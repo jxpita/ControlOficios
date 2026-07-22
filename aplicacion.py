@@ -306,13 +306,6 @@ class AplicacionPrincipal(ttk.Frame):
         self.combo_estado.current(0)
         self.combo_estado.grid(row=6, column=1, sticky="w", pady=4)
 
-        ttk.Label(
-            marco,
-            text="Sin responsable el oficio queda \"Por asignar\". Al asignar un\n"
-                 "responsable pasa automáticamente a \"En proceso\".",
-            foreground="#6B7280", font=("Helvetica", 8),
-        ).grid(row=7, column=1, sticky="w", pady=(2, 0))
-
         btn = ttk.Button(marco, text="Registrar oficio", command=self._guardar_oficio)
         btn.grid(row=8, column=1, sticky="w", pady=18)
         # Estilo especial para el botón principal
