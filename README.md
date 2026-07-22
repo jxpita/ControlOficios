@@ -1,4 +1,4 @@
-# Gestor de Oficios — Unidad de Cumplimiento
+# Control de Oficios — Unidad de Cumplimiento
 
 Aplicación de escritorio (Python + Tkinter) para registrar y hacer seguimiento
 a los oficios/circulares que llegan a la unidad. Almacenamiento en archivos

@@ -19,6 +19,9 @@ except ImportError:
 
 
 class AplicacionPrincipal(ttk.Frame):
+    # Texto que representa "ningún responsable" en los desplegables.
+    SIN_RESPONSABLE = "(Sin responsable)"
+
     def __init__(self, maestro, usuario_sesion):
         super().__init__(maestro, padding=10)
         self.maestro = maestro
@@ -26,7 +29,7 @@ class AplicacionPrincipal(ttk.Frame):
         self.empleados = almacen_empleados.cargar_empleados()
 
         # --- Configuración de la ventana ---
-        maestro.title(f"Gestor de Oficios · {self.usuario['nombre']}")
+        maestro.title(f"Control de Oficios · {self.usuario['nombre']}")
         maestro.geometry("950x650")
         if ARCHIVO_ICONO.exists():
             try:
@@ -116,7 +119,7 @@ class AplicacionPrincipal(ttk.Frame):
         lbl_titulo.pack(side="left", padx=3, pady=10)
 
         # Título de la aplicación
-        lbl_app = tk.Label(cabecera, text="Gestor de Oficios - Unidad de Cumplimiento",
+        lbl_app = tk.Label(cabecera, text="Control de Oficios — Unidad de Cumplimiento",
                            font=("Arial", 14), fg=COLOR_BLANCO, bg=COLOR_AZUL)
         lbl_app.pack(side="right", padx=20, pady=10)
 
@@ -147,8 +150,11 @@ class AplicacionPrincipal(ttk.Frame):
         self.entrada_fecha_oficio.insert(0, date.today().isoformat())
         self.entrada_fecha_oficio.grid(row=3, column=1, sticky="w", pady=4)
 
-        ttk.Label(marco, text="Usuario / empleado responsable").grid(row=4, column=0, sticky="w", pady=4)
-        self.combo_empleado = ttk.Combobox(marco, width=37, state="readonly", values=self._valores_empleados())
+        ttk.Label(marco, text="Usuario / empleado responsable (opcional)").grid(row=4, column=0, sticky="w", pady=4)
+        self.combo_empleado = ttk.Combobox(
+            marco, width=37, state="readonly",
+            values=[self.SIN_RESPONSABLE] + self._valores_empleados())
+        self.combo_empleado.current(0)  # por defecto: sin responsable
         self.combo_empleado.grid(row=4, column=1, sticky="w", pady=4)
         if not self.empleados:
             ttk.Label(marco, text="(No hay empleados. Cargue datos/empleados.csv)", foreground="#a00").grid(row=5, column=1, sticky="w")
@@ -158,8 +164,15 @@ class AplicacionPrincipal(ttk.Frame):
         self.combo_estado.current(0)
         self.combo_estado.grid(row=6, column=1, sticky="w", pady=4)
 
+        ttk.Label(
+            marco,
+            text="Sin responsable el oficio queda \"Por asignar\". Al asignar un\n"
+                 "responsable pasa automáticamente a \"En proceso\".",
+            foreground="#6B7280", font=("Helvetica", 8),
+        ).grid(row=7, column=1, sticky="w", pady=(2, 0))
+
         btn = ttk.Button(marco, text="Registrar oficio", command=self._guardar_oficio)
-        btn.grid(row=7, column=1, sticky="w", pady=18)
+        btn.grid(row=8, column=1, sticky="w", pady=18)
         # Estilo especial para el botón principal
         estilo = ttk.Style()
         estilo.configure("Accent.TButton", background=COLOR_AZUL, foreground=COLOR_BLANCO, font=("Helvetica", 10, "bold"))
@@ -168,16 +181,24 @@ class AplicacionPrincipal(ttk.Frame):
     # Los demás métodos (_guardar_oficio, _construir_listado, etc.) permanecen idénticos.
     # Para ahorrar espacio, los incluyo a continuación pero son los mismos que antes.
 
+    def _empleado_por_nombre(self, nombre):
+        """Devuelve (id_empleado, nombre_empleado) a partir del texto elegido
+        en un desplegable. Para "(Sin responsable)" o vacío devuelve ("", "")."""
+        if not nombre or nombre == self.SIN_RESPONSABLE:
+            return "", ""
+        for empleado in self.empleados:
+            if empleado["nombreEmpleado"] == nombre:
+                return empleado["idUsuario"], empleado["nombreEmpleado"]
+        return "", nombre
+
     def _guardar_oficio(self):
-        if self.combo_empleado.current() < 0:
-            messagebox.showwarning("Falta empleado", "Seleccione un empleado.")
-            return
-        empleado = self.empleados[self.combo_empleado.current()]
+        # El responsable es opcional: "(Sin responsable)" => sin asignar.
+        id_empleado, nombre_empleado = self._empleado_por_nombre(self.combo_empleado.get())
         try:
             referencia = oficios.registrar_oficio(
                 self.entrada_codigo.get(), self.entrada_fecha_recepcion.get(),
-                self.entrada_fecha_oficio.get(), empleado["idUsuario"],
-                empleado["nombreEmpleado"], self.combo_estado.get(),
+                self.entrada_fecha_oficio.get(), id_empleado,
+                nombre_empleado, self.combo_estado.get(),
                 self.usuario["usuario"],
             )
         except ValueError as error:
@@ -185,6 +206,8 @@ class AplicacionPrincipal(ttk.Frame):
             return
         messagebox.showinfo("Registrado", f"Oficio registrado.\nReferencia: {referencia}")
         self.entrada_codigo.delete(0, "end")
+        self.combo_empleado.current(0)
+        self.combo_estado.current(0)
         self._refrescar_listado()
 
     def _construir_listado(self):
@@ -201,11 +224,23 @@ class AplicacionPrincipal(ttk.Frame):
         barra = ttk.Frame(marco)
         barra.pack(fill="x", pady=8)
         ttk.Button(barra, text="Actualizar lista", command=self._refrescar_listado).pack(side="left")
-        ttk.Label(barra, text="   Cambiar estado del seleccionado a:").pack(side="left")
-        self.combo_nuevo_estado = ttk.Combobox(barra, width=18, state="readonly", values=ESTADOS)
+
+        ttk.Label(barra, text="   Responsable:").pack(side="left")
+        self.combo_responsable_edicion = ttk.Combobox(
+            barra, width=20, state="readonly",
+            values=[self.SIN_RESPONSABLE] + self._valores_empleados())
+        self.combo_responsable_edicion.current(0)
+        self.combo_responsable_edicion.pack(side="left", padx=5)
+
+        ttk.Label(barra, text="Estado:").pack(side="left")
+        self.combo_nuevo_estado = ttk.Combobox(barra, width=14, state="readonly", values=ESTADOS)
         self.combo_nuevo_estado.current(0)
         self.combo_nuevo_estado.pack(side="left", padx=5)
-        ttk.Button(barra, text="Aplicar", command=self._cambiar_estado).pack(side="left")
+
+        ttk.Button(barra, text="Aplicar cambios", command=self._aplicar_cambios).pack(side="left", padx=5)
+
+        # Al seleccionar un oficio, precargar sus valores actuales.
+        self.tabla.bind("<<TreeviewSelect>>", self._al_seleccionar_oficio)
         self._refrescar_listado()
 
     def _refrescar_listado(self):
@@ -221,16 +256,40 @@ class AplicacionPrincipal(ttk.Frame):
         except Exception as e:
             messagebox.showerror("Error al cargar oficios", str(e))
 
-    def _cambiar_estado(self):
+    def _al_seleccionar_oficio(self, evento=None):
+        """Precarga los desplegables con el responsable y estado del oficio
+        seleccionado en la tabla."""
+        seleccion = self.tabla.selection()
+        if not seleccion:
+            return
+        valores = self.tabla.item(seleccion[0], "values")
+        empleado_actual = valores[4] if len(valores) > 4 else ""
+        estado_actual = valores[5] if len(valores) > 5 else ""
+        if empleado_actual and empleado_actual in self._valores_empleados():
+            self.combo_responsable_edicion.set(empleado_actual)
+        else:
+            self.combo_responsable_edicion.set(self.SIN_RESPONSABLE)
+        if estado_actual in ESTADOS:
+            self.combo_nuevo_estado.set(estado_actual)
+
+    def _aplicar_cambios(self):
         seleccion = self.tabla.selection()
         if not seleccion:
             messagebox.showwarning("Sin selección", "Seleccione un oficio en la lista.")
             return
+        id_empleado, nombre_empleado = self._empleado_por_nombre(
+            self.combo_responsable_edicion.get())
         try:
-            oficios.actualizar_estado(seleccion[0], self.combo_nuevo_estado.get(), self.usuario["usuario"])
+            estado_final = oficios.actualizar_oficio(
+                seleccion[0], self.combo_nuevo_estado.get(),
+                id_empleado, nombre_empleado, self.usuario["usuario"])
         except ValueError as error:
             messagebox.showerror("Error", str(error))
             return
+        # Si las reglas ajustaron el estado (p. ej. al asignar responsable),
+        # reflejarlo en el desplegable.
+        if estado_final in ESTADOS:
+            self.combo_nuevo_estado.set(estado_final)
         self._refrescar_listado()
 
     def _construir_usuarios(self):
@@ -354,14 +413,27 @@ class AplicacionPrincipal(ttk.Frame):
 #  INGRESO / PRIMER USO (con colores corporativos)
 # ============================================================================
 class VentanaIngreso(tk.Frame):
+    # Colores de apoyo para la pantalla de ingreso.
+    COLOR_FONDO = COLOR_GRIS_CLARO
+    COLOR_BORDE = "#E1E5EC"
+    COLOR_CAMPO = "#F7F8FA"
+    COLOR_BORDE_CAMPO = "#CBD2DE"
+    COLOR_SUBTITULO = "#C7D2E6"
+    COLOR_TENUE = "#6B7280"
+    COLOR_AZUL_HOVER = "#1A2E5A"
+
     def __init__(self, maestro):
         # Heredamos de tk.Frame para poder usar bg
-        tk.Frame.__init__(self, maestro, bg=COLOR_BLANCO)
+        tk.Frame.__init__(self, maestro, bg=self.COLOR_FONDO)
         self.maestro = maestro
-        self.pack(fill="both", expand=True, padx=30, pady=30)
+        self.pack(fill="both", expand=True)
 
-        maestro.title("Gestor de Oficios · Ingreso")
-        maestro.geometry("400x360")
+        maestro.title("Control de Oficios · Ingreso")
+        self._centrar(440, 560)
+        try:
+            maestro.resizable(False, False)
+        except tk.TclError:
+            pass
 
         # Ícono
         if ARCHIVO_ICONO.exists():
@@ -370,40 +442,148 @@ class VentanaIngreso(tk.Frame):
             except tk.TclError:
                 pass
 
-        # Estilo para los labels (fondo blanco, texto azul)
-        estilo = ttk.Style()
-        estilo.configure("Login.TLabel", background=COLOR_BLANCO, foreground=COLOR_TEXTO)
+        self._configurar_estilos()
 
         if autenticacion.existe_algun_usuario():
             self._formulario_ingreso()
         else:
             self._formulario_primer_uso()
 
+    def _centrar(self, ancho, alto):
+        """Centra la ventana en la pantalla."""
+        self.maestro.update_idletasks()
+        x = (self.maestro.winfo_screenwidth() - ancho) // 2
+        y = (self.maestro.winfo_screenheight() - alto) // 3
+        self.maestro.geometry(f"{ancho}x{alto}+{x}+{max(y, 0)}")
+
+    def _configurar_estilos(self):
+        estilo = ttk.Style()
+        try:
+            estilo.theme_use("clam")
+        except tk.TclError:
+            pass
+        estilo.configure("Login.TLabel", background=COLOR_BLANCO, foreground=COLOR_TEXTO)
+        # Campos de texto con borde suave que se resalta al enfocar.
+        estilo.configure(
+            "Login.TEntry", fieldbackground=self.COLOR_CAMPO,
+            foreground=COLOR_TEXTO, bordercolor=self.COLOR_BORDE_CAMPO,
+            lightcolor=self.COLOR_BORDE_CAMPO, darkcolor=self.COLOR_BORDE_CAMPO,
+            relief="flat", padding=6)
+        estilo.map(
+            "Login.TEntry",
+            bordercolor=[("focus", COLOR_AZUL)],
+            lightcolor=[("focus", COLOR_AZUL)],
+            darkcolor=[("focus", COLOR_AZUL)],
+            fieldbackground=[("focus", COLOR_BLANCO)])
+
     def _limpiar(self):
         for hijo in self.winfo_children():
             hijo.destroy()
 
-    def _formulario_ingreso(self):
+    # ---- Componentes reutilizables -----------------------------------------
+    def _construir_marco(self):
+        """Crea el banner corporativo y la tarjeta central. Devuelve el
+        contenedor interno (con fondo blanco) donde va cada formulario."""
         self._limpiar()
-        # El fondo ya es blanco por el __init__, pero lo reafirmamos
-        self.configure(bg=COLOR_BLANCO)
 
-        ttk.Label(self, text="Iniciar sesión", font=("Helvetica", 15, "bold"),
-                  style="Login.TLabel").pack(pady=(0, 20))
-        ttk.Label(self, text="Usuario", style="Login.TLabel").pack(anchor="w")
-        self.entrada_usuario = ttk.Entry(self, width=30)
-        self.entrada_usuario.pack(fill="x", pady=(0, 10))
-        ttk.Label(self, text="Contraseña", style="Login.TLabel").pack(anchor="w")
-        self.entrada_clave = ttk.Entry(self, width=30, show="•")
-        self.entrada_clave.pack(fill="x")
-        self.entrada_clave.bind("<Return>", lambda evento: self._ingresar())
+        # Banner superior con identidad corporativa.
+        banner = tk.Frame(self, bg=COLOR_AZUL, height=132)
+        banner.pack(fill="x")
+        banner.pack_propagate(False)
 
-        # Botón personalizado (tk.Button) con colores fijos
-        btn = tk.Button(self, text="Ingresar", command=self._ingresar,
+        logo_img = self._cargar_logo(52)
+        if logo_img:
+            lbl_logo = tk.Label(banner, image=logo_img, bg=COLOR_AZUL)
+            lbl_logo.image = logo_img
+            lbl_logo.pack(pady=(22, 0))
+            titulo_pad = (6, 0)
+        else:
+            titulo_pad = (34, 0)
+        tk.Label(banner, text="Banco del Pacífico", bg=COLOR_AZUL, fg=COLOR_BLANCO,
+                 font=("Arial", 16, "bold")).pack(pady=titulo_pad)
+        tk.Label(banner, text="Control de Oficios · Unidad de Cumplimiento",
+                 bg=COLOR_AZUL, fg=self.COLOR_SUBTITULO,
+                 font=("Helvetica", 9)).pack(pady=(2, 0))
+
+        # Cuerpo con tarjeta.
+        cuerpo = tk.Frame(self, bg=self.COLOR_FONDO)
+        cuerpo.pack(fill="both", expand=True)
+        tarjeta = tk.Frame(cuerpo, bg=COLOR_BLANCO,
+                           highlightbackground=self.COLOR_BORDE,
+                           highlightthickness=1)
+        tarjeta.pack(fill="both", expand=True, padx=34, pady=28)
+
+        interno = tk.Frame(tarjeta, bg=COLOR_BLANCO)
+        interno.pack(fill="both", expand=True, padx=30, pady=26)
+        return interno
+
+    def _cargar_logo(self, alto):
+        if not (ARCHIVO_LOGO.exists() and PILLOW_AVAILABLE):
+            return None
+        try:
+            img = Image.open(ARCHIVO_LOGO)
+            ancho = int(img.size[0] * (alto / float(img.size[1])))
+            img = img.resize((ancho, alto), Image.Resampling.LANCZOS)
+            return ImageTk.PhotoImage(img)
+        except Exception:
+            return None
+
+    def _etiqueta_campo(self, contenedor, texto):
+        tk.Label(contenedor, text=texto, bg=COLOR_BLANCO, fg=COLOR_TEXTO,
+                 font=("Helvetica", 9, "bold")).pack(anchor="w")
+
+    def _campo(self, contenedor, oculto=False):
+        entrada = ttk.Entry(contenedor, style="Login.TEntry",
+                            font=("Helvetica", 11), show="•" if oculto else "")
+        entrada.pack(fill="x", ipady=4, pady=(4, 14))
+        return entrada
+
+    def _boton_principal(self, contenedor, texto, comando):
+        btn = tk.Button(contenedor, text=texto, command=comando,
                         bg=COLOR_AZUL, fg=COLOR_BLANCO,
-                        activebackground="#1A2E5A", activeforeground=COLOR_BLANCO,
-                        font=("Helvetica", 10, "bold"), relief="flat", padx=20, pady=8)
-        btn.pack(pady=20)
+                        activebackground=self.COLOR_AZUL_HOVER,
+                        activeforeground=COLOR_BLANCO,
+                        font=("Helvetica", 11, "bold"), relief="flat",
+                        cursor="hand2", pady=9)
+        btn.pack(fill="x", pady=(8, 0))
+        btn.bind("<Enter>", lambda e: btn.config(bg=self.COLOR_AZUL_HOVER))
+        btn.bind("<Leave>", lambda e: btn.config(bg=COLOR_AZUL))
+        return btn
+
+    def _casilla_mostrar_clave(self, contenedor):
+        self.var_mostrar = tk.BooleanVar(value=False)
+
+        def alternar():
+            self.entrada_clave.config(show="" if self.var_mostrar.get() else "•")
+
+        tk.Checkbutton(
+            contenedor, text="Mostrar contraseña", variable=self.var_mostrar,
+            command=alternar, bg=COLOR_BLANCO, fg=self.COLOR_TENUE,
+            activebackground=COLOR_BLANCO, activeforeground=self.COLOR_TENUE,
+            selectcolor=COLOR_BLANCO, font=("Helvetica", 9),
+            cursor="hand2", bd=0, highlightthickness=0
+        ).pack(anchor="w", pady=(0, 16))
+
+    # ---- Formularios --------------------------------------------------------
+    def _formulario_ingreso(self):
+        cont = self._construir_marco()
+
+        tk.Label(cont, text="Iniciar sesión", bg=COLOR_BLANCO, fg=COLOR_TEXTO,
+                 font=("Helvetica", 17, "bold")).pack(anchor="w")
+        tk.Label(cont, text="Ingrese sus credenciales para continuar",
+                 bg=COLOR_BLANCO, fg=self.COLOR_TENUE,
+                 font=("Helvetica", 9)).pack(anchor="w", pady=(2, 20))
+
+        self._etiqueta_campo(cont, "Usuario")
+        self.entrada_usuario = self._campo(cont)
+        self._etiqueta_campo(cont, "Contraseña")
+        self.entrada_clave = self._campo(cont, oculto=True)
+        self.entrada_clave.bind("<Return>", lambda evento: self._ingresar())
+        self.entrada_usuario.bind("<Return>", lambda evento: self.entrada_clave.focus_set())
+
+        self._casilla_mostrar_clave(cont)
+        self._boton_principal(cont, "Ingresar", self._ingresar)
+        self.entrada_usuario.focus_set()
 
     def _ingresar(self):
         try:
@@ -418,26 +598,25 @@ class VentanaIngreso(tk.Frame):
         AplicacionPrincipal(self.maestro, sesion)
 
     def _formulario_primer_uso(self):
-        self._limpiar()
-        self.configure(bg=COLOR_BLANCO)
+        cont = self._construir_marco()
 
-        ttk.Label(self, text="Primer uso: crear administrador",
-                  font=("Helvetica", 13, "bold"), style="Login.TLabel").pack(pady=(0, 15))
-        ttk.Label(self, text="Usuario", style="Login.TLabel").pack(anchor="w")
-        self.entrada_usuario = ttk.Entry(self, width=30)
-        self.entrada_usuario.pack(fill="x", pady=(0, 5))
-        ttk.Label(self, text="Nombre", style="Login.TLabel").pack(anchor="w")
-        self.entrada_nombre = ttk.Entry(self, width=30)
-        self.entrada_nombre.pack(fill="x", pady=(0, 5))
-        ttk.Label(self, text="Contraseña", style="Login.TLabel").pack(anchor="w")
-        self.entrada_clave = ttk.Entry(self, width=30, show="•")
-        self.entrada_clave.pack(fill="x", pady=(0, 5))
+        tk.Label(cont, text="Primer uso", bg=COLOR_BLANCO, fg=COLOR_TEXTO,
+                 font=("Helvetica", 17, "bold")).pack(anchor="w")
+        tk.Label(cont, text="Cree la cuenta de administrador para comenzar",
+                 bg=COLOR_BLANCO, fg=self.COLOR_TENUE,
+                 font=("Helvetica", 9)).pack(anchor="w", pady=(2, 18))
 
-        btn = tk.Button(self, text="Crear y continuar", command=self._crear_administrador,
-                        bg=COLOR_AZUL, fg=COLOR_BLANCO,
-                        activebackground="#1A2E5A", activeforeground=COLOR_BLANCO,
-                        font=("Helvetica", 10, "bold"), relief="flat", padx=20, pady=8)
-        btn.pack(pady=16)
+        self._etiqueta_campo(cont, "Usuario")
+        self.entrada_usuario = self._campo(cont)
+        self._etiqueta_campo(cont, "Nombre")
+        self.entrada_nombre = self._campo(cont)
+        self._etiqueta_campo(cont, "Contraseña")
+        self.entrada_clave = self._campo(cont, oculto=True)
+        self.entrada_clave.bind("<Return>", lambda evento: self._crear_administrador())
+
+        self._casilla_mostrar_clave(cont)
+        self._boton_principal(cont, "Crear y continuar", self._crear_administrador)
+        self.entrada_usuario.focus_set()
 
     def _crear_administrador(self):
         try:

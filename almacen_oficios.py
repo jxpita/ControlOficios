@@ -64,6 +64,31 @@ def _generar_referencia(fecha_recepcion: str, registros: List[Dict]) -> str:
     return f"{prefijo_dia}{secuencial_max + 1:04d}"           # primero -> 0000
 
 
+# --- Reglas de negocio: relación responsable / estado -----------------------
+def _resolver_estado(nombre_empleado: str, estado: str) -> str:
+    """Aplica las reglas de negocio entre responsable y estado.
+
+    - Sin responsable: el único estado válido es "Por asignar". Si se pidió
+      "En proceso" o "Finalizado" se lanza un error (esos estados exigen
+      responsable).
+    - Con responsable: no puede quedar en "Por asignar"; al asignar un
+      responsable el oficio pasa automáticamente a "En proceso". Si el estado
+      pedido es "En proceso" o "Finalizado" se respeta.
+    Devuelve el estado ya corregido.
+    """
+    tiene_responsable = bool((nombre_empleado or "").strip())
+    if not tiene_responsable:
+        if estado in ("En proceso", "Finalizado"):
+            raise ValueError(
+                f"El estado \"{estado}\" requiere un responsable asignado."
+            )
+        return "Por asignar"
+    # Con responsable asignado
+    if estado == "Por asignar":
+        return "En proceso"
+    return estado
+
+
 # --- Operaciones -------------------------------------------------------------
 def registrar_oficio(codigo_oficio: str, fecha_recepcion: str, fecha_oficio: str,
                      id_empleado: str, nombre_empleado: str, estado: str,
@@ -75,8 +100,11 @@ def registrar_oficio(codigo_oficio: str, fecha_recepcion: str, fecha_oficio: str
     _validar_fecha(fecha_oficio, "Fecha de oficio")
     if estado not in ESTADOS:
         raise ValueError("Estado no válido.")
-    if not nombre_empleado:
-        raise ValueError("Debe seleccionar un empleado responsable.")
+
+    # El responsable es opcional. Las reglas ajustan el estado en consecuencia.
+    nombre_empleado = (nombre_empleado or "").strip()
+    id_empleado = (id_empleado or "").strip()
+    estado = _resolver_estado(nombre_empleado, estado)
 
     registros = _leer_registros()
     referencia = _generar_referencia(fecha_recepcion, registros)
@@ -101,36 +129,39 @@ def listar_oficios() -> List[Dict]:
     return _leer_registros()
 
 
-def actualizar_estado(referencia: str, nuevo_estado: str,
-                     actualizado_por: str) -> None:
+def actualizar_oficio(referencia: str, nuevo_estado: str, id_empleado: str,
+                     nombre_empleado: str, actualizado_por: str) -> str:
+    """Actualiza estado y/o responsable de un oficio en una sola operación,
+    respetando las reglas de negocio (ver `_resolver_estado`).
+
+    Devuelve el estado final aplicado (puede diferir del solicitado si las
+    reglas lo ajustaron, p. ej. al asignar responsable a un "Por asignar").
+    """
     if nuevo_estado not in ESTADOS:
         raise ValueError("Estado no válido.")
+    nombre_empleado = (nombre_empleado or "").strip()
+    id_empleado = (id_empleado or "").strip()
+    estado_final = _resolver_estado(nombre_empleado, nuevo_estado)
+
     registros = _leer_registros()
     for registro in registros:
         if registro["referencia"] == referencia:
-            registro["estado"] = nuevo_estado
-            registro.setdefault("historial", []).append({
-                "estado": nuevo_estado,
-                "por": actualizado_por,
-                "cuando": datetime.now().isoformat(timespec="seconds"),
-            })
-            _guardar_registros(registros)
-            return
-    raise ValueError("No se encontró la referencia indicada.")
-
-
-def reasignar_empleado(referencia: str, id_empleado: str, nombre_empleado: str,
-                      actualizado_por: str) -> None:
-    registros = _leer_registros()
-    for registro in registros:
-        if registro["referencia"] == referencia:
-            registro["id_empleado"] = id_empleado
-            registro["empleado"] = nombre_empleado
-            registro.setdefault("historial", []).append({
-                "evento": f"Reasignado a {nombre_empleado}",
-                "por": actualizado_por,
-                "cuando": datetime.now().isoformat(timespec="seconds"),
-            })
-            _guardar_registros(registros)
-            return
+            cambios = []
+            if nombre_empleado != registro.get("empleado", ""):
+                registro["id_empleado"] = id_empleado
+                registro["empleado"] = nombre_empleado
+                cambios.append(
+                    f"Responsable: {nombre_empleado or '(sin responsable)'}"
+                )
+            if estado_final != registro.get("estado"):
+                registro["estado"] = estado_final
+                cambios.append(f"Estado: {estado_final}")
+            if cambios:
+                registro.setdefault("historial", []).append({
+                    "evento": " · ".join(cambios),
+                    "por": actualizado_por,
+                    "cuando": datetime.now().isoformat(timespec="seconds"),
+                })
+                _guardar_registros(registros)
+            return estado_final
     raise ValueError("No se encontró la referencia indicada.")
