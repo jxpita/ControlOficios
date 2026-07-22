@@ -159,6 +159,11 @@ def validar_acceso(usuario: str, clave: str) -> Optional[Dict]:
     return None
 
 
+def cerrar_sesion(usuario: str) -> None:
+    """Registra en la bitácora el cierre de sesión del usuario."""
+    registro_actividad.registrar("CIERRE_SESION", f"usuario={usuario}", usuario)
+
+
 def listar_usuarios() -> List[Dict]:
     return [{"usuario": usu["usuario"], "nombre": usu["nombre"],
              "rol": usu.get("rol", ROL_USUARIO)} for usu in _leer_usuarios()]

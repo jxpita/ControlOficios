@@ -168,6 +168,7 @@ class AplicacionPrincipal(ttk.Frame):
         maestro.title(f"Control de Oficios · {self.usuario['nombre']} "
                       f"({self.usuario.get('rol', ROL_USUARIO)})")
         maestro.geometry("950x650")
+        maestro.resizable(True, True)
         if ARCHIVO_ICONO.exists():
             try:
                 maestro.iconbitmap(str(ARCHIVO_ICONO))
@@ -258,10 +259,30 @@ class AplicacionPrincipal(ttk.Frame):
                                 fg=COLOR_BLANCO, bg=COLOR_AZUL)
         lbl_titulo.pack(side="left", padx=3, pady=10)
 
+        # Botón de cerrar sesión (extremo derecho).
+        btn_salir = tk.Button(cabecera, text="Cerrar sesión", command=self._cerrar_sesion,
+                              bg=COLOR_AZUL, fg=COLOR_BLANCO, relief="flat", cursor="hand2",
+                              activebackground="#1A2E5A", activeforeground=COLOR_BLANCO,
+                              font=("Helvetica", 10, "bold"), padx=12, pady=6,
+                              highlightbackground=COLOR_BLANCO, highlightthickness=1,
+                              takefocus=0)
+        btn_salir.pack(side="right", padx=15, pady=10)
+        btn_salir.bind("<Enter>", lambda e: btn_salir.config(bg="#1A2E5A"))
+        btn_salir.bind("<Leave>", lambda e: btn_salir.config(bg=COLOR_AZUL))
+
         # Título de la aplicación
         lbl_app = tk.Label(cabecera, text="Control de Oficios — Unidad de Cumplimiento",
                            font=("Arial", 14), fg=COLOR_BLANCO, bg=COLOR_AZUL)
         lbl_app.pack(side="right", padx=20, pady=10)
+
+    def _cerrar_sesion(self):
+        """Cierra la sesión actual y vuelve a la pantalla de ingreso."""
+        if not messagebox.askyesno("Cerrar sesión", "¿Desea cerrar la sesión actual?"):
+            return
+        autenticacion.cerrar_sesion(self.usuario["usuario"])
+        self.destroy()
+        # Restablecer la ventana a su tamaño de ingreso y mostrar el login.
+        VentanaIngreso(self.maestro)
 
     # ---- Métodos de las pestañas (sin cambios, solo se ajustan los colores) ----
     def _valores_empleados(self):
