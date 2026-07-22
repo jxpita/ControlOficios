@@ -21,6 +21,7 @@ from cryptography.fernet import InvalidToken
 from configuracion import ARCHIVO_OFICIOS, PREFIJO_REFERENCIA, ESTADOS
 from cifrado import cifrar, descifrar
 import registro_actividad
+import permisos
 
 
 # --- Persistencia ------------------------------------------------------------
@@ -36,8 +37,9 @@ def _leer_registros() -> List[Dict]:
 
 
 def _guardar_registros(registros: List[Dict]) -> None:
-    ARCHIVO_OFICIOS.write_bytes(
-        cifrar(json.dumps(registros, ensure_ascii=False, indent=2))
+    permisos.escribir_bytes_protegido(
+        ARCHIVO_OFICIOS,
+        cifrar(json.dumps(registros, ensure_ascii=False, indent=2)),
     )
 
 

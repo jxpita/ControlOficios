@@ -64,6 +64,7 @@ oficios_tracker/
 ├── cifrado.py            # Cifrado Fernet + hashing de contraseñas
 ├── autenticacion.py      # Ingreso, usuarios y roles del sistema
 ├── registro_actividad.py # Bitácora de auditoría (log en texto plano)
+├── permisos.py           # Endurece permisos (solo lectura) de los archivos
 ├── almacen_empleados.py  # Lee empleados.csv para el combo
 ├── almacen_oficios.py    # CRUD de oficios + referencia secuencial
 ├── metricas.py           # Cálculo de métricas del tablero
@@ -112,11 +113,22 @@ tu `empleados.csv` dentro de `datos/` al lado del `.exe`.
   solo verificarlas. Es lo correcto.
 - **Oficios y credenciales:** cifrado **autenticado** con Fernet. Si alguien
   edita un byte del archivo, el descifrado falla y la app avisa de manipulación.
-- **Límite honesto:** la `clave_maestra.key` vive en disco junto a los datos.
-  Esto **frena la manipulación casual** (abrir el archivo y editarlo), pero un
-  usuario con acceso a la máquina y al ejecutable podría, con esfuerzo, extraer
-  la clave. El cifrado de archivos da *confidencialidad e integridad*, no
-  *control de acceso real*. Para eso, ver la sección 6.
+- **Permisos restringidos (módulo `permisos.py`):** todos los archivos que crea
+  la app (`clave_maestra.key`, `credenciales.dat`, `oficios.dat` y
+  `actividad.log`) quedan tras cada escritura en **solo lectura del propietario**
+  (`0o400`), y la carpeta `datos/` se restringe a `0o700`. La app puede seguir
+  operando porque, justo antes de reescribir, restaura el permiso y vuelve a
+  bloquearlo. Esto **impide la modificación y el borrado casual** y bloquea a
+  **otros usuarios del sistema**.
+  - En **Windows**, `0o400` marca el archivo como *solo lectura*: no se puede
+    modificar ni borrar con normalidad.
+  - En **Linux/macOS**, el borrado depende de los permisos de la carpeta, por
+    eso `datos/` queda en `0o700`.
+- **Límite honesto:** la cuenta que **ejecuta la app es dueña** de los archivos,
+  y `root`/Administrador ignora estos permisos; con esfuerzo podría revertirlos.
+  La `clave_maestra.key` también vive en disco junto a los datos. El endurecimiento
+  de permisos + el cifrado dan *confidencialidad, integridad y freno a la
+  manipulación*, **no control de acceso absoluto**. Para eso, ver la sección 6.
 - Respalda `clave_maestra.key`: **si se pierde, los datos cifrados no se
   recuperan.**
 

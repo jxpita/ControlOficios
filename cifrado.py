@@ -7,6 +7,7 @@ from typing import Optional, Tuple
 from cryptography.fernet import Fernet
 
 from configuracion import ARCHIVO_CLAVE, ITERACIONES_PBKDF2
+import permisos
 
 
 # --- Clave maestra Fernet ----------------------------------------------------
@@ -15,11 +16,8 @@ def obtener_clave() -> bytes:
     if ARCHIVO_CLAVE.exists():
         return ARCHIVO_CLAVE.read_bytes()
     clave = Fernet.generate_key()
-    ARCHIVO_CLAVE.write_bytes(clave)
-    try:  # permisos restrictivos donde el SO lo soporte
-        os.chmod(ARCHIVO_CLAVE, 0o600)
-    except (OSError, NotImplementedError):
-        pass
+    # La clave nunca se reescribe: se deja como solo lectura del propietario.
+    permisos.escribir_bytes_protegido(ARCHIVO_CLAVE, clave)
     return clave
 
 

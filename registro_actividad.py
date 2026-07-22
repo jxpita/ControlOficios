@@ -17,18 +17,21 @@ principal: si por algún motivo no se puede escribir, se ignora el error.
 from datetime import datetime
 
 from configuracion import ARCHIVO_LOG
+import permisos
 
 
 def registrar(accion: str, detalle: str = "", actor: str = "sistema") -> None:
-    """Añade una línea a la bitácora de auditoría."""
+    """Añade una línea a la bitácora de auditoría.
+
+    Tras cada anexado el archivo se deja en solo lectura, para dificultar su
+    modificación o borrado (ver `permisos`)."""
     marca = datetime.now().isoformat(timespec="seconds")
     actor = (actor or "desconocido").strip() or "desconocido"
     # Se eliminan saltos de línea del detalle para no romper el formato por línea.
     detalle = " ".join(str(detalle).splitlines())
     linea = f"{marca} | {actor} | {accion} | {detalle}\n"
     try:
-        with open(ARCHIVO_LOG, "a", encoding="utf-8") as archivo:
-            archivo.write(linea)
+        permisos.anexar_texto_protegido(ARCHIVO_LOG, linea)
     except OSError:
         # La auditoría no debe tumbar la aplicación si el disco falla.
         pass

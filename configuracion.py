@@ -13,6 +13,11 @@ else:
 
 DIR_DATOS = DIR_BASE / "datos"
 DIR_DATOS.mkdir(exist_ok=True)
+try:  # restringir la carpeta al propietario (evita borrado por otros usuarios)
+    import os as _os
+    _os.chmod(DIR_DATOS, 0o700)
+except (OSError, NotImplementedError):
+    pass
 
 # --- Archivos ----------------------------------------------------------------
 ARCHIVO_CLAVE = DIR_DATOS / "clave_maestra.key"

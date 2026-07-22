@@ -10,6 +10,7 @@ from configuracion import (
 )
 from cifrado import cifrar, descifrar, generar_hash_clave, verificar_clave
 import registro_actividad
+import permisos
 
 
 def _normalizar_roles(usuarios: List[Dict]) -> List[Dict]:
@@ -39,8 +40,9 @@ def _leer_usuarios() -> List[Dict]:
 
 
 def _guardar_usuarios(usuarios: List[Dict]) -> None:
-    ARCHIVO_CREDENCIALES.write_bytes(
-        cifrar(json.dumps(usuarios, ensure_ascii=False, indent=2))
+    permisos.escribir_bytes_protegido(
+        ARCHIVO_CREDENCIALES,
+        cifrar(json.dumps(usuarios, ensure_ascii=False, indent=2)),
     )
 
 
