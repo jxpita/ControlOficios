@@ -9,6 +9,8 @@ import almacen_oficios as oficios
 import metricas
 from configuracion import (
     ESTADOS, ARCHIVO_LOGO, ARCHIVO_ICONO,
+    ROL_SUPERUSUARIO, ROL_ADMINISTRADOR, ROL_USUARIO,
+    ROLES_ASIGNABLES, ROLES_GESTORES,
     COLOR_AZUL, COLOR_BLANCO, COLOR_GRIS_CLARO, COLOR_TEXTO, COLOR_TEXTO_INV
 )
 
@@ -71,6 +73,12 @@ class SelectorFecha(tk.Frame):
         self._popup.configure(bg=COLOR_BLANCO)
         self._popup.resizable(False, False)
         self._popup.transient(self.winfo_toplevel())
+        # Usar el mismo ícono del banco que la ventana principal.
+        if ARCHIVO_ICONO.exists():
+            try:
+                self._popup.iconbitmap(str(ARCHIVO_ICONO))
+            except tk.TclError:
+                pass
         # Posicionar justo debajo del campo.
         self._popup.geometry(
             f"+{self.winfo_rootx()}+{self.winfo_rooty() + self.winfo_height() + 2}")
@@ -157,7 +165,8 @@ class AplicacionPrincipal(ttk.Frame):
         self.empleados = almacen_empleados.cargar_empleados()
 
         # --- Configuración de la ventana ---
-        maestro.title(f"Control de Oficios · {self.usuario['nombre']}")
+        maestro.title(f"Control de Oficios · {self.usuario['nombre']} "
+                      f"({self.usuario.get('rol', ROL_USUARIO)})")
         maestro.geometry("950x650")
         if ARCHIVO_ICONO.exists():
             try:
@@ -182,12 +191,15 @@ class AplicacionPrincipal(ttk.Frame):
 
         self.cuaderno.add(self.pestana_registro, text="  Registrar oficio  ")
         self.cuaderno.add(self.pestana_listado, text="  Oficios  ")
-        self.cuaderno.add(self.pestana_usuarios, text="  Usuarios  ")
+        # La pestaña de usuarios solo está disponible para gestores.
+        if self._puede_gestionar_usuarios():
+            self.cuaderno.add(self.pestana_usuarios, text="  Usuarios  ")
         self.cuaderno.add(self.pestana_tablero, text="  Tablero  ")
 
         self._construir_registro()
         self._construir_listado()
-        self._construir_usuarios()
+        if self._puede_gestionar_usuarios():
+            self._construir_usuarios()
         self._construir_tablero()
 
         self.cuaderno.bind("<<NotebookTabChanged>>", self._al_cambiar_pestana)
@@ -254,6 +266,10 @@ class AplicacionPrincipal(ttk.Frame):
     # ---- Métodos de las pestañas (sin cambios, solo se ajustan los colores) ----
     def _valores_empleados(self):
         return [empleado["nombreEmpleado"] for empleado in self.empleados]
+
+    def _puede_gestionar_usuarios(self):
+        """True si el usuario en sesión puede crear/editar/eliminar usuarios."""
+        return self.usuario.get("rol") in ROLES_GESTORES
 
     def _construir_registro(self):
         marco = self.pestana_registro
@@ -420,54 +436,163 @@ class AplicacionPrincipal(ttk.Frame):
 
     def _construir_usuarios(self):
         marco = self.pestana_usuarios
-        ttk.Label(marco, text="Crear usuario del sistema",
-                  font=("Helvetica", 13, "bold")).grid(row=0, column=0, columnspan=2, sticky="w", pady=(0, 15))
+        # Usuario que se está editando (None = se está creando uno nuevo).
+        self._usuario_en_edicion = None
+
+        self.lbl_form_usuario = ttk.Label(
+            marco, text="Crear usuario del sistema", font=("Helvetica", 13, "bold"))
+        self.lbl_form_usuario.grid(row=0, column=0, columnspan=2, sticky="w", pady=(0, 15))
+
         ttk.Label(marco, text="Usuario").grid(row=1, column=0, sticky="w", pady=4)
         self.entrada_usuario = ttk.Entry(marco, width=30)
         self.entrada_usuario.grid(row=1, column=1, sticky="w")
         ttk.Label(marco, text="Nombre").grid(row=2, column=0, sticky="w", pady=4)
         self.entrada_nombre = ttk.Entry(marco, width=30)
         self.entrada_nombre.grid(row=2, column=1, sticky="w")
-        ttk.Label(marco, text="Contraseña").grid(row=3, column=0, sticky="w", pady=4)
+        ttk.Label(marco, text="Rol").grid(row=3, column=0, sticky="w", pady=4)
+        self.combo_rol = ttk.Combobox(marco, width=27, state="readonly", values=ROLES_ASIGNABLES)
+        self.combo_rol.current(0)
+        self.combo_rol.grid(row=3, column=1, sticky="w")
+        ttk.Label(marco, text="Contraseña").grid(row=4, column=0, sticky="w", pady=4)
         self.entrada_clave = ttk.Entry(marco, width=30, show="•")
-        self.entrada_clave.grid(row=3, column=1, sticky="w")
-        ttk.Label(marco, text="Confirmar contraseña").grid(row=4, column=0, sticky="w", pady=4)
+        self.entrada_clave.grid(row=4, column=1, sticky="w")
+        ttk.Label(marco, text="Confirmar contraseña").grid(row=5, column=0, sticky="w", pady=4)
         self.entrada_clave2 = ttk.Entry(marco, width=30, show="•")
-        self.entrada_clave2.grid(row=4, column=1, sticky="w")
-        btn = ttk.Button(marco, text="Crear usuario", command=self._crear_usuario)
-        btn.grid(row=5, column=1, sticky="w", pady=14)
-        btn.config(style="Accent.TButton")
+        self.entrada_clave2.grid(row=5, column=1, sticky="w")
+        self.lbl_ayuda_clave = ttk.Label(marco, text="", foreground="#6B7280", font=("Helvetica", 8))
+        self.lbl_ayuda_clave.grid(row=6, column=1, sticky="w")
 
-        ttk.Label(marco, text="Usuarios existentes:").grid(row=6, column=0, sticky="w")
-        self.tabla_usuarios = ttk.Treeview(marco, columns=("usuario", "nombre"), show="headings", height=8)
+        barra_form = ttk.Frame(marco)
+        barra_form.grid(row=7, column=1, sticky="w", pady=12)
+        self.btn_guardar_usuario = ttk.Button(barra_form, text="Crear usuario",
+                                               command=self._guardar_usuario)
+        self.btn_guardar_usuario.pack(side="left")
+        self.btn_guardar_usuario.config(style="Accent.TButton")
+        ttk.Button(barra_form, text="Nuevo / limpiar",
+                   command=self._nuevo_usuario).pack(side="left", padx=6)
+
+        ttk.Label(marco, text="Usuarios existentes:").grid(row=8, column=0, sticky="w", pady=(6, 0))
+        self.tabla_usuarios = ttk.Treeview(
+            marco, columns=("usuario", "nombre", "rol"), show="headings", height=8)
         self.tabla_usuarios.heading("usuario", text="Usuario")
         self.tabla_usuarios.heading("nombre", text="Nombre")
-        self.tabla_usuarios.column("usuario", width=140)
+        self.tabla_usuarios.heading("rol", text="Rol")
+        self.tabla_usuarios.column("usuario", width=130)
         self.tabla_usuarios.column("nombre", width=220)
-        self.tabla_usuarios.grid(row=7, column=0, columnspan=2, sticky="w", pady=6)
+        self.tabla_usuarios.column("rol", width=120)
+        self.tabla_usuarios.grid(row=9, column=0, columnspan=2, sticky="w", pady=6)
+        self.tabla_usuarios.bind("<<TreeviewSelect>>", self._al_seleccionar_usuario)
+
+        barra_tabla = ttk.Frame(marco)
+        barra_tabla.grid(row=10, column=0, columnspan=2, sticky="w")
+        ttk.Button(barra_tabla, text="Editar seleccionado",
+                   command=self._editar_usuario_seleccionado).pack(side="left")
+        ttk.Button(barra_tabla, text="Eliminar seleccionado",
+                   command=self._eliminar_usuario_seleccionado).pack(side="left", padx=6)
+
+        self._nuevo_usuario()
         self._refrescar_usuarios()
 
-    def _crear_usuario(self):
-        if self.entrada_clave.get() != self.entrada_clave2.get():
-            messagebox.showerror("Error", "Las contraseñas no coinciden.")
-            return
-        try:
-            autenticacion.crear_usuario(self.entrada_usuario.get(),
-                                        self.entrada_nombre.get(),
-                                        self.entrada_clave.get())
-        except ValueError as error:
-            messagebox.showerror("Error", str(error))
-            return
-        messagebox.showinfo("Listo", "Usuario creado correctamente.")
+    def _nuevo_usuario(self):
+        """Restablece el formulario para crear un usuario nuevo."""
+        self._usuario_en_edicion = None
+        self.lbl_form_usuario.config(text="Crear usuario del sistema")
+        self.btn_guardar_usuario.config(text="Crear usuario")
+        self.lbl_ayuda_clave.config(text="")
         for entrada in (self.entrada_usuario, self.entrada_nombre,
                         self.entrada_clave, self.entrada_clave2):
             entrada.delete(0, "end")
+        self.entrada_usuario.config(state="normal")
+        self.combo_rol.config(state="readonly", values=ROLES_ASIGNABLES)
+        self.combo_rol.current(0)
+        if self.tabla_usuarios.selection():
+            self.tabla_usuarios.selection_remove(self.tabla_usuarios.selection())
+
+    def _al_seleccionar_usuario(self, evento=None):
+        pass  # la carga se hace explícitamente con "Editar seleccionado"
+
+    def _editar_usuario_seleccionado(self):
+        seleccion = self.tabla_usuarios.selection()
+        if not seleccion:
+            messagebox.showwarning("Sin selección", "Seleccione un usuario de la lista.")
+            return
+        usuario, nombre, rol = self.tabla_usuarios.item(seleccion[0], "values")
+        self._usuario_en_edicion = usuario
+        self.lbl_form_usuario.config(text=f"Editar usuario: {usuario}")
+        self.btn_guardar_usuario.config(text="Guardar cambios")
+        self.lbl_ayuda_clave.config(text="(Deje la contraseña vacía para no cambiarla)")
+
+        self.entrada_usuario.config(state="normal")
+        self.entrada_usuario.delete(0, "end")
+        self.entrada_usuario.insert(0, usuario)
+        self.entrada_usuario.config(state="disabled")  # el usuario es la clave, no se cambia
+        self.entrada_nombre.delete(0, "end")
+        self.entrada_nombre.insert(0, nombre)
+        self.entrada_clave.delete(0, "end")
+        self.entrada_clave2.delete(0, "end")
+
+        if rol == ROL_SUPERUSUARIO:
+            # El rol del superusuario no puede cambiarse.
+            self.combo_rol.config(state="readonly", values=[ROL_SUPERUSUARIO])
+            self.combo_rol.set(ROL_SUPERUSUARIO)
+            self.combo_rol.config(state="disabled")
+        else:
+            self.combo_rol.config(state="readonly", values=ROLES_ASIGNABLES)
+            self.combo_rol.set(rol if rol in ROLES_ASIGNABLES else ROL_USUARIO)
+
+    def _guardar_usuario(self):
+        if self.entrada_clave.get() != self.entrada_clave2.get():
+            messagebox.showerror("Error", "Las contraseñas no coinciden.")
+            return
+        actor = self.usuario["usuario"]
+        actor_rol = self.usuario.get("rol")
+        try:
+            if self._usuario_en_edicion is None:
+                # Crear usuario nuevo.
+                rol = autenticacion.crear_usuario(
+                    self.entrada_usuario.get(), self.entrada_nombre.get(),
+                    self.entrada_clave.get(), self.combo_rol.get(), actor)
+                mensaje = f"Usuario creado correctamente (rol: {rol})."
+            else:
+                # Editar usuario existente. La contraseña vacía no se cambia.
+                autenticacion.editar_usuario(
+                    self._usuario_en_edicion, actor, actor_rol,
+                    nombre=self.entrada_nombre.get(),
+                    clave=self.entrada_clave.get() or None,
+                    rol=self.combo_rol.get())
+                mensaje = "Cambios guardados correctamente."
+        except ValueError as error:
+            messagebox.showerror("Error", str(error))
+            return
+        messagebox.showinfo("Listo", mensaje)
+        self._nuevo_usuario()
+        self._refrescar_usuarios()
+
+    def _eliminar_usuario_seleccionado(self):
+        seleccion = self.tabla_usuarios.selection()
+        if not seleccion:
+            messagebox.showwarning("Sin selección", "Seleccione un usuario de la lista.")
+            return
+        usuario, _, rol = self.tabla_usuarios.item(seleccion[0], "values")
+        if rol == ROL_SUPERUSUARIO:
+            messagebox.showerror("No permitido", "El superusuario no puede eliminarse.")
+            return
+        if not messagebox.askyesno("Confirmar", f"¿Eliminar al usuario '{usuario}'?"):
+            return
+        try:
+            autenticacion.eliminar_usuario(usuario, self.usuario["usuario"],
+                                           self.usuario.get("rol"))
+        except ValueError as error:
+            messagebox.showerror("Error", str(error))
+            return
+        self._nuevo_usuario()
         self._refrescar_usuarios()
 
     def _refrescar_usuarios(self):
         self.tabla_usuarios.delete(*self.tabla_usuarios.get_children())
         for usu in autenticacion.listar_usuarios():
-            self.tabla_usuarios.insert("", "end", values=(usu["usuario"], usu["nombre"]))
+            self.tabla_usuarios.insert("", "end",
+                                       values=(usu["usuario"], usu["nombre"], usu["rol"]))
 
     def _construir_tablero(self):
         marco = self.pestana_tablero
@@ -528,10 +653,15 @@ class AplicacionPrincipal(ttk.Frame):
                                font=("Helvetica", 7))
 
     def _al_cambiar_pestana(self, evento):
-        indice = evento.widget.index("current")
-        if indice == 1:
+        # Se identifica la pestaña por su widget (no por índice), porque la
+        # pestaña "Usuarios" puede o no estar presente según el rol.
+        try:
+            actual = evento.widget.nametowidget(evento.widget.select())
+        except (tk.TclError, KeyError):
+            return
+        if actual is self.pestana_listado:
             self._refrescar_listado()
-        elif indice == 3:
+        elif actual is self.pestana_tablero:
             self._refrescar_tablero()
 
 
@@ -732,7 +862,7 @@ class VentanaIngreso(tk.Frame):
 
         tk.Label(cont, text="Primer uso", bg=COLOR_BLANCO, fg=COLOR_TEXTO,
                  font=("Helvetica", 17, "bold")).pack(anchor="w")
-        tk.Label(cont, text="Cree la cuenta de administrador para comenzar",
+        tk.Label(cont, text="Cree la cuenta de superusuario para comenzar",
                  bg=COLOR_BLANCO, fg=self.COLOR_TENUE,
                  font=("Helvetica", 9)).pack(anchor="w", pady=(2, 18))
 
@@ -750,13 +880,14 @@ class VentanaIngreso(tk.Frame):
 
     def _crear_administrador(self):
         try:
+            # El primer usuario del sistema se crea como superusuario.
             autenticacion.crear_usuario(self.entrada_usuario.get(),
                                         self.entrada_nombre.get(),
                                         self.entrada_clave.get())
         except ValueError as error:
             messagebox.showerror("Error", str(error))
             return
-        messagebox.showinfo("Listo", "Administrador creado. Inicie sesión.")
+        messagebox.showinfo("Listo", "Superusuario creado. Inicie sesión.")
         self._formulario_ingreso()
 
 

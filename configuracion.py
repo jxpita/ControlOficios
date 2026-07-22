@@ -19,6 +19,7 @@ ARCHIVO_CLAVE = DIR_DATOS / "clave_maestra.key"
 ARCHIVO_CREDENCIALES = DIR_DATOS / "credenciales.dat"
 ARCHIVO_OFICIOS = DIR_DATOS / "oficios.dat"
 ARCHIVO_EMPLEADOS = DIR_DATOS / "empleados.csv"
+ARCHIVO_LOG = DIR_DATOS / "actividad.log"   # bitácora de auditoría (texto plano)
 
 # --- Imágenes (logo e ícono) ------------------------------------------------
 ARCHIVO_LOGO = DIR_DATOS / "bdp_icon.ico"      # logo que se muestra junto al título
@@ -27,6 +28,16 @@ ARCHIVO_ICONO = DIR_DATOS / "bdp_icon_alt.ico"          # ícono de la ventana
 # --- Constantes de negocio ---------------------------------------------------
 ESTADOS = ["Por asignar", "En proceso", "Finalizado"]
 PREFIJO_REFERENCIA = "UDC-OFICIO"
+
+# --- Roles de usuario --------------------------------------------------------
+# El superusuario es el primer usuario que se crea y NO puede eliminarse.
+ROL_SUPERUSUARIO = "superusuario"
+ROL_ADMINISTRADOR = "administrador"
+ROL_USUARIO = "usuario"
+# Roles asignables desde la gestión de usuarios (el superusuario no es asignable).
+ROLES_ASIGNABLES = [ROL_ADMINISTRADOR, ROL_USUARIO]
+# Roles con permiso para crear/editar/eliminar usuarios.
+ROLES_GESTORES = (ROL_SUPERUSUARIO, ROL_ADMINISTRADOR)
 
 # --- Seguridad ---------------------------------------------------------------
 ITERACIONES_PBKDF2 = 240_000

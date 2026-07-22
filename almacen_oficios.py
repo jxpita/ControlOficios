@@ -20,6 +20,7 @@ from cryptography.fernet import InvalidToken
 
 from configuracion import ARCHIVO_OFICIOS, PREFIJO_REFERENCIA, ESTADOS
 from cifrado import cifrar, descifrar
+import registro_actividad
 
 
 # --- Persistencia ------------------------------------------------------------
@@ -98,6 +99,12 @@ def registrar_oficio(codigo_oficio: str, fecha_recepcion: str, fecha_oficio: str
         raise ValueError("Debe ingresar el código de oficio o circular.")
     _validar_fecha(fecha_recepcion, "Fecha de recepción")
     _validar_fecha(fecha_oficio, "Fecha de oficio")
+    # La fecha de oficio no puede ser posterior a la de recepción: no se puede
+    # recibir un oficio antes de que exista.
+    if datetime.strptime(fecha_oficio, "%Y-%m-%d") > datetime.strptime(fecha_recepcion, "%Y-%m-%d"):
+        raise ValueError(
+            "La fecha de oficio no puede ser posterior a la fecha de recepción."
+        )
     if estado not in ESTADOS:
         raise ValueError("Estado no válido.")
 
@@ -122,6 +129,11 @@ def registrar_oficio(codigo_oficio: str, fecha_recepcion: str, fecha_oficio: str
         "historial": [{"estado": estado, "por": registrado_por, "cuando": ahora}],
     })
     _guardar_registros(registros)
+    registro_actividad.registrar(
+        "REGISTRAR_OFICIO",
+        f"referencia={referencia}; codigo={codigo_oficio}; "
+        f"responsable={nombre_empleado or '(sin responsable)'}; estado={estado}",
+        registrado_por)
     return referencia
 
 
@@ -163,5 +175,9 @@ def actualizar_oficio(referencia: str, nuevo_estado: str, id_empleado: str,
                     "cuando": datetime.now().isoformat(timespec="seconds"),
                 })
                 _guardar_registros(registros)
+                registro_actividad.registrar(
+                    "ACTUALIZAR_OFICIO",
+                    f"referencia={referencia}; " + "; ".join(cambios),
+                    actualizado_por)
             return estado_final
     raise ValueError("No se encontró la referencia indicada.")

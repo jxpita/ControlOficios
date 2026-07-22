@@ -26,8 +26,34 @@ pip install cryptography
 python aplicacion.py
 ```
 
-En el primer arranque no hay usuarios: la pantalla pedirá crear un
-**administrador**. Luego inicia sesión con esas credenciales.
+En el primer arranque no hay usuarios: la pantalla pedirá crear el
+**superusuario**. Luego inicia sesión con esas credenciales.
+
+## 2.1 Roles de usuario
+
+- **Superusuario:** es el primer usuario que se crea. Puede gestionar usuarios
+  y **no puede eliminarse ni cambiar de rol** bajo ninguna circunstancia.
+- **Administrador:** puede crear, editar y eliminar otros usuarios (excepto
+  eliminar al superusuario) y usar toda la aplicación.
+- **Usuario (regular):** usa la aplicación (registrar oficios, gestionar
+  estados/responsables, tablero) pero **no ve la pestaña "Usuarios"** ni puede
+  gestionar cuentas.
+
+La gestión de usuarios (crear/editar/eliminar, asignar rol) está disponible
+solo para superusuario y administrador. Nadie puede eliminarse a sí mismo
+mientras su sesión está activa.
+
+## 2.2 Bitácora de auditoría
+
+Toda acción que **modifica datos persistentes** queda registrada en
+`datos/actividad.log` (texto plano): alta de oficios, cambios de estado o de
+responsable, alta/edición/eliminación de usuarios e inicios de sesión (exitosos
+y fallidos). No se registra la navegación ni los clics de la interfaz. Cada
+línea tiene el formato:
+
+```
+AAAA-MM-DDTHH:MM:SS | actor | ACCION | detalle
+```
 
 ## 3. Estructura
 
@@ -36,7 +62,8 @@ oficios_tracker/
 ├── aplicacion.py         # Interfaz (ingreso + pestañas). Punto de entrada.
 ├── configuracion.py      # Rutas y constantes
 ├── cifrado.py            # Cifrado Fernet + hashing de contraseñas
-├── autenticacion.py      # Ingreso y usuarios del sistema
+├── autenticacion.py      # Ingreso, usuarios y roles del sistema
+├── registro_actividad.py # Bitácora de auditoría (log en texto plano)
 ├── almacen_empleados.py  # Lee empleados.csv para el combo
 ├── almacen_oficios.py    # CRUD de oficios + referencia secuencial
 ├── metricas.py           # Cálculo de métricas del tablero
@@ -44,6 +71,7 @@ oficios_tracker/
     ├── clave_maestra.key   (clave de cifrado — PROTEGER / RESPALDAR)
     ├── credenciales.dat    (usuarios del sistema, cifrado)
     ├── oficios.dat         (registros, cifrado)
+    ├── actividad.log       (bitácora de auditoría, texto plano)
     └── empleados.csv       (idUsuario,nombreUsuario,nombreEmpleado)
 ```
 
