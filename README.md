@@ -85,22 +85,68 @@ nunca reinicie, se cambia únicamente en `almacen_oficios._generar_referencia`.
 
 ```bash
 pip install pyinstaller
-pyinstaller --onefile --windowed --name GestorOficios aplicacion.py
+pyinstaller --onefile --windowed --name ControlOficios ^
+            --icon datos/bdp_icon_alt.ico aplicacion.py
 ```
 
+> El `^` es continuación de línea en Windows (CMD). En una sola línea, o en
+> PowerShell/Linux usa `\` en vez de `^`.
+
 - `--windowed` (equivale a `--noconsole`): oculta la consola negra.
-- `--onefile`: un único `.exe` en `dist/GestorOficios.exe`.
+- `--onefile`: un único `.exe` en `dist/ControlOficios.exe`.
+- `--name ControlOficios`: el ejecutable se llamará `ControlOficios.exe`.
+- `--icon datos/bdp_icon_alt.ico`: **incrusta el ícono del banco en el `.exe`**
+  (el que se ve en el Explorador, la barra de tareas y el acceso directo). Debe
+  ser un archivo `.ico` (ya lo tienes en `datos/`).
 
-Para reducir tamaño:
+### Ícono del ejecutable — detalles
 
-1. Trabaja dentro de un **entorno virtual** con solo `cryptography` y
-   `pyinstaller` instalados (evita arrastrar librerías de más).
-2. Añade **UPX**: descarga upx y usa `--upx-dir C:\ruta\upx`.
+- El `--icon` afecta al ícono del **archivo `.exe`**. El ícono de las **ventanas**
+  en tiempo de ejecución lo pone la propia app con `iconbitmap` (lee
+  `datos/bdp_icon_alt.ico`), así que conviene que ese archivo siga junto al `.exe`.
+- Si cambias el ícono y Windows sigue mostrando el anterior, es la **caché de
+  íconos** de Windows: renombra el `.exe` o reinicia el Explorador.
+
+### Para reducir tamaño
+
+1. Trabaja dentro de un **entorno virtual** con solo lo necesario instalado
+   (`cryptography`, `pyinstaller` y, si quieres que se vea el logo, `Pillow`).
+   Así PyInstaller no arrastra librerías de más.
+2. Añade **UPX** (ver abajo): `--upx-dir C:\ruta\upx`.
 3. `--onedir` (en lugar de `--onefile`) arranca más rápido y suele pesar menos
    en total, aunque genera una carpeta en vez de un archivo único.
 
 Nota: `cryptography` incluye binarios de OpenSSL, así que ~8–15 MB es lo
 esperable para el ejecutable. Es el precio de tener cifrado serio.
+
+### ¿Qué es UPX y cómo se usa?
+
+**UPX** (*Ultimate Packer for eXecutables*) es un **compresor de ejecutables**:
+comprime el `.exe` y, al abrirlo, se descomprime solo en memoria. El archivo
+en disco pesa menos (a veces 30–50 %) y el programa funciona igual; el único
+costo es unos milisegundos extra al iniciar. Es gratuito y de código abierto.
+
+Cómo usarlo con PyInstaller (en Windows):
+
+1. Descarga UPX de <https://upx.github.io> (el `.zip` para Windows) y
+   descomprímelo, por ejemplo en `C:\upx`. Dentro está `upx.exe`.
+2. Pásale la carpeta a PyInstaller con `--upx-dir`:
+
+   ```bash
+   pyinstaller --onefile --windowed --name ControlOficios ^
+               --icon datos/bdp_icon_alt.ico ^
+               --upx-dir C:\upx aplicacion.py
+   ```
+
+   PyInstaller detecta `upx.exe` en esa carpeta y comprime automáticamente los
+   binarios al empaquetar.
+3. (Opcional) Si algún módulo diera problemas al comprimirse, puedes excluirlo:
+   `--upx-exclude vcruntime140.dll`. Y para no usar UPX en una compilación,
+   `--noupx`.
+
+Notas: no necesitas instalar UPX (basta con la carpeta descomprimida). Ten en
+cuenta que **algunos antivirus** miran con recelo los ejecutables comprimidos
+con UPX; si te da falsos positivos, compila sin UPX.
 
 **Importante sobre las rutas:** el código detecta si corre como `.exe` y guarda
 la carpeta `datos/` **junto al ejecutable** (no en la carpeta temporal). Copia
