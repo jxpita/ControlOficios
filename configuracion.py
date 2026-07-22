@@ -21,7 +21,7 @@ ARCHIVO_OFICIOS = DIR_DATOS / "oficios.dat"
 ARCHIVO_EMPLEADOS = DIR_DATOS / "empleados.csv"
 
 # --- Imágenes (logo e ícono) ------------------------------------------------
-ARCHIVO_LOGO = DIR_DATOS / "bdp_icon.jpg"      # logo principal (PNG)
+ARCHIVO_LOGO = DIR_DATOS / "bdp_icon.ico"      # logo que se muestra junto al título
 ARCHIVO_ICONO = DIR_DATOS / "bdp_icon_alt.ico"          # ícono de la ventana
 
 # --- Constantes de negocio ---------------------------------------------------

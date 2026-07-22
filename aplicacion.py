@@ -1,6 +1,7 @@
+import calendar
 import tkinter as tk
 from tkinter import ttk, messagebox
-from datetime import date
+from datetime import date, datetime
 
 import autenticacion
 import almacen_empleados
@@ -16,6 +17,133 @@ try:
     PILLOW_AVAILABLE = True
 except ImportError:
     PILLOW_AVAILABLE = False
+
+
+class SelectorFecha(tk.Frame):
+    """Campo de fecha con calendario emergente. No requiere librerías externas.
+
+    Muestra un cuadro de texto (AAAA-MM-DD) y un botón que abre un calendario
+    para elegir la fecha con el ratón. También se puede escribir la fecha a mano.
+    Se usa `.get()` para leer el texto y `.set(fecha)` para fijarlo.
+    """
+    DIAS_SEMANA = ["Lu", "Ma", "Mi", "Ju", "Vi", "Sá", "Do"]
+    MESES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio",
+             "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
+
+    def __init__(self, maestro, fecha_inicial=None):
+        super().__init__(maestro, background=COLOR_BLANCO)
+        self.entrada = ttk.Entry(self, width=14)
+        self.entrada.pack(side="left")
+        self.boton = tk.Button(self, text="📅", command=self._alternar_calendario,
+                               relief="flat", cursor="hand2", bg=COLOR_GRIS_CLARO,
+                               activebackground="#DDE3EC", padx=6, takefocus=0)
+        self.boton.pack(side="left", padx=(4, 0))
+        self._popup = None
+        self.set(fecha_inicial or date.today())
+
+    # -- API pública ----------------------------------------------------------
+    def get(self):
+        return self.entrada.get().strip()
+
+    def set(self, valor):
+        if isinstance(valor, date):
+            valor = valor.isoformat()
+        self.entrada.delete(0, "end")
+        self.entrada.insert(0, valor)
+
+    # -- Interno --------------------------------------------------------------
+    def _fecha_base(self):
+        """Fecha desde la que se abre el calendario (la escrita, o hoy)."""
+        try:
+            return datetime.strptime(self.get(), "%Y-%m-%d").date()
+        except ValueError:
+            return date.today()
+
+    def _alternar_calendario(self):
+        if self._popup is not None and self._popup.winfo_exists():
+            self._cerrar()
+            return
+        base = self._fecha_base()
+        self._anio, self._mes = base.year, base.month
+
+        self._popup = tk.Toplevel(self)
+        self._popup.title("Seleccionar fecha")
+        self._popup.configure(bg=COLOR_BLANCO)
+        self._popup.resizable(False, False)
+        self._popup.transient(self.winfo_toplevel())
+        # Posicionar justo debajo del campo.
+        self._popup.geometry(
+            f"+{self.winfo_rootx()}+{self.winfo_rooty() + self.winfo_height() + 2}")
+        self._popup.bind("<Escape>", lambda e: self._cerrar())
+        self._popup.protocol("WM_DELETE_WINDOW", self._cerrar)
+        self._dibujar_calendario()
+
+    def _cerrar(self):
+        if self._popup is not None:
+            self._popup.destroy()
+            self._popup = None
+
+    def _cambiar_mes(self, delta):
+        mes = self._mes - 1 + delta
+        self._anio += mes // 12
+        self._mes = mes % 12 + 1
+        self._dibujar_calendario()
+
+    def _dibujar_calendario(self):
+        for hijo in self._popup.winfo_children():
+            hijo.destroy()
+
+        # Cabecera con navegación de mes.
+        cabecera = tk.Frame(self._popup, bg=COLOR_AZUL)
+        cabecera.pack(fill="x")
+        tk.Button(cabecera, text="‹", command=lambda: self._cambiar_mes(-1),
+                  bg=COLOR_AZUL, fg=COLOR_BLANCO, relief="flat", cursor="hand2",
+                  activebackground="#1A2E5A", activeforeground=COLOR_BLANCO,
+                  font=("Helvetica", 12, "bold"), takefocus=0, width=3).pack(side="left")
+        tk.Label(cabecera, text=f"{self.MESES[self._mes - 1]} {self._anio}",
+                 bg=COLOR_AZUL, fg=COLOR_BLANCO, font=("Helvetica", 10, "bold")
+                 ).pack(side="left", expand=True)
+        tk.Button(cabecera, text="›", command=lambda: self._cambiar_mes(1),
+                  bg=COLOR_AZUL, fg=COLOR_BLANCO, relief="flat", cursor="hand2",
+                  activebackground="#1A2E5A", activeforeground=COLOR_BLANCO,
+                  font=("Helvetica", 12, "bold"), takefocus=0, width=3).pack(side="right")
+
+        cuerpo = tk.Frame(self._popup, bg=COLOR_BLANCO, padx=6, pady=6)
+        cuerpo.pack()
+        for col, nombre in enumerate(self.DIAS_SEMANA):
+            tk.Label(cuerpo, text=nombre, bg=COLOR_BLANCO, fg="#6B7280",
+                     font=("Helvetica", 8, "bold"), width=3).grid(row=0, column=col, padx=1, pady=(0, 2))
+
+        hoy = date.today()
+        seleccion = self._fecha_base()
+        semanas = calendar.Calendar(firstweekday=0).monthdayscalendar(self._anio, self._mes)
+        for fila, semana in enumerate(semanas, start=1):
+            for col, dia in enumerate(semana):
+                if dia == 0:
+                    continue
+                actual = date(self._anio, self._mes, dia)
+                if actual == seleccion:
+                    fondo, texto = COLOR_AZUL, COLOR_BLANCO
+                elif actual == hoy:
+                    fondo, texto = COLOR_GRIS_CLARO, COLOR_AZUL
+                else:
+                    fondo, texto = COLOR_BLANCO, COLOR_TEXTO
+                tk.Button(cuerpo, text=str(dia), width=3, relief="flat",
+                          cursor="hand2", bg=fondo, fg=texto,
+                          activebackground="#1A2E5A", activeforeground=COLOR_BLANCO,
+                          font=("Helvetica", 9), takefocus=0,
+                          command=lambda d=actual: self._elegir(d)
+                          ).grid(row=fila, column=col, padx=1, pady=1)
+
+        pie = tk.Frame(self._popup, bg=COLOR_BLANCO, pady=4)
+        pie.pack(fill="x")
+        tk.Button(pie, text="Hoy", command=lambda: self._elegir(date.today()),
+                  bg=COLOR_GRIS_CLARO, fg=COLOR_AZUL, relief="flat", cursor="hand2",
+                  font=("Helvetica", 9, "bold"), takefocus=0).pack()
+
+    def _elegir(self, fecha):
+        self.set(fecha)
+        self._cerrar()
 
 
 class AplicacionPrincipal(ttk.Frame):
@@ -140,14 +268,12 @@ class AplicacionPrincipal(ttk.Frame):
         self.entrada_codigo = ttk.Entry(marco, width=40)
         self.entrada_codigo.grid(row=1, column=1, sticky="w", pady=4)
 
-        ttk.Label(marco, text="Fecha de recepción (AAAA-MM-DD)").grid(row=2, column=0, sticky="w", pady=4)
-        self.entrada_fecha_recepcion = ttk.Entry(marco, width=20)
-        self.entrada_fecha_recepcion.insert(0, date.today().isoformat())
+        ttk.Label(marco, text="Fecha de recepción").grid(row=2, column=0, sticky="w", pady=4)
+        self.entrada_fecha_recepcion = SelectorFecha(marco)
         self.entrada_fecha_recepcion.grid(row=2, column=1, sticky="w", pady=4)
 
-        ttk.Label(marco, text="Fecha de oficio (AAAA-MM-DD)").grid(row=3, column=0, sticky="w", pady=4)
-        self.entrada_fecha_oficio = ttk.Entry(marco, width=20)
-        self.entrada_fecha_oficio.insert(0, date.today().isoformat())
+        ttk.Label(marco, text="Fecha de oficio").grid(row=3, column=0, sticky="w", pady=4)
+        self.entrada_fecha_oficio = SelectorFecha(marco)
         self.entrada_fecha_oficio.grid(row=3, column=1, sticky="w", pady=4)
 
         ttk.Label(marco, text="Usuario / empleado responsable (opcional)").grid(row=4, column=0, sticky="w", pady=4)
@@ -429,7 +555,7 @@ class VentanaIngreso(tk.Frame):
         self.pack(fill="both", expand=True)
 
         maestro.title("Control de Oficios · Ingreso")
-        self._centrar(440, 560)
+        self._centrar(440, 600)
         try:
             maestro.resizable(False, False)
         except tk.TclError:
@@ -487,23 +613,27 @@ class VentanaIngreso(tk.Frame):
         self._limpiar()
 
         # Banner superior con identidad corporativa.
-        banner = tk.Frame(self, bg=COLOR_AZUL, height=132)
+        banner = tk.Frame(self, bg=COLOR_AZUL, height=150)
         banner.pack(fill="x")
         banner.pack_propagate(False)
 
-        logo_img = self._cargar_logo(52)
+        # Fila con el ícono a la izquierda del texto "Banco del Pacífico".
+        fila = tk.Frame(banner, bg=COLOR_AZUL)
+        fila.pack(pady=(26, 0))
+        logo_img = self._cargar_logo(46)
         if logo_img:
-            lbl_logo = tk.Label(banner, image=logo_img, bg=COLOR_AZUL)
+            lbl_logo = tk.Label(fila, image=logo_img, bg=COLOR_AZUL)
             lbl_logo.image = logo_img
-            lbl_logo.pack(pady=(22, 0))
-            titulo_pad = (6, 0)
-        else:
-            titulo_pad = (34, 0)
-        tk.Label(banner, text="Banco del Pacífico", bg=COLOR_AZUL, fg=COLOR_BLANCO,
-                 font=("Arial", 16, "bold")).pack(pady=titulo_pad)
-        tk.Label(banner, text="Control de Oficios · Unidad de Cumplimiento",
-                 bg=COLOR_AZUL, fg=self.COLOR_SUBTITULO,
-                 font=("Helvetica", 9)).pack(pady=(2, 0))
+            lbl_logo.pack(side="left", padx=(0, 10))
+        tk.Label(fila, text="Banco del Pacífico", bg=COLOR_AZUL, fg=COLOR_BLANCO,
+                 font=("Arial", 16, "bold")).pack(side="left")
+
+        # Subtítulo y sub-subtítulo.
+        tk.Label(banner, text="Unidad de Cumplimiento", bg=COLOR_AZUL,
+                 fg=self.COLOR_SUBTITULO, font=("Helvetica", 10, "bold")
+                 ).pack(pady=(8, 0))
+        tk.Label(banner, text="Uso Interno", bg=COLOR_AZUL,
+                 fg=self.COLOR_SUBTITULO, font=("Helvetica", 8)).pack(pady=(1, 0))
 
         # Cuerpo con tarjeta.
         cuerpo = tk.Frame(self, bg=self.COLOR_FONDO)
