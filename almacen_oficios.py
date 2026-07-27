@@ -7,10 +7,10 @@ El día que migres a SQLite o a un motor SQL (ver README), reescribes el
 cuerpo de estas funciones y NO tocas la interfaz ni las métricas.
 
 Formato: oficios.dat cifrado con Fernet; internamente una lista JSON.
-El código de oficio/circular se mapea a una referencia interna:
-    UDC-OFICIO-AAAAMMDD-NNNN   (NNNN = secuencial de 4 dígitos, desde 0000)
-El secuencial se reinicia por cada DÍA DE RECEPCIÓN. (Ver _generar_referencia
-si prefieres usar la fecha de registro o un contador global.)
+La Referencia oficio (campo 'codigo_oficio') se mapea a una Referencia UDC:
+    REQ-INF-AAAA-NNNN   (NNNN = secuencial de 4 dígitos, desde 0001)
+El secuencial es POR AÑO y arranca desde el último valor registrado en el Excel
+anterior, que el superusuario configura una sola vez (ver el módulo parametros).
 """
 import json
 import shutil
@@ -26,6 +26,7 @@ from configuracion import (
 from cifrado import cifrar, descifrar
 import registro_actividad
 import permisos
+import parametros
 
 
 # --- Persistencia ------------------------------------------------------------
@@ -60,19 +61,28 @@ def _validar_fecha(texto: str, campo: str) -> str:
     return texto
 
 
-def _generar_referencia(fecha_recepcion: str, registros: List[Dict]) -> str:
-    """Secuencial por día de recepción. Usa max+1 (tolerante a huecos)."""
-    parte_fecha = fecha_recepcion.replace("-", "")            # AAAAMMDD
-    prefijo_dia = f"{PREFIJO_REFERENCIA}-{parte_fecha}-"
-    secuencial_max = -1
+def _generar_referencia(registros: List[Dict], anio: int = None) -> str:
+    """Genera la Referencia UDC:  REQ-INF-<año>-<secuencial de 4 dígitos>.
+
+    El secuencial es **por año** (vuelve a 0001 cada año) y arranca desde el
+    último registrado en el Excel anterior, que el superusuario configura una
+    sola vez (ver `parametros`).
+
+    Se usa max(secuencial configurado, mayor secuencial existente) + 1, de modo
+    que nunca se genera una referencia duplicada aunque se reconfigure el valor
+    inicial o queden huecos en la numeración.
+    """
+    anio = anio or date.today().year
+    prefijo_anio = f"{PREFIJO_REFERENCIA}-{anio:04d}-"
+    secuencial_max = parametros.obtener_secuencial_inicial(anio)
     for registro in registros:
         referencia = registro.get("referencia", "")
-        if referencia.startswith(prefijo_dia):
+        if referencia.startswith(prefijo_anio):
             try:
                 secuencial_max = max(secuencial_max, int(referencia.rsplit("-", 1)[1]))
             except ValueError:
                 pass
-    return f"{prefijo_dia}{secuencial_max + 1:04d}"           # primero -> 0000
+    return f"{prefijo_anio}{secuencial_max + 1:04d}"          # primero -> 0001
 
 
 # --- Reglas de negocio: relación responsable / estado -----------------------
@@ -120,10 +130,15 @@ def _validar_fecha_respuesta(fecha_respuesta: str, fecha_recepcion: str) -> str:
 def registrar_oficio(codigo_oficio: str, fecha_recepcion: str, fecha_oficio: str,
                      id_empleado: str, nombre_empleado: str, estado: str,
                      registrado_por: str, fecha_respuesta: str = "",
-                     observacion: str = "") -> str:
+                     observacion: str = "", causal_oficio: str = "",
+                     referencia_sb: str = "") -> str:
+    """`codigo_oficio` es la **Referencia oficio** (obligatoria).
+    `causal_oficio` y `referencia_sb` son opcionales."""
     codigo_oficio = codigo_oficio.strip()
     if not codigo_oficio:
-        raise ValueError("Debe ingresar el código de oficio o circular.")
+        raise ValueError("Debe ingresar la referencia del oficio o circular.")
+    causal_oficio = (causal_oficio or "").strip()
+    referencia_sb = (referencia_sb or "").strip()
     _validar_fecha(fecha_recepcion, "Fecha de recepción")
     _validar_fecha(fecha_oficio, "Fecha de oficio")
     # La fecha de oficio no puede ser posterior a la de recepción: no se puede
@@ -144,20 +159,22 @@ def registrar_oficio(codigo_oficio: str, fecha_recepcion: str, fecha_oficio: str
     estado = _resolver_estado(nombre_empleado, estado)
 
     registros = _leer_registros()
-    # El código de oficio no puede repetirse (aunque la referencia interna sea
+    # La referencia del oficio no puede repetirse (aunque la Referencia UDC sea
     # única). Se compara sin distinguir mayúsculas/minúsculas ni espacios.
     codigo_normalizado = codigo_oficio.casefold()
     for registro in registros:
         if registro.get("codigo_oficio", "").strip().casefold() == codigo_normalizado:
             raise ValueError(
-                f"Ya existe un oficio con el código \"{codigo_oficio}\". "
-                "El código de oficio no puede repetirse."
+                f"Ya existe un oficio con la referencia \"{codigo_oficio}\". "
+                "La referencia del oficio no puede repetirse."
             )
-    referencia = _generar_referencia(fecha_recepcion, registros)
+    referencia = _generar_referencia(registros)
     ahora = datetime.now().isoformat(timespec="seconds")
     registros.append({
-        "referencia": referencia,
-        "codigo_oficio": codigo_oficio,
+        "referencia": referencia,          # Referencia UDC
+        "codigo_oficio": codigo_oficio,    # Referencia oficio
+        "causal_oficio": causal_oficio,
+        "referencia_sb": referencia_sb,
         "fecha_recepcion": fecha_recepcion,
         "fecha_oficio": fecha_oficio,
         "fecha_respuesta": fecha_respuesta,
@@ -177,6 +194,11 @@ def registrar_oficio(codigo_oficio: str, fecha_recepcion: str, fecha_oficio: str
         f"responsable={nombre_empleado or '(sin responsable)'}; estado={estado}",
         registrado_por)
     return referencia
+
+
+def proxima_referencia() -> str:
+    """Referencia UDC que se asignaría al próximo oficio (solo informativa)."""
+    return _generar_referencia(_leer_registros())
 
 
 def listar_oficios() -> List[Dict]:
@@ -408,3 +430,76 @@ def eliminar_respuesta(referencia: str, actor: str, actor_rol: str) -> None:
                 f"referencia={referencia}; archivo={nombre}", actor)
             return
     raise ValueError("No se encontró la referencia indicada.")
+
+
+# --- Búsqueda / filtros ------------------------------------------------------
+# Campos de texto por los que se puede buscar: clave interna -> etiqueta.
+CAMPOS_BUSQUEDA = {
+    "referencia": "Referencia UDC",
+    "codigo_oficio": "Referencia oficio",
+    "causal_oficio": "Causal oficio",
+    "referencia_sb": "Referencia SB",
+}
+
+# Tipos de fecha por los que se puede filtrar.
+CAMPOS_FECHA = {
+    "fecha_oficio": "Fecha de oficio",
+    "fecha_recepcion": "Fecha de recepción",
+    "fecha_respuesta": "Fecha de respuesta",
+}
+
+
+def filtrar_oficios(registros: List[Dict], campo_texto: str = "", texto: str = "",
+                    campo_fecha: str = "", desde: str = "", hasta: str = "") -> List[Dict]:
+    """Filtra una lista de oficios.
+
+    - `campo_texto` + `texto`: coincidencia parcial, sin distinguir
+      mayúsculas/minúsculas, sobre uno de los campos de `CAMPOS_BUSQUEDA`.
+    - `campo_fecha` + `desde`/`hasta`: rango sobre UN SOLO tipo de fecha
+      (`CAMPOS_FECHA`). Ambos extremos se comparan contra el mismo campo, por
+      lo que no es posible mezclar tipos de fecha. Si solo se indica `desde`,
+      se busca esa **fecha única**; si solo se indica `hasta`, todo lo anterior
+      o igual a esa fecha.
+
+    Los oficios sin la fecha indicada (por ejemplo sin fecha de respuesta) no
+    aparecen cuando se filtra por ese campo.
+    """
+    resultado = registros
+
+    texto = (texto or "").strip().casefold()
+    if texto:
+        if campo_texto not in CAMPOS_BUSQUEDA:
+            raise ValueError("Campo de búsqueda no válido.")
+        resultado = [r for r in resultado
+                     if texto in (r.get(campo_texto, "") or "").casefold()]
+
+    desde = (desde or "").strip()
+    hasta = (hasta or "").strip()
+    if desde or hasta:
+        if campo_fecha not in CAMPOS_FECHA:
+            raise ValueError("Tipo de fecha no válido.")
+        etiqueta = CAMPOS_FECHA[campo_fecha]
+        if desde:
+            _validar_fecha(desde, f"{etiqueta} (desde)")
+        if hasta:
+            _validar_fecha(hasta, f"{etiqueta} (hasta)")
+        if desde and hasta and desde > hasta:
+            raise ValueError(
+                "La fecha inicial no puede ser posterior a la fecha final."
+            )
+        # Fecha única: solo se indicó el extremo inicial.
+        if desde and not hasta:
+            hasta = desde
+        filtrados = []
+        for registro in resultado:
+            valor = (registro.get(campo_fecha, "") or "").strip()
+            if not valor:
+                continue          # sin esa fecha -> no participa del filtro
+            if desde and valor < desde:
+                continue
+            if hasta and valor > hasta:
+                continue
+            filtrados.append(registro)
+        resultado = filtrados
+
+    return resultado

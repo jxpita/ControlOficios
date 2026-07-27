@@ -23,6 +23,7 @@ except (OSError, NotImplementedError):
 ARCHIVO_CLAVE = DIR_DATOS / "clave_maestra.key"
 ARCHIVO_CREDENCIALES = DIR_DATOS / "credenciales.dat"
 ARCHIVO_OFICIOS = DIR_DATOS / "oficios.dat"
+ARCHIVO_PARAMETROS = DIR_DATOS / "parametros.dat"   # parámetros del sistema, cifrado
 ARCHIVO_LOG = DIR_DATOS / "actividad.log"   # bitácora de auditoría (texto plano)
 
 # --- Respuestas en PDF adjuntas a los oficios --------------------------------
@@ -35,7 +36,8 @@ ARCHIVO_ICONO = DIR_DATOS / "bdp_icon_alt.ico"          # ícono de la ventana
 
 # --- Constantes de negocio ---------------------------------------------------
 ESTADOS = ["Por asignar", "En proceso", "Finalizado"]
-PREFIJO_REFERENCIA = "UDC-OFICIO"
+# Referencia UDC:  REQ-INF-<año>-<secuencial de 4 dígitos, desde 0001>
+PREFIJO_REFERENCIA = "REQ-INF"
 
 # --- Roles de usuario --------------------------------------------------------
 # El superusuario es el primer usuario que se crea y NO puede eliminarse.

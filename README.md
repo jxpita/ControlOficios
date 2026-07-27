@@ -115,13 +115,17 @@ el resto son opcionales.
 
 | Campo | Obligatorio | Notas |
 |---|---|---|
-| Código de oficio | **Sí \*** | No puede repetirse |
+| Referencia oficio | **Sí \*** | No puede repetirse |
+| Causal oficio | No | Texto libre |
+| Referencia SB | No | Texto libre |
 | Fecha de oficio | **Sí \*** | No puede ser posterior a la de recepción |
 | Fecha de recepción | **Sí \*** | |
 | Fecha de respuesta | No | No puede ser anterior a la de recepción |
 | Usuario responsable | No | Sin responsable ⇒ "Por asignar" |
 | Estado | **Sí \*** | |
 | Observación | No | Texto libre, editable después |
+
+La **Referencia UDC** no se ingresa: la genera el sistema (ver más abajo).
 
 **Ninguna fecha puede ser posterior a hoy** (no se registra lo que aún no ha
 ocurrido): el calendario muestra los días futuros deshabilitados y el
@@ -193,6 +197,7 @@ oficios_tracker/
 ├── autenticacion.py      # Ingreso, usuarios y roles del sistema
 ├── registro_actividad.py # Bitácora de auditoría (log en texto plano)
 ├── permisos.py           # Endurece permisos (solo lectura) de los archivos
+├── parametros.py         # Parámetros del sistema (secuencial inicial UDC)
 ├── almacen_oficios.py    # CRUD de oficios + referencia secuencial
 ├── visor_pdf.py          # Visor de PDF integrado (requiere PyMuPDF)
 ├── metricas.py           # Cálculo de métricas del tablero
@@ -202,6 +207,7 @@ oficios_tracker/
     ├── clave_maestra.key   (clave de cifrado — PROTEGER / RESPALDAR)
     ├── credenciales.dat    (usuarios del sistema, cifrado)
     ├── oficios.dat         (registros, cifrado)
+    ├── parametros.dat      (secuencial inicial de la Referencia UDC, cifrado)
     ├── actividad.log       (bitácora de auditoría, texto plano)
     └── respuestas/         (PDF de respuesta, uno por oficio)
 ```
@@ -228,14 +234,50 @@ python herramienta_admin.py oficios --csv reporte.csv
 Es de **solo lectura y exportación**: no modifica los datos. Si la ejecutas sin
 argumentos, imprime su propia ayuda.
 
-La referencia interna tiene el formato **`UDC-OFICIO-AAAAMMDD-NNNN`**.
-El secuencial `NNNN` (4 dígitos, desde `0000`) se reinicia por cada **día de
-recepción**. Si prefieres usar la fecha de registro o un contador global que
-nunca reinicie, se cambia únicamente en `almacen_oficios._generar_referencia`.
+## 3.2 Referencia UDC y secuencial inicial
 
-Además de la referencia interna (siempre única), el **código de oficio** que
-ingresa el usuario **no puede repetirse**: al registrar se rechaza un código ya
-existente (sin distinguir mayúsculas/minúsculas ni espacios).
+La **Referencia UDC** la genera el sistema con el formato
+**`REQ-INF-<año>-<NNNN>`** (por ejemplo `REQ-INF-2026-0242`). El secuencial
+`NNNN` es de 4 dígitos y **se reinicia cada año** empezando en `0001`.
+
+**Continuidad con el Excel anterior:** los oficios que se llevaban en Excel no
+se migran; el sistema continúa desde el último registrado allí. Para eso, el
+**superusuario** abre la pestaña **Configuración** (visible solo para él) e
+ingresa **una sola vez** la última Referencia UDC usada, por ejemplo
+`REQ-INF-2026-0241`. A partir de ahí el sistema numera `REQ-INF-2026-0242`,
+`REQ-INF-2026-0243`, …
+
+Detalles:
+
+- Se acepta la referencia completa (`REQ-INF-2026-0241`) o solo el número
+  (`241`, que asume el año en curso).
+- La pestaña muestra siempre cuál será la **próxima** Referencia UDC.
+- El valor se guarda cifrado en `datos/parametros.dat` y el cambio queda en la
+  bitácora de auditoría.
+- Reconfigurarlo **nunca genera duplicados**: la numeración usa
+  `max(valor configurado, mayor secuencial ya existente) + 1`.
+- Si nunca se configura, la numeración arranca en `REQ-INF-<año>-0001`.
+
+Además de la Referencia UDC (siempre única), la **Referencia oficio** que
+ingresa el usuario **no puede repetirse**: al registrar se rechaza una
+referencia ya existente (sin distinguir mayúsculas/minúsculas ni espacios).
+
+## 3.3 Búsqueda de oficios
+
+La pestaña *Oficios* incluye un panel **Buscar oficios** con dos filtros
+combinables:
+
+- **Por texto**, eligiendo el campo: Referencia UDC, Referencia oficio,
+  Causal oficio o Referencia SB. La coincidencia es **parcial** y no distingue
+  mayúsculas/minúsculas.
+- **Por fecha**, eligiendo el tipo (fecha de oficio, de recepción o de
+  respuesta) y un rango *desde* / *hasta*. Ambos extremos aplican **siempre al
+  mismo tipo de fecha**, por lo que no es posible mezclar (p. ej. desde = fecha
+  de oficio y hasta = fecha de recepción). Si se deja *hasta* vacío, se busca
+  por esa **fecha única**.
+
+El panel indica cuántos oficios se están mostrando del total, y "Limpiar
+filtros" restablece la lista completa.
 
 ## 4. Compilar a ejecutable (lo más ligero posible)
 

@@ -5,10 +5,11 @@ from datetime import date, datetime
 
 import autenticacion
 import almacen_oficios as oficios
+import parametros
 import visor_pdf
 import metricas
 from configuracion import (
-    ESTADOS, ARCHIVO_LOGO, ARCHIVO_ICONO,
+    ESTADOS, ARCHIVO_LOGO, ARCHIVO_ICONO, PREFIJO_REFERENCIA,
     ROL_SUPERUSUARIO, ROL_ADMINISTRADOR, ROL_USUARIO,
     ROLES_ASIGNABLES, ROLES_GESTORES,
     COLOR_AZUL, COLOR_BLANCO, COLOR_GRIS_CLARO, COLOR_TEXTO, COLOR_TEXTO_INV
@@ -247,6 +248,7 @@ class AplicacionPrincipal(ttk.Frame):
         self.pestana_listado = ttk.Frame(self.cuaderno, padding=10)
         self.pestana_usuarios = ttk.Frame(self.cuaderno, padding=15)
         self.pestana_tablero = ttk.Frame(self.cuaderno, padding=15)
+        self.pestana_configuracion = ttk.Frame(self.cuaderno, padding=15)
 
         self.cuaderno.add(self.pestana_registro, text="  Registrar oficio  ")
         self.cuaderno.add(self.pestana_listado, text="  Oficios  ")
@@ -254,12 +256,17 @@ class AplicacionPrincipal(ttk.Frame):
         if self._puede_gestionar_usuarios():
             self.cuaderno.add(self.pestana_usuarios, text="  Usuarios  ")
         self.cuaderno.add(self.pestana_tablero, text="  Tablero  ")
+        # La configuración del secuencial es exclusiva del superusuario.
+        if self._es_superusuario():
+            self.cuaderno.add(self.pestana_configuracion, text="  Configuración  ")
 
         self._construir_registro()
         self._construir_listado()
         if self._puede_gestionar_usuarios():
             self._construir_usuarios()
         self._construir_tablero()
+        if self._es_superusuario():
+            self._construir_configuracion()
 
         self.cuaderno.bind("<<NotebookTabChanged>>", self._al_cambiar_pestana)
 
@@ -395,6 +402,9 @@ class AplicacionPrincipal(ttk.Frame):
         y reasignar/cambiar libremente el estado de los oficios (gestor)."""
         return self.usuario.get("rol") in ROLES_GESTORES
 
+    def _es_superusuario(self):
+        return self.usuario.get("rol") == ROL_SUPERUSUARIO
+
     def _construir_registro(self):
         marco = self.pestana_registro
         # Aplicar fondo blanco a todos los hijos
@@ -405,54 +415,63 @@ class AplicacionPrincipal(ttk.Frame):
                   font=("Helvetica", 13, "bold")).grid(row=0, column=0, columnspan=2, sticky="w", pady=(0, 15))
 
         # Los campos obligatorios se marcan con un asterisco (*).
-        ttk.Label(marco, text="Código de oficio o circular *").grid(row=1, column=0, sticky="w", pady=4)
+        ttk.Label(marco, text="Referencia oficio *").grid(row=1, column=0, sticky="w", pady=4)
         self.entrada_codigo = ttk.Entry(marco, width=40)
         self.entrada_codigo.grid(row=1, column=1, sticky="w", pady=4)
 
+        ttk.Label(marco, text="Causal oficio").grid(row=2, column=0, sticky="w", pady=4)
+        self.entrada_causal = ttk.Entry(marco, width=40)
+        self.entrada_causal.grid(row=2, column=1, sticky="w", pady=4)
+
+        ttk.Label(marco, text="Referencia SB").grid(row=3, column=0, sticky="w", pady=4)
+        self.entrada_referencia_sb = ttk.Entry(marco, width=40)
+        self.entrada_referencia_sb.grid(row=3, column=1, sticky="w", pady=4)
+
         # Orden de fechas: oficio -> recepción -> respuesta.
-        ttk.Label(marco, text="Fecha de oficio *").grid(row=2, column=0, sticky="w", pady=4)
+        ttk.Label(marco, text="Fecha de oficio *").grid(row=4, column=0, sticky="w", pady=4)
         self.entrada_fecha_oficio = SelectorFecha(marco)
-        self.entrada_fecha_oficio.grid(row=2, column=1, sticky="w", pady=4)
+        self.entrada_fecha_oficio.grid(row=4, column=1, sticky="w", pady=4)
 
-        ttk.Label(marco, text="Fecha de recepción *").grid(row=3, column=0, sticky="w", pady=4)
+        ttk.Label(marco, text="Fecha de recepción *").grid(row=5, column=0, sticky="w", pady=4)
         self.entrada_fecha_recepcion = SelectorFecha(marco)
-        self.entrada_fecha_recepcion.grid(row=3, column=1, sticky="w", pady=4)
+        self.entrada_fecha_recepcion.grid(row=5, column=1, sticky="w", pady=4)
 
-        ttk.Label(marco, text="Fecha de respuesta").grid(row=4, column=0, sticky="w", pady=4)
+        ttk.Label(marco, text="Fecha de respuesta").grid(row=6, column=0, sticky="w", pady=4)
         self.entrada_fecha_respuesta = SelectorFecha(marco, permitir_vacio=True)
-        self.entrada_fecha_respuesta.grid(row=4, column=1, sticky="w", pady=4)
+        self.entrada_fecha_respuesta.grid(row=6, column=1, sticky="w", pady=4)
 
-        ttk.Label(marco, text="Usuario responsable").grid(row=5, column=0, sticky="w", pady=4)
+        ttk.Label(marco, text="Usuario responsable").grid(row=7, column=0, sticky="w", pady=4)
         self.combo_empleado = ttk.Combobox(
             marco, width=37, state="readonly",
             values=[self.SIN_RESPONSABLE] + self._valores_responsables())
         self.combo_empleado.current(0)  # por defecto: sin responsable
-        self.combo_empleado.grid(row=5, column=1, sticky="w", pady=4)
+        self.combo_empleado.grid(row=7, column=1, sticky="w", pady=4)
 
-        ttk.Label(marco, text="Estado *").grid(row=6, column=0, sticky="w", pady=4)
+        ttk.Label(marco, text="Estado *").grid(row=8, column=0, sticky="w", pady=4)
         self.combo_estado = ttk.Combobox(marco, width=25, state="readonly", values=ESTADOS)
         self.combo_estado.current(0)
-        self.combo_estado.grid(row=6, column=1, sticky="w", pady=4)
+        self.combo_estado.grid(row=8, column=1, sticky="w", pady=4)
 
-        ttk.Label(marco, text="Observación").grid(row=7, column=0, sticky="nw", pady=4)
+        ttk.Label(marco, text="Observación").grid(row=9, column=0, sticky="nw", pady=4)
         self.texto_observacion = tk.Text(marco, width=44, height=4, wrap="word",
                                          font=("Helvetica", 10),
                                          highlightthickness=1, highlightbackground="#CBD2DE",
                                          relief="flat")
-        self.texto_observacion.grid(row=7, column=1, sticky="w", pady=4)
+        self.texto_observacion.grid(row=9, column=1, sticky="w", pady=4)
 
         ttk.Label(marco, text="* Campos obligatorios", foreground="#6B7280",
-                  font=("Helvetica", 8)).grid(row=8, column=1, sticky="w")
+                  font=("Helvetica", 8)).grid(row=10, column=1, sticky="w")
 
         btn = ttk.Button(marco, text="Registrar oficio", command=self._guardar_oficio)
-        btn.grid(row=9, column=1, sticky="w", pady=14)
+        btn.grid(row=11, column=1, sticky="w", pady=14)
         # Estilo especial para el botón principal
         estilo = ttk.Style()
         estilo.configure("Accent.TButton", background=COLOR_AZUL, foreground=COLOR_BLANCO, font=("Helvetica", 10, "bold"))
         btn.config(style="Accent.TButton")
 
     def _guardar_oficio(self):
-        # El responsable, la fecha de respuesta y la observación son opcionales.
+        # Solo la referencia del oficio y las fechas de oficio/recepción son
+        # obligatorias; el resto de campos son opcionales.
         id_empleado, nombre_empleado = self._responsable_por_display(self.combo_empleado.get())
         try:
             referencia = oficios.registrar_oficio(
@@ -460,36 +479,111 @@ class AplicacionPrincipal(ttk.Frame):
                 self.entrada_fecha_oficio.get(), id_empleado,
                 nombre_empleado, self.combo_estado.get(),
                 self.usuario["usuario"],
-                self.entrada_fecha_respuesta.get(),
-                self.texto_observacion.get("1.0", "end"),
+                fecha_respuesta=self.entrada_fecha_respuesta.get(),
+                observacion=self.texto_observacion.get("1.0", "end"),
+                causal_oficio=self.entrada_causal.get(),
+                referencia_sb=self.entrada_referencia_sb.get(),
             )
         except ValueError as error:
             messagebox.showerror("Error", str(error))
             return
-        messagebox.showinfo("Registrado", f"Oficio registrado.\nReferencia: {referencia}")
-        self.entrada_codigo.delete(0, "end")
+        messagebox.showinfo("Registrado",
+                            f"Oficio registrado.\nReferencia UDC: {referencia}")
+        for entrada in (self.entrada_codigo, self.entrada_causal,
+                        self.entrada_referencia_sb):
+            entrada.delete(0, "end")
         self.entrada_fecha_respuesta.set("")
         self.texto_observacion.delete("1.0", "end")
         self.combo_empleado.current(0)
         self.combo_estado.current(0)
         self._refrescar_listado()
 
+    def _construir_filtros(self, marco):
+        """Panel de búsqueda: por texto (Referencia UDC / Referencia oficio /
+        Causal / Referencia SB) y por fecha única o rango de un mismo tipo."""
+        panel = ttk.LabelFrame(marco, text=" Buscar oficios ", padding=8)
+        panel.pack(fill="x", pady=(0, 6))
+
+        # Fila 1: búsqueda por texto.
+        fila1 = ttk.Frame(panel)
+        fila1.pack(fill="x")
+        ttk.Label(fila1, text="Buscar por").pack(side="left")
+        self._etiquetas_busqueda = list(oficios.CAMPOS_BUSQUEDA.values())
+        self.combo_campo_busqueda = ttk.Combobox(
+            fila1, width=18, state="readonly", values=self._etiquetas_busqueda)
+        self.combo_campo_busqueda.current(0)
+        self.combo_campo_busqueda.pack(side="left", padx=6)
+        self.entrada_busqueda = ttk.Entry(fila1, width=28)
+        self.entrada_busqueda.pack(side="left", padx=(0, 6))
+        self.entrada_busqueda.bind("<Return>", lambda e: self._refrescar_listado())
+
+        # Fila 2: filtro por fecha (un solo tipo para ambos extremos).
+        fila2 = ttk.Frame(panel)
+        fila2.pack(fill="x", pady=(6, 0))
+        ttk.Label(fila2, text="Fecha").pack(side="left")
+        self._etiquetas_fecha = list(oficios.CAMPOS_FECHA.values())
+        self.combo_campo_fecha = ttk.Combobox(
+            fila2, width=18, state="readonly", values=self._etiquetas_fecha)
+        self.combo_campo_fecha.current(0)
+        self.combo_campo_fecha.pack(side="left", padx=6)
+        ttk.Label(fila2, text="desde").pack(side="left")
+        self.filtro_fecha_desde = SelectorFecha(fila2, permitir_vacio=True)
+        self.filtro_fecha_desde.pack(side="left", padx=(4, 10))
+        ttk.Label(fila2, text="hasta").pack(side="left")
+        self.filtro_fecha_hasta = SelectorFecha(fila2, permitir_vacio=True)
+        self.filtro_fecha_hasta.pack(side="left", padx=4)
+
+        ttk.Button(fila2, text="Buscar",
+                   command=self._refrescar_listado).pack(side="left", padx=(12, 4))
+        ttk.Button(fila2, text="Limpiar filtros",
+                   command=self._limpiar_filtros).pack(side="left")
+
+        ttk.Label(panel,
+                  text="El rango de fechas aplica a un solo tipo de fecha. "
+                       "Deje \"hasta\" vacío para buscar por una fecha única.",
+                  foreground="#6B7280", font=("Helvetica", 8)).pack(anchor="w", pady=(4, 0))
+
+        self.lbl_resultados = ttk.Label(panel, text="", foreground="#6B7280",
+                                        font=("Helvetica", 8))
+        self.lbl_resultados.pack(anchor="w")
+
+    def _limpiar_filtros(self):
+        self.entrada_busqueda.delete(0, "end")
+        self.combo_campo_busqueda.current(0)
+        self.combo_campo_fecha.current(0)
+        self.filtro_fecha_desde.set("")
+        self.filtro_fecha_hasta.set("")
+        self._refrescar_listado()
+
+    def _clave_por_etiqueta(self, mapa, etiqueta):
+        """Devuelve la clave interna a partir de la etiqueta mostrada."""
+        for clave, valor in mapa.items():
+            if valor == etiqueta:
+                return clave
+        return ""
+
     def _construir_listado(self):
         marco = self.pestana_listado
         es_gestor = self._puede_gestionar_usuarios()
 
+        # --- Filtros de búsqueda --------------------------------------------
+        self._construir_filtros(marco)
+
         # --- Tabla de oficios (orden: oficio -> recepción -> respuesta) ------
-        columnas = ("referencia", "codigo", "oficio", "recepcion", "respuesta",
-                    "empleado", "estado", "pdf", "observacion")
-        titulos = ("Referencia", "Código oficio", "F. oficio", "F. recepción",
-                   "F. respuesta", "Responsable", "Estado", "PDF", "Observación")
-        anchos = (145, 110, 85, 90, 90, 150, 85, 40, 180)
+        columnas = ("referencia", "codigo", "causal", "sb", "oficio", "recepcion",
+                    "respuesta", "empleado", "estado", "pdf", "observacion")
+        titulos = ("Referencia UDC", "Referencia oficio", "Causal oficio",
+                   "Referencia SB", "F. oficio", "F. recepción", "F. respuesta",
+                   "Responsable", "Estado", "PDF", "Observación")
+        # Referencia UDC y Referencia oficio con ancho suficiente para verse
+        # completas (p. ej. "REQ-INF-2026-0241").
+        anchos = (150, 150, 150, 120, 90, 95, 95, 150, 90, 40, 200)
         contenedor = ttk.Frame(marco)
         contenedor.pack(fill="both", expand=True, side="top")
         self.tabla = ttk.Treeview(contenedor, columns=columnas, show="headings", height=8)
         for columna, titulo, ancho in zip(columnas, titulos, anchos):
             self.tabla.heading(columna, text=titulo)
-            self.tabla.column(columna, width=ancho, anchor="w", stretch=False)
+            self.tabla.column(columna, width=ancho, minwidth=ancho, anchor="w", stretch=False)
         self.tabla.column("observacion", stretch=True)
         barra_v = ttk.Scrollbar(contenedor, orient="vertical", command=self.tabla.yview)
         barra_h = ttk.Scrollbar(contenedor, orient="horizontal", command=self.tabla.xview)
@@ -561,21 +655,43 @@ class AplicacionPrincipal(ttk.Frame):
         self.tabla.delete(*self.tabla.get_children())
         try:
             # Un usuario regular solo ve sus oficios (registrados o asignados).
-            for registro in oficios.listar_oficios_visibles(
-                    self.usuario["usuario"], self.usuario.get("rol")):
+            registros = oficios.listar_oficios_visibles(
+                self.usuario["usuario"], self.usuario.get("rol"))
+            total_visibles = len(registros)
+            # Filtros de búsqueda (si el panel ya está construido).
+            if hasattr(self, "entrada_busqueda"):
+                registros = oficios.filtrar_oficios(
+                    registros,
+                    self._clave_por_etiqueta(oficios.CAMPOS_BUSQUEDA,
+                                             self.combo_campo_busqueda.get()),
+                    self.entrada_busqueda.get(),
+                    self._clave_por_etiqueta(oficios.CAMPOS_FECHA,
+                                             self.combo_campo_fecha.get()),
+                    self.filtro_fecha_desde.get(),
+                    self.filtro_fecha_hasta.get())
+            for registro in registros:
                 observacion = " ".join(registro.get("observacion", "").split())
                 if len(observacion) > 60:
                     observacion = observacion[:57] + "..."
                 self.tabla.insert("", "end", iid=registro["referencia"], values=(
                     registro["referencia"], registro["codigo_oficio"],
+                    registro.get("causal_oficio", ""),
+                    registro.get("referencia_sb", ""),
                     registro["fecha_oficio"], registro["fecha_recepcion"],
                     registro.get("fecha_respuesta", ""),
                     registro.get("empleado", ""), registro["estado"],
                     "Sí" if registro.get("archivo_respuesta") else "",
                     observacion))
+        except ValueError as error:
+            messagebox.showerror("Filtro no válido", str(error))
+            return
         except Exception as e:
             messagebox.showerror("Error al cargar oficios", str(e))
             return
+        if hasattr(self, "lbl_resultados"):
+            self.lbl_resultados.config(
+                text=f"Mostrando {len(registros)} de {total_visibles} oficios."
+                if len(registros) != total_visibles else "")
         # Conservar la selección tras refrescar, si el oficio sigue existiendo.
         for referencia in seleccion_previa:
             if self.tabla.exists(referencia):
@@ -948,6 +1064,90 @@ class AplicacionPrincipal(ttk.Frame):
             self.tabla_usuarios.insert("", "end",
                                        values=(usu["usuario"], usu["nombre"], usu["rol"]))
 
+    # ---- Configuración (solo superusuario) ---------------------------------
+    def _construir_configuracion(self):
+        """Permite al superusuario indicar la última Referencia UDC registrada
+        en el Excel anterior, para que el sistema continúe desde ahí."""
+        marco = self.pestana_configuracion
+
+        ttk.Label(marco, text="Configuración del sistema",
+                  font=("Helvetica", 13, "bold")).pack(anchor="w", pady=(0, 12))
+
+        panel = ttk.LabelFrame(marco, text=" Secuencial inicial de la Referencia UDC ",
+                               padding=12)
+        panel.pack(fill="x")
+
+        ttk.Label(
+            panel, wraplength=760, justify="left",
+            text="Los oficios anteriores se llevaban en un Excel y no se migran. "
+                 "Indique la ÚLTIMA Referencia UDC registrada allí y el sistema "
+                 "continuará numerando a partir de la siguiente.\n"
+                 f"Formato: {PREFIJO_REFERENCIA}-AAAA-NNNN  "
+                 f"(por ejemplo {PREFIJO_REFERENCIA}-{date.today().year}-0241 → "
+                 f"el próximo oficio será {PREFIJO_REFERENCIA}-{date.today().year}-0242)."
+        ).grid(row=0, column=0, columnspan=2, sticky="w", pady=(0, 10))
+
+        ttk.Label(panel, text="Última Referencia UDC registrada").grid(
+            row=1, column=0, sticky="w", pady=4)
+        self.entrada_secuencial = ttk.Entry(panel, width=28)
+        self.entrada_secuencial.grid(row=1, column=1, sticky="w", padx=6, pady=4)
+
+        btn = ttk.Button(panel, text="Guardar", command=self._guardar_secuencial)
+        btn.grid(row=2, column=1, sticky="w", padx=6, pady=(8, 4))
+        btn.config(style="Accent.TButton")
+
+        self.lbl_secuencial = ttk.Label(panel, text="", font=("Helvetica", 9))
+        self.lbl_secuencial.grid(row=3, column=0, columnspan=2, sticky="w", pady=(8, 0))
+
+        ttk.Label(
+            panel, foreground="#6B7280", font=("Helvetica", 8), wraplength=760,
+            justify="left",
+            text="El secuencial es por año: cada año la numeración vuelve a empezar "
+                 "en 0001. Solo el superusuario puede modificar este valor y el "
+                 "cambio queda registrado en la bitácora. Reconfigurarlo nunca "
+                 "genera referencias duplicadas."
+        ).grid(row=4, column=0, columnspan=2, sticky="w", pady=(10, 0))
+
+        self._refrescar_configuracion()
+
+    def _refrescar_configuracion(self):
+        try:
+            actual = parametros.obtener_referencia_inicial()
+            proxima = oficios.proxima_referencia()
+        except ValueError as error:
+            self.lbl_secuencial.config(text=str(error), foreground="#a00")
+            return
+        if actual:
+            texto = f"Configurado: {actual}.    Próxima Referencia UDC: {proxima}"
+        else:
+            texto = f"Sin configurar. Próxima Referencia UDC: {proxima}"
+        self.lbl_secuencial.config(text=texto, foreground=COLOR_TEXTO)
+
+    def _guardar_secuencial(self):
+        valor = self.entrada_secuencial.get().strip()
+        if not valor:
+            messagebox.showwarning("Falta el dato",
+                                   "Ingrese la última Referencia UDC registrada.")
+            return
+        if parametros.esta_configurado() and not messagebox.askyesno(
+                "Confirmar",
+                f"El secuencial inicial ya está configurado como "
+                f"{parametros.obtener_referencia_inicial()}.\n\n"
+                "¿Desea reemplazarlo? El cambio quedará registrado en la bitácora."):
+            return
+        try:
+            normalizada = parametros.definir_secuencial_inicial(
+                valor, self.usuario["usuario"], self.usuario.get("rol"))
+        except ValueError as error:
+            messagebox.showerror("Error", str(error))
+            return
+        self.entrada_secuencial.delete(0, "end")
+        self._refrescar_configuracion()
+        messagebox.showinfo(
+            "Listo",
+            f"Secuencial inicial configurado en {normalizada}.\n"
+            f"La próxima Referencia UDC será {oficios.proxima_referencia()}.")
+
     # ---- Tablero (dashboard) -----------------------------------------------
     # Paleta de los estados, reutilizada en tarjetas y gráficos.
     COLOR_POR_ASIGNAR = "#b45309"
@@ -1224,6 +1424,9 @@ class AplicacionPrincipal(ttk.Frame):
             return
         if actual is self.pestana_registro:
             self._refrescar_responsables()
+        elif actual is self.pestana_configuracion:
+            if self._es_superusuario():
+                self._refrescar_configuracion()
         elif actual is self.pestana_listado:
             self._refrescar_responsables()
             self._refrescar_listado()
