@@ -5,7 +5,8 @@
 - `cryptography` — **obligatoria** (cifrado de credenciales y oficios).
 - `pymupdf` — opcional: visor de PDF integrado (`visor_pdf.py`). Sin ella la
   app funciona y ofrece abrir el PDF con el lector del sistema.
-- `pillow` — opcional: logo del banco en cabecera y login.
+- `pillow` — opcional: logo del banco en cabecera/login y mayor nitidez del
+  visor de PDF (sin ella el visor usa el modo PPM nativo de Tk).
 
 Las dependencias opcionales se importan con `try/except ImportError` y tienen
 alternativa; no rompas ese patrón al modificar el código.

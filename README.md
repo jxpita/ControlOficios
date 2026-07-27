@@ -11,25 +11,42 @@ permanecen en inglés las palabras propias de Python y de las librerías
 ## 1. Requisitos
 
 - Python 3.9 o superior (recomendado 3.11+).
-- Dependencias:
+
+### Dependencias externas
+
+La aplicación usa **solo tres** librerías de terceros. Instalación completa
+(recomendada, para tener todas las funciones):
 
 ```bash
-pip install cryptography      # obligatoria (cifrado)
-pip install pymupdf           # para ver los PDF de respuesta DENTRO de la app
-pip install pillow            # opcional: muestra el logo del banco
+pip install cryptography pymupdf pillow
 ```
 
-Solo **`cryptography`** es obligatoria. Las otras dos son opcionales y la
-aplicación funciona sin ellas:
+| Librería | `import` | ¿Obligatoria? | Para qué se usa | Si falta… |
+|---|---|---|---|---|
+| **cryptography** | `cryptography` | **Sí** | Cifrado Fernet de `oficios.dat` y `credenciales.dat`; hashing PBKDF2 de contraseñas | La app **no arranca** |
+| **PyMuPDF** | `fitz` | No | Visor de PDF integrado: renderiza cada página de la respuesta | "Ver respuesta (PDF)" ofrece abrirlo con el lector del sistema |
+| **Pillow** | `PIL` | No | 1) Logo del banco en la cabecera y el login. 2) Mejora la nitidez del visor de PDF (renderiza a 2× y reduce con LANCZOS) | Sin logo; el visor usa el modo PPM nativo de Tk (funciona, algo menos nítido) |
 
-- **PyMuPDF** habilita el visor de PDF integrado. Si no está instalado, al
-  pulsar "Ver respuesta (PDF)" la app ofrece abrirlo con el lector del sistema.
-  Se eligió PyMuPDF porque se instala como *wheel* (no necesita binarios
-  externos como poppler), funciona en Windows sin instalar nada más y se
-  empaqueta bien con PyInstaller. Añade ~25 MB al ejecutable.
-- **Pillow** solo afecta a que se vea el logo en la cabecera y el login.
+Las dependencias opcionales se importan con `try/except ImportError` y siempre
+tienen una alternativa, así que **la aplicación funciona sin ellas**.
 
-`tkinter` viene con Python en Windows y macOS. En Linux, si falta:
+**Sobre PyMuPDF:** se eligió frente a otras opciones (como `pdf2image`) porque
+se instala como *wheel* —no necesita binarios externos como poppler—, funciona
+en Windows sin instalar nada más y se empaqueta bien con PyInstaller. Añade
+~25 MB al ejecutable; si no necesitas ver los PDF dentro de la app, puedes
+omitirla.
+
+**Gráficos del tablero:** se dibujan con el `Canvas` de Tkinter, así que **no
+se requiere matplotlib** ni ninguna otra librería de gráficos.
+
+### Módulos de la biblioteca estándar
+
+No hay que instalarlos (vienen con Python), pero conviene saber que se usan:
+`tkinter` (interfaz), `json`, `csv`, `datetime`, `pathlib`, `os`, `sys`,
+`shutil`, `subprocess`, `calendar`, `collections`, `typing`, `hashlib`, `hmac`
+y `base64`.
+
+`tkinter` viene incluido con Python en Windows y macOS. En Linux, si falta:
 `sudo apt install python3-tk`.
 
 ## 2. Ejecutar en desarrollo
@@ -219,9 +236,10 @@ pyinstaller --onefile --windowed --name ControlOficios ^
 ### Para reducir tamaño
 
 1. Trabaja dentro de un **entorno virtual** con solo lo necesario instalado
-   (`cryptography`, `pyinstaller`, y opcionalmente `Pillow` para el logo y
-   `pymupdf` para el visor de PDF). Así PyInstaller no arrastra librerías de
-   más. Ten en cuenta que `pymupdf` añade ~25 MB al ejecutable: si no necesitas
+   (`cryptography`, `pyinstaller`, y opcionalmente `pymupdf` para el visor de
+   PDF y `Pillow` para el logo y la nitidez del visor). Así PyInstaller no
+   arrastra librerías de más.
+   Ten en cuenta que `pymupdf` añade ~25 MB al ejecutable: si no necesitas
    ver los PDF dentro de la app, omítelo y se usará el lector del sistema.
 2. Añade **UPX** (ver abajo): `--upx-dir C:\ruta\upx`.
 3. `--onedir` (en lugar de `--onefile`) arranca más rápido y suele pesar menos
