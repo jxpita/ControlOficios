@@ -14,7 +14,7 @@ si prefieres usar la fecha de registro o un contador global.)
 """
 import json
 import shutil
-from datetime import datetime
+from datetime import datetime, date
 from pathlib import Path
 from typing import List, Dict, Optional
 
@@ -49,10 +49,14 @@ def _guardar_registros(registros: List[Dict]) -> None:
 
 # --- Validaciones y referencia ----------------------------------------------
 def _validar_fecha(texto: str, campo: str) -> str:
+    """Valida el formato y que la fecha no sea futura: no se puede registrar
+    algo que todavía no ha ocurrido."""
     try:
-        datetime.strptime(texto, "%Y-%m-%d")
+        valor = datetime.strptime(texto, "%Y-%m-%d").date()
     except (ValueError, TypeError):
         raise ValueError(f"{campo} debe tener formato AAAA-MM-DD.")
+    if valor > date.today():
+        raise ValueError(f"{campo} no puede ser posterior a hoy.")
     return texto
 
 

@@ -32,11 +32,19 @@ class SelectorFecha(tk.Frame):
     MESES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio",
              "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
 
-    def __init__(self, maestro, fecha_inicial=None, permitir_vacio=False):
+    def __init__(self, maestro, fecha_inicial=None, permitir_vacio=False,
+                 fecha_maxima=None):
         """`permitir_vacio=True` deja el campo en blanco y ofrece un botón
-        "Limpiar" en el calendario (para fechas opcionales)."""
+        "Limpiar" en el calendario (para fechas opcionales).
+
+        `fecha_maxima` es la última fecha seleccionable; por omisión **hoy**,
+        porque no se puede registrar algo que aún no ha ocurrido. Pásalo como
+        `False` para no aplicar ningún tope."""
         super().__init__(maestro, background=COLOR_BLANCO)
         self.permitir_vacio = permitir_vacio
+        if fecha_maxima is None:
+            fecha_maxima = date.today()
+        self.fecha_maxima = fecha_maxima or None   # False -> sin tope
         self.entrada = ttk.Entry(self, width=14)
         self.entrada.pack(side="left")
         self.boton = tk.Button(self, text="📅", command=self._alternar_calendario,
@@ -72,6 +80,9 @@ class SelectorFecha(tk.Frame):
             self._cerrar()
             return
         base = self._fecha_base()
+        # No abrir el calendario en un mes posterior al tope.
+        if self.fecha_maxima and base > self.fecha_maxima:
+            base = self.fecha_maxima
         self._anio, self._mes = base.year, base.month
 
         self._popup = tk.Toplevel(self)
@@ -85,12 +96,33 @@ class SelectorFecha(tk.Frame):
                 self._popup.iconbitmap(str(ARCHIVO_ICONO))
             except tk.TclError:
                 pass
-        # Posicionar justo debajo del campo.
-        self._popup.geometry(
-            f"+{self.winfo_rootx()}+{self.winfo_rooty() + self.winfo_height() + 2}")
         self._popup.bind("<Escape>", lambda e: self._cerrar())
         self._popup.protocol("WM_DELETE_WINDOW", self._cerrar)
         self._dibujar_calendario()
+        self._ubicar_popup()
+
+    def _ubicar_popup(self):
+        """Coloca el calendario junto al campo, abriéndose hacia ARRIBA si no
+        cabe debajo, y sin salirse de los bordes de la pantalla."""
+        popup = self._popup
+        popup.update_idletasks()
+        ancho, alto = popup.winfo_width(), popup.winfo_height()
+        pantalla_ancho = popup.winfo_screenwidth()
+        pantalla_alto = popup.winfo_screenheight()
+
+        x = self.winfo_rootx()
+        abajo = self.winfo_rooty() + self.winfo_height() + 2
+        arriba = self.winfo_rooty() - alto - 2
+
+        # Si no cabe debajo pero sí encima, se abre hacia arriba.
+        if abajo + alto > pantalla_alto and arriba >= 0:
+            y = arriba
+        else:
+            y = min(abajo, max(0, pantalla_alto - alto))
+
+        # Evitar que se salga por los lados.
+        x = max(0, min(x, pantalla_ancho - ancho))
+        popup.geometry(f"+{int(x)}+{int(y)}")
 
     def _cerrar(self):
         if self._popup is not None:
@@ -117,9 +149,17 @@ class SelectorFecha(tk.Frame):
         tk.Label(cabecera, text=f"{self.MESES[self._mes - 1]} {self._anio}",
                  bg=COLOR_AZUL, fg=COLOR_BLANCO, font=("Helvetica", 10, "bold")
                  ).pack(side="left", expand=True)
-        tk.Button(cabecera, text="›", command=lambda: self._cambiar_mes(1),
-                  bg=COLOR_AZUL, fg=COLOR_BLANCO, relief="flat", cursor="hand2",
+        # El botón "mes siguiente" se desactiva si ya se alcanzó el mes tope.
+        hay_siguiente = not (self.fecha_maxima and
+                             (self._anio, self._mes) >=
+                             (self.fecha_maxima.year, self.fecha_maxima.month))
+        tk.Button(cabecera, text="›",
+                  command=(lambda: self._cambiar_mes(1)) if hay_siguiente else None,
+                  bg=COLOR_AZUL, fg=COLOR_BLANCO if hay_siguiente else "#5A6B8C",
+                  relief="flat", cursor="hand2" if hay_siguiente else "arrow",
                   activebackground="#1A2E5A", activeforeground=COLOR_BLANCO,
+                  state="normal" if hay_siguiente else "disabled",
+                  disabledforeground="#5A6B8C",
                   font=("Helvetica", 12, "bold"), takefocus=0, width=3).pack(side="right")
 
         cuerpo = tk.Frame(self._popup, bg=COLOR_BLANCO, padx=6, pady=6)
@@ -136,17 +176,25 @@ class SelectorFecha(tk.Frame):
                 if dia == 0:
                     continue
                 actual = date(self._anio, self._mes, dia)
-                if actual == seleccion:
+                # Las fechas posteriores al tope (hoy) no son seleccionables.
+                bloqueada = bool(self.fecha_maxima) and actual > self.fecha_maxima
+                if bloqueada:
+                    fondo, texto = COLOR_BLANCO, "#C3C9D4"
+                elif actual == seleccion:
                     fondo, texto = COLOR_AZUL, COLOR_BLANCO
                 elif actual == hoy:
                     fondo, texto = COLOR_GRIS_CLARO, COLOR_AZUL
                 else:
                     fondo, texto = COLOR_BLANCO, COLOR_TEXTO
                 tk.Button(cuerpo, text=str(dia), width=3, relief="flat",
-                          cursor="hand2", bg=fondo, fg=texto,
-                          activebackground="#1A2E5A", activeforeground=COLOR_BLANCO,
+                          cursor="arrow" if bloqueada else "hand2",
+                          bg=fondo, fg=texto,
+                          activebackground=fondo if bloqueada else "#1A2E5A",
+                          activeforeground=texto if bloqueada else COLOR_BLANCO,
+                          state="disabled" if bloqueada else "normal",
+                          disabledforeground="#C3C9D4",
                           font=("Helvetica", 9), takefocus=0,
-                          command=lambda d=actual: self._elegir(d)
+                          command=None if bloqueada else (lambda d=actual: self._elegir(d))
                           ).grid(row=fila, column=col, padx=1, pady=1)
 
         pie = tk.Frame(self._popup, bg=COLOR_BLANCO, pady=4)
@@ -176,7 +224,8 @@ class AplicacionPrincipal(ttk.Frame):
         # --- Configuración de la ventana ---
         maestro.title(f"Control de Oficios · {self.usuario['nombre']} "
                       f"({self.usuario.get('rol', ROL_USUARIO)})")
-        maestro.geometry("950x650")
+        maestro.geometry("1060x720")
+        maestro.minsize(940, 620)
         maestro.resizable(True, True)
         if ARCHIVO_ICONO.exists():
             try:
@@ -432,53 +481,63 @@ class AplicacionPrincipal(ttk.Frame):
                     "empleado", "estado", "pdf", "observacion")
         titulos = ("Referencia", "Código oficio", "F. oficio", "F. recepción",
                    "F. respuesta", "Responsable", "Estado", "PDF", "Observación")
-        anchos = (145, 110, 90, 95, 95, 160, 90, 40, 200)
+        anchos = (145, 110, 85, 90, 90, 150, 85, 40, 180)
         contenedor = ttk.Frame(marco)
         contenedor.pack(fill="both", expand=True, side="top")
-        self.tabla = ttk.Treeview(contenedor, columns=columnas, show="headings", height=10)
+        self.tabla = ttk.Treeview(contenedor, columns=columnas, show="headings", height=8)
         for columna, titulo, ancho in zip(columnas, titulos, anchos):
             self.tabla.heading(columna, text=titulo)
-            self.tabla.column(columna, width=ancho, anchor="w")
+            self.tabla.column(columna, width=ancho, anchor="w", stretch=False)
+        self.tabla.column("observacion", stretch=True)
         barra_v = ttk.Scrollbar(contenedor, orient="vertical", command=self.tabla.yview)
-        self.tabla.configure(yscrollcommand=barra_v.set)
+        barra_h = ttk.Scrollbar(contenedor, orient="horizontal", command=self.tabla.xview)
+        self.tabla.configure(yscrollcommand=barra_v.set, xscrollcommand=barra_h.set)
         barra_v.pack(side="right", fill="y")
+        barra_h.pack(side="bottom", fill="x")
         self.tabla.pack(fill="both", expand=True, side="left")
 
         # --- Panel de edición del oficio seleccionado ------------------------
-        panel = ttk.LabelFrame(marco, text=" Modificar oficio seleccionado ", padding=10)
-        panel.pack(fill="x", pady=(8, 0))
+        # Disposición en una sola fila de campos + observación, para que la
+        # pestaña no quede saturada y el calendario tenga espacio.
+        panel = ttk.LabelFrame(marco, text=" Modificar oficio seleccionado ", padding=8)
+        panel.pack(fill="x", pady=(6, 0))
 
-        ttk.Label(panel, text="Fecha de respuesta").grid(row=0, column=0, sticky="w", pady=3)
-        self.edicion_fecha_respuesta = SelectorFecha(panel, permitir_vacio=True)
-        self.edicion_fecha_respuesta.grid(row=0, column=1, sticky="w", padx=(6, 18), pady=3)
+        fila = ttk.Frame(panel)
+        fila.pack(fill="x")
+
+        ttk.Label(fila, text="F. respuesta").pack(side="left")
+        self.edicion_fecha_respuesta = SelectorFecha(fila, permitir_vacio=True)
+        self.edicion_fecha_respuesta.pack(side="left", padx=(6, 16))
 
         if es_gestor:
             # Solo administrador / superusuario pueden reasignar responsable.
-            ttk.Label(panel, text="Responsable").grid(row=0, column=2, sticky="w", pady=3)
+            ttk.Label(fila, text="Responsable").pack(side="left")
             self.combo_responsable_edicion = ttk.Combobox(
-                panel, width=26, state="readonly",
+                fila, width=24, state="readonly",
                 values=[self.SIN_RESPONSABLE] + self._valores_responsables())
             self.combo_responsable_edicion.current(0)
-            self.combo_responsable_edicion.grid(row=0, column=3, sticky="w", padx=6, pady=3)
+            self.combo_responsable_edicion.pack(side="left", padx=(6, 16))
             estados_disponibles = ESTADOS
         else:
             # El usuario solo alterna entre En proceso y Finalizado.
             estados_disponibles = ["En proceso", "Finalizado"]
 
-        ttk.Label(panel, text="Estado").grid(row=1, column=0, sticky="w", pady=3)
-        self.combo_nuevo_estado = ttk.Combobox(panel, width=14, state="readonly",
+        ttk.Label(fila, text="Estado").pack(side="left")
+        self.combo_nuevo_estado = ttk.Combobox(fila, width=13, state="readonly",
                                                values=estados_disponibles)
         self.combo_nuevo_estado.current(0)
-        self.combo_nuevo_estado.grid(row=1, column=1, sticky="w", padx=6, pady=3)
+        self.combo_nuevo_estado.pack(side="left", padx=6)
 
-        ttk.Label(panel, text="Observación").grid(row=2, column=0, sticky="nw", pady=3)
-        self.edicion_observacion = tk.Text(panel, width=70, height=3, wrap="word",
+        fila_obs = ttk.Frame(panel)
+        fila_obs.pack(fill="x", pady=(6, 0))
+        ttk.Label(fila_obs, text="Observación").pack(side="left", anchor="n")
+        self.edicion_observacion = tk.Text(fila_obs, height=2, wrap="word",
                                            font=("Helvetica", 10), relief="flat",
                                            highlightthickness=1, highlightbackground="#CBD2DE")
-        self.edicion_observacion.grid(row=2, column=1, columnspan=3, sticky="w", padx=6, pady=3)
+        self.edicion_observacion.pack(side="left", fill="x", expand=True, padx=6)
 
         barra = ttk.Frame(panel)
-        barra.grid(row=3, column=0, columnspan=4, sticky="w", pady=(10, 0))
+        barra.pack(fill="x", pady=(8, 0))
         btn_guardar = ttk.Button(barra, text="Guardar cambios", command=self._aplicar_cambios)
         btn_guardar.pack(side="left")
         btn_guardar.config(style="Accent.TButton")

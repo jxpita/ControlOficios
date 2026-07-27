@@ -88,6 +88,13 @@ el resto son opcionales.
 | Estado | **Sí \*** | |
 | Observación | No | Texto libre, editable después |
 
+**Ninguna fecha puede ser posterior a hoy** (no se registra lo que aún no ha
+ocurrido): el calendario muestra los días futuros deshabilitados y el
+almacenamiento rechaza una fecha futura escrita a mano.
+
+El calendario se abre **hacia arriba** cuando no hay espacio suficiente debajo
+del campo, y se ajusta para no salirse de la pantalla.
+
 **Qué puede modificar cada rol** en la pestaña *Oficios*:
 
 | | F. respuesta | Responsable | Estado | Observación |

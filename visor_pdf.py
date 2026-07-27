@@ -73,6 +73,7 @@ class VisorPDF(tk.Toplevel):
         self.pagina_actual = 0
         self.zoom = 1.0
         self._imagen = None      # referencia viva para que Tk no la libere
+        self._id_imagen = None   # identificador del objeto en el lienzo
 
         self._construir_barra()
         self._construir_lienzo()
@@ -123,6 +124,8 @@ class VisorPDF(tk.Toplevel):
         self.bind("<Escape>", lambda e: self.destroy())
         self.bind("<Prior>", lambda e: self.pagina_anterior())
         self.bind("<Next>", lambda e: self.pagina_siguiente())
+        # Recentrar la página cuando cambia el tamaño de la ventana.
+        self.lienzo.bind("<Configure>", lambda e: self._centrar_pagina())
 
     # -- Navegación y zoom ----------------------------------------------------
     def pagina_anterior(self):
@@ -159,11 +162,29 @@ class VisorPDF(tk.Toplevel):
             self._imagen = tk.PhotoImage(data=pixmap.tobytes("ppm"))
 
         self.lienzo.delete("all")
-        self.lienzo.create_image(0, 0, anchor="nw", image=self._imagen)
-        self.lienzo.configure(scrollregion=self.lienzo.bbox("all"))
+        self._id_imagen = self.lienzo.create_image(0, 0, anchor="nw", image=self._imagen)
+        self._centrar_pagina()
         self.lbl_pagina.config(
             text=f"Página {self.pagina_actual + 1} de {self.documento.page_count}"
                  f"   ·   Zoom {int(self.zoom * 100)}%")
+
+    def _centrar_pagina(self):
+        """Centra horizontalmente la página dentro del lienzo (y verticalmente
+        si sobra espacio), para que el documento no quede pegado a la izquierda."""
+        if self._imagen is None or not hasattr(self, "_id_imagen"):
+            return
+        ancho_lienzo = self.lienzo.winfo_width()
+        alto_lienzo = self.lienzo.winfo_height()
+        ancho_img = self._imagen.width()
+        alto_img = self._imagen.height()
+
+        x = max((ancho_lienzo - ancho_img) // 2, 0)
+        y = max((alto_lienzo - alto_img) // 2, 0)
+        self.lienzo.coords(self._id_imagen, x, y)
+        # La región desplazable cubre al menos el lienzo completo, de modo que
+        # la imagen centrada no "salte" al desplazarse.
+        self.lienzo.configure(scrollregion=(
+            0, 0, max(ancho_img, ancho_lienzo), max(alto_img, alto_lienzo)))
 
     def destroy(self):
         # Liberar los enlaces globales del ratón y cerrar el documento.
