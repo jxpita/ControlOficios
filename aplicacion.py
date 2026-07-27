@@ -424,14 +424,15 @@ class AplicacionPrincipal(ttk.Frame):
 
             ttk.Button(barra, text="Aplicar cambios", command=self._aplicar_cambios).pack(side="left", padx=5)
         else:
-            # Usuario regular: solo puede marcar como "Finalizado" los oficios
-            # "En proceso" que tenga asignados.
-            ttk.Label(
-                barra,
-                text="   Puede marcar como \"Finalizado\" un oficio \"En proceso\" asignado a usted:"
-            ).pack(side="left")
-            ttk.Button(barra, text="Marcar como Finalizado",
-                       command=self._finalizar_oficio).pack(side="left", padx=5)
+            # Usuario regular: en sus oficios asignados solo puede alternar
+            # entre "En proceso" y "Finalizado" (por si finalizó por error).
+            ttk.Label(barra, text="   Estado de su oficio:").pack(side="left")
+            self.combo_estado_usuario = ttk.Combobox(
+                barra, width=14, state="readonly", values=["En proceso", "Finalizado"])
+            self.combo_estado_usuario.current(0)
+            self.combo_estado_usuario.pack(side="left", padx=5)
+            ttk.Button(barra, text="Aplicar",
+                       command=self._aplicar_estado_usuario).pack(side="left", padx=5)
 
         # Al seleccionar un oficio, precargar sus valores actuales (solo gestor).
         self.tabla.bind("<<TreeviewSelect>>", self._al_seleccionar_oficio)
@@ -451,24 +452,27 @@ class AplicacionPrincipal(ttk.Frame):
             messagebox.showerror("Error al cargar oficios", str(e))
 
     def _al_seleccionar_oficio(self, evento=None):
-        """Precarga los desplegables del gestor con el responsable y estado del
-        oficio seleccionado. Para usuarios regulares no hay desplegables."""
-        if not self._puede_gestionar_usuarios():
-            return
+        """Precarga los desplegables con el responsable/estado del oficio
+        seleccionado, según el rol."""
         seleccion = self.tabla.selection()
         if not seleccion:
             return
         registro = self._oficio_por_referencia(seleccion[0])
         if registro is None:
             return
-        display = self._display_responsable(
-            registro.get("id_empleado", ""), registro.get("empleado", ""))
-        if display and display in self._valores_responsables():
-            self.combo_responsable_edicion.set(display)
+        if self._puede_gestionar_usuarios():
+            display = self._display_responsable(
+                registro.get("id_empleado", ""), registro.get("empleado", ""))
+            if display and display in self._valores_responsables():
+                self.combo_responsable_edicion.set(display)
+            else:
+                self.combo_responsable_edicion.set(self.SIN_RESPONSABLE)
+            if registro.get("estado") in ESTADOS:
+                self.combo_nuevo_estado.set(registro["estado"])
         else:
-            self.combo_responsable_edicion.set(self.SIN_RESPONSABLE)
-        if registro.get("estado") in ESTADOS:
-            self.combo_nuevo_estado.set(registro["estado"])
+            estado = registro.get("estado")
+            if estado in ("En proceso", "Finalizado"):
+                self.combo_estado_usuario.set(estado)
 
     def _aplicar_cambios(self):
         seleccion = self.tabla.selection()
@@ -491,19 +495,19 @@ class AplicacionPrincipal(ttk.Frame):
             self.combo_nuevo_estado.set(estado_final)
         self._refrescar_listado()
 
-    def _finalizar_oficio(self):
-        """Usuario regular: marca como 'Finalizado' un oficio 'En proceso'
-        asignado a él (única transición permitida para su rol)."""
+    def _aplicar_estado_usuario(self):
+        """Usuario regular: alterna el estado (En proceso / Finalizado) de un
+        oficio asignado a él."""
         seleccion = self.tabla.selection()
         if not seleccion:
             messagebox.showwarning("Sin selección", "Seleccione un oficio en la lista.")
             return
         try:
-            oficios.finalizar_oficio(seleccion[0], self.usuario["usuario"])
+            oficios.actualizar_estado_asignado(
+                seleccion[0], self.usuario["usuario"], self.combo_estado_usuario.get())
         except ValueError as error:
             messagebox.showerror("Error", str(error))
             return
-        messagebox.showinfo("Listo", "Oficio marcado como Finalizado.")
         self._refrescar_listado()
 
     def _construir_usuarios(self):
@@ -559,6 +563,8 @@ class AplicacionPrincipal(ttk.Frame):
         barra_tabla.grid(row=10, column=0, columnspan=2, sticky="w")
         ttk.Button(barra_tabla, text="Editar seleccionado",
                    command=self._editar_usuario_seleccionado).pack(side="left")
+        ttk.Button(barra_tabla, text="Restablecer contraseña",
+                   command=self._restablecer_clave_seleccionado).pack(side="left", padx=6)
         ttk.Button(barra_tabla, text="Eliminar seleccionado",
                    command=self._eliminar_usuario_seleccionado).pack(side="left", padx=6)
 
@@ -662,6 +668,89 @@ class AplicacionPrincipal(ttk.Frame):
         self._refrescar_usuarios()
         self._refrescar_responsables()
 
+    def _restablecer_clave_seleccionado(self):
+        """El gestor selecciona un usuario y le cede el teclado para que escriba
+        su nueva contraseña (recuperación de contraseña)."""
+        seleccion = self.tabla_usuarios.selection()
+        if not seleccion:
+            messagebox.showwarning("Sin selección", "Seleccione un usuario de la lista.")
+            return
+        usuario, nombre, _ = self.tabla_usuarios.item(seleccion[0], "values")
+        nueva = self._pedir_nueva_clave(f"{nombre} ({usuario})")
+        if nueva is None:  # cancelado
+            return
+        try:
+            autenticacion.restablecer_clave(
+                usuario, self.usuario["usuario"], self.usuario.get("rol"), nueva)
+        except ValueError as error:
+            messagebox.showerror("Error", str(error))
+            return
+        messagebox.showinfo("Listo", f"Contraseña de '{usuario}' restablecida correctamente.")
+
+    def _pedir_nueva_clave(self, usuario_texto):
+        """Diálogo modal para escribir y confirmar una nueva contraseña.
+        Devuelve la contraseña, o None si se cancela."""
+        dlg = tk.Toplevel(self)
+        dlg.title("Restablecer contraseña")
+        dlg.configure(bg=COLOR_BLANCO)
+        dlg.resizable(False, False)
+        dlg.transient(self.winfo_toplevel())
+        if ARCHIVO_ICONO.exists():
+            try:
+                dlg.iconbitmap(str(ARCHIVO_ICONO))
+            except tk.TclError:
+                pass
+
+        resultado = {"clave": None}
+        cont = tk.Frame(dlg, bg=COLOR_BLANCO, padx=20, pady=16)
+        cont.pack(fill="both", expand=True)
+        tk.Label(cont, text=f"Nueva contraseña para:\n{usuario_texto}", bg=COLOR_BLANCO,
+                 fg=COLOR_TEXTO, justify="left", font=("Helvetica", 10, "bold")).pack(anchor="w")
+        tk.Label(cont, text="Cédale el teclado al usuario para que la escriba.",
+                 bg=COLOR_BLANCO, fg="#6B7280", font=("Helvetica", 8)).pack(anchor="w", pady=(0, 10))
+
+        tk.Label(cont, text="Contraseña", bg=COLOR_BLANCO, fg=COLOR_TEXTO).pack(anchor="w")
+        e1 = ttk.Entry(cont, width=30, show="•")
+        e1.pack(fill="x", pady=(0, 8))
+        tk.Label(cont, text="Confirmar contraseña", bg=COLOR_BLANCO, fg=COLOR_TEXTO).pack(anchor="w")
+        e2 = ttk.Entry(cont, width=30, show="•")
+        e2.pack(fill="x", pady=(0, 6))
+
+        var = tk.BooleanVar(value=False)
+        def alternar():
+            e1.config(show="" if var.get() else "•")
+            e2.config(show="" if var.get() else "•")
+        tk.Checkbutton(cont, text="Mostrar contraseña", variable=var, command=alternar,
+                       bg=COLOR_BLANCO, fg="#6B7280", activebackground=COLOR_BLANCO,
+                       selectcolor=COLOR_BLANCO, font=("Helvetica", 9),
+                       cursor="hand2", bd=0, highlightthickness=0).pack(anchor="w", pady=(0, 12))
+
+        def aceptar():
+            if e1.get() != e2.get():
+                messagebox.showerror("Error", "Las contraseñas no coinciden.", parent=dlg)
+                return
+            if not e1.get():
+                messagebox.showerror("Error", "La contraseña no puede estar vacía.", parent=dlg)
+                return
+            resultado["clave"] = e1.get()
+            dlg.destroy()
+
+        barra = tk.Frame(cont, bg=COLOR_BLANCO)
+        barra.pack(fill="x")
+        tk.Button(barra, text="Restablecer", command=aceptar, bg=COLOR_AZUL, fg=COLOR_BLANCO,
+                  activebackground="#1A2E5A", activeforeground=COLOR_BLANCO, relief="flat",
+                  cursor="hand2", font=("Helvetica", 10, "bold"), padx=12, pady=5).pack(side="right")
+        tk.Button(barra, text="Cancelar", command=dlg.destroy, relief="flat", cursor="hand2",
+                  font=("Helvetica", 10), padx=12, pady=5).pack(side="right", padx=6)
+
+        e1.bind("<Return>", lambda e: e2.focus_set())
+        e2.bind("<Return>", lambda e: aceptar())
+        dlg.update_idletasks()
+        dlg.grab_set()
+        e1.focus_set()
+        dlg.wait_window()
+        return resultado["clave"]
+
     def _refrescar_usuarios(self):
         self.tabla_usuarios.delete(*self.tabla_usuarios.get_children())
         for usu in autenticacion.listar_usuarios():
@@ -677,7 +766,7 @@ class AplicacionPrincipal(ttk.Frame):
         self.lienzo = tk.Canvas(marco, height=220, background=COLOR_BLANCO,
                                 highlightthickness=1, highlightbackground="#ccc")
         self.lienzo.pack(fill="x", pady=8)
-        ttk.Button(marco, text="Actualizar métricas", command=self._refrescar_tablero).pack(anchor="w")
+        # El tablero se actualiza solo al entrar a la pestaña (ver _al_cambiar_pestana).
 
     def _tarjeta(self, contenedor, titulo, valor, color):
         marco = tk.Frame(contenedor, bg=color, padx=14, pady=10)

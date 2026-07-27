@@ -4,12 +4,12 @@
 - cluster-only mode — file stats not available
 
 ## Summary
-- 145 nodes · 307 edges · 11 communities (7 shown, 4 thin omitted)
+- 151 nodes · 321 edges · 12 communities (6 shown, 6 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `c7784bae`
+- Built from commit: `c3c56957`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -25,18 +25,19 @@
 - Community 8
 - Community 9
 - Community 10
+- Community 11
 
 ## God Nodes (most connected - your core abstractions)
-1. `AplicacionPrincipal` - 32 edges
+1. `AplicacionPrincipal` - 34 edges
 2. `VentanaIngreso` - 17 edges
 3. `SelectorFecha` - 12 edges
-4. `registrar()` - 11 edges
-5. `_leer_usuarios()` - 9 edges
+4. `registrar()` - 12 edges
+5. `_leer_usuarios()` - 10 edges
 6. `descifrar()` - 9 edges
 7. `registrar_oficio()` - 7 edges
-8. `crear_usuario()` - 7 edges
-9. `editar_usuario()` - 7 edges
-10. `escribir_bytes_protegido()` - 7 edges
+8. `_guardar_usuarios()` - 7 edges
+9. `crear_usuario()` - 7 edges
+10. `editar_usuario()` - 7 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `_leer_registros()` --calls--> `descifrar()`  [EXTRACTED]
@@ -53,15 +54,15 @@
 ## Import Cycles
 - None detected.
 
-## Communities (11 total, 4 thin omitted)
+## Communities (12 total, 6 thin omitted)
 
 ### Community 0 - "Community 0"
 Cohesion: 0.16
-Nodes (22): _buscar(), cerrar_sesion(), crear_usuario(), editar_usuario(), eliminar_usuario(), existe_algun_usuario(), _guardar_usuarios(), _leer_usuarios() (+14 more)
+Nodes (24): _buscar(), cerrar_sesion(), crear_usuario(), editar_usuario(), eliminar_usuario(), existe_algun_usuario(), _guardar_usuarios(), _leer_usuarios() (+16 more)
 
 ### Community 1 - "Community 1"
 Cohesion: 0.17
-Nodes (19): actualizar_oficio(), finalizar_oficio(), _generar_referencia(), _guardar_registros(), _leer_registros(), listar_oficios(), Capa de almacenamiento de OFICIOS.  *** Punto clave de arquitectura *** Toda la, Actualiza estado y/o responsable de un oficio en una sola operación,     respeta (+11 more)
+Nodes (19): actualizar_estado_asignado(), actualizar_oficio(), _generar_referencia(), _guardar_registros(), _leer_registros(), listar_oficios(), Capa de almacenamiento de OFICIOS.  *** Punto clave de arquitectura *** Toda la, Actualiza estado y/o responsable de un oficio en una sola operación,     respeta (+11 more)
 
 ### Community 2 - "Community 2"
 Cohesion: 0.19
@@ -79,17 +80,13 @@ Nodes (12): anexar_texto_protegido(), _chmod(), escribir_bytes_protegido(), hace
 Cohesion: 0.31
 Nodes (3): Campo de fecha con calendario emergente. No requiere librerías externas.      Mu, Fecha desde la que se abre el calendario (la escrita, o hoy)., SelectorFecha
 
-### Community 6 - "Community 6"
-Cohesion: 0.24
-Nodes (3): Texto que se muestra en los desplegables para un responsable.         Incluye el, A partir del texto del desplegable devuelve (usuario, nombre).         Para "(Si, Precarga los desplegables del gestor con el responsable y estado del         ofi
-
 ## Knowledge Gaps
-- **4 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **6 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `AplicacionPrincipal` connect `Community 7` to `Community 2`, `Community 6`, `Community 8`, `Community 9`, `Community 10`?**
-  _High betweenness centrality (0.396) - this node is a cross-community bridge._
-- **Why does `SelectorFecha` connect `Community 5` to `Community 2`, `Community 10`, `Community 6`?**
-  _High betweenness centrality (0.129) - this node is a cross-community bridge._
+- **Why does `AplicacionPrincipal` connect `Community 6` to `Community 2`, `Community 7`, `Community 8`, `Community 9`, `Community 10`, `Community 11`?**
+  _High betweenness centrality (0.414) - this node is a cross-community bridge._
+- **Why does `SelectorFecha` connect `Community 5` to `Community 8`, `Community 2`, `Community 7`?**
+  _High betweenness centrality (0.123) - this node is a cross-community bridge._

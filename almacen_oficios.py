@@ -116,6 +116,15 @@ def registrar_oficio(codigo_oficio: str, fecha_recepcion: str, fecha_oficio: str
     estado = _resolver_estado(nombre_empleado, estado)
 
     registros = _leer_registros()
+    # El código de oficio no puede repetirse (aunque la referencia interna sea
+    # única). Se compara sin distinguir mayúsculas/minúsculas ni espacios.
+    codigo_normalizado = codigo_oficio.casefold()
+    for registro in registros:
+        if registro.get("codigo_oficio", "").strip().casefold() == codigo_normalizado:
+            raise ValueError(
+                f"Ya existe un oficio con el código \"{codigo_oficio}\". "
+                "El código de oficio no puede repetirse."
+            )
     referencia = _generar_referencia(fecha_recepcion, registros)
     ahora = datetime.now().isoformat(timespec="seconds")
     registros.append({
@@ -151,7 +160,7 @@ def actualizar_oficio(referencia: str, nuevo_estado: str, id_empleado: str,
 
     Reservado a GESTORES (administrador / superusuario): pueden reasignar el
     responsable y fijar cualquier estado. Los usuarios regulares no pueden usar
-    esta vía (ver `finalizar_oficio`).
+    esta vía (ver `actualizar_estado_asignado`).
 
     Devuelve el estado final aplicado (puede diferir del solicitado si las
     reglas lo ajustaron, p. ej. al asignar responsable a un "Por asignar").
@@ -195,32 +204,36 @@ def actualizar_oficio(referencia: str, nuevo_estado: str, id_empleado: str,
     raise ValueError("No se encontró la referencia indicada.")
 
 
-def finalizar_oficio(referencia: str, actor: str) -> str:
-    """Finaliza un oficio desde el rol de usuario regular.
+def actualizar_estado_asignado(referencia: str, actor: str, nuevo_estado: str) -> str:
+    """Cambio de estado desde el rol de usuario regular.
 
-    Solo permite la transición "En proceso" -> "Finalizado" y únicamente si el
-    oficio está asignado al propio `actor` (comparando el usuario responsable).
+    Solo permite alternar entre "En proceso" y "Finalizado" (por si finalizó por
+    error y quiere reabrirlo) y únicamente en oficios asignados al propio
+    `actor`. No puede dejarlo en "Por asignar" (eso quitaría el responsable).
     """
+    estados_permitidos = ("En proceso", "Finalizado")
+    if nuevo_estado not in estados_permitidos:
+        raise ValueError(
+            "Como usuario solo puede alternar entre \"En proceso\" y \"Finalizado\"."
+        )
     actor_norm = (actor or "").strip().lower()
     registros = _leer_registros()
     for registro in registros:
         if registro["referencia"] == referencia:
             responsable = (registro.get("id_empleado", "") or "").strip().lower()
             if not responsable or responsable != actor_norm:
-                raise ValueError("Solo puede finalizar oficios asignados a usted.")
-            if registro.get("estado") != "En proceso":
-                raise ValueError(
-                    "Solo puede finalizar un oficio que esté \"En proceso\"."
-                )
-            registro["estado"] = "Finalizado"
+                raise ValueError("Solo puede cambiar el estado de oficios asignados a usted.")
+            if registro.get("estado") == nuevo_estado:
+                return nuevo_estado  # sin cambios
+            registro["estado"] = nuevo_estado
             registro.setdefault("historial", []).append({
-                "evento": "Estado: Finalizado",
+                "evento": f"Estado: {nuevo_estado}",
                 "por": actor,
                 "cuando": datetime.now().isoformat(timespec="seconds"),
             })
             _guardar_registros(registros)
             registro_actividad.registrar(
                 "ACTUALIZAR_OFICIO",
-                f"referencia={referencia}; Estado: Finalizado", actor)
-            return "Finalizado"
+                f"referencia={referencia}; Estado: {nuevo_estado}", actor)
+            return nuevo_estado
     raise ValueError("No se encontró la referencia indicada.")

@@ -118,6 +118,10 @@ def editar_usuario(usuario: str, actor: str, actor_rol: str,
             cambios.append(f"rol={rol}")
 
     if clave:
+        # Solo el propio superusuario puede cambiar la contraseña del superusuario.
+        if (objetivo["rol"] == ROL_SUPERUSUARIO
+                and objetivo["usuario"] != (actor or "").strip().lower()):
+            raise ValueError("Solo el superusuario puede cambiar su propia contraseña.")
         objetivo["sal"], objetivo["hash"] = generar_hash_clave(clave)
         cambios.append("contraseña=(actualizada)")
 
@@ -159,6 +163,33 @@ def validar_acceso(usuario: str, clave: str) -> Optional[Dict]:
     registro_actividad.registrar(
         "INICIO_SESION_FALLIDO", f"usuario={usuario}", usuario or "desconocido")
     return None
+
+
+def restablecer_clave(usuario: str, actor: str, actor_rol: str,
+                      nueva_clave: str) -> None:
+    """Restablece (recupera) la contraseña de un usuario. Pensado para que un
+    gestor le ceda el teclado al usuario y este escriba su nueva contraseña.
+
+    Solo superusuario y administrador pueden hacerlo. La contraseña del
+    superusuario solo puede cambiarla el propio superusuario (por ahora no se
+    contempla el escenario en que el superusuario la olvida)."""
+    if actor_rol not in ROLES_GESTORES:
+        raise ValueError("No tiene permisos para restablecer contraseñas.")
+    if not nueva_clave:
+        raise ValueError("La nueva contraseña no puede estar vacía.")
+
+    usuarios = _leer_usuarios()
+    objetivo = _buscar(usuarios, usuario)
+    if objetivo is None:
+        raise ValueError("No se encontró el usuario indicado.")
+    if (objetivo["rol"] == ROL_SUPERUSUARIO
+            and objetivo["usuario"] != (actor or "").strip().lower()):
+        raise ValueError("Solo el superusuario puede cambiar su propia contraseña.")
+
+    objetivo["sal"], objetivo["hash"] = generar_hash_clave(nueva_clave)
+    _guardar_usuarios(usuarios)
+    registro_actividad.registrar(
+        "RESTABLECER_CLAVE", f"usuario={objetivo['usuario']}", actor)
 
 
 def cerrar_sesion(usuario: str) -> None:

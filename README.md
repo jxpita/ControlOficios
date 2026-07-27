@@ -36,13 +36,21 @@ En el primer arranque no hay usuarios: la pantalla pedirá crear el
 - **Administrador:** puede crear, editar y eliminar otros usuarios (excepto
   eliminar al superusuario) y usar toda la aplicación.
 - **Usuario (regular):** usa la aplicación (registrar oficios, tablero) pero
-  **no ve la pestaña "Usuarios"** ni puede gestionar cuentas. Sobre los oficios,
-  solo puede **marcar como "Finalizado"** un oficio que esté **"En proceso" y
-  asignado a él** (no puede reasignar responsables ni fijar otros estados).
+  **no ve la pestaña "Usuarios"** ni puede gestionar cuentas. Sobre los oficios
+  **asignados a él** solo puede **alternar el estado entre "En proceso" y
+  "Finalizado"** (por si finalizó por error y quiere reabrirlo); no puede
+  reasignar responsables ni dejarlo en "Por asignar".
 
-La gestión de usuarios (crear/editar/eliminar, asignar rol) está disponible
-solo para superusuario y administrador. Nadie puede eliminarse a sí mismo
-mientras su sesión está activa.
+La gestión de usuarios (crear, editar, eliminar, asignar rol y **restablecer
+contraseñas**) está disponible solo para superusuario y administrador. Nadie
+puede eliminarse a sí mismo mientras su sesión está activa.
+
+**Restablecer contraseñas:** un gestor selecciona al usuario y pulsa
+"Restablecer contraseña"; se abre un diálogo para escribir la nueva clave (la
+idea es cederle el teclado al usuario). Así un administrador que olvidó su
+contraseña puede ser ayudado por el superusuario u otro administrador. La
+contraseña del **superusuario** solo puede cambiarla él mismo (por ahora no se
+contempla el caso en que el superusuario la olvide).
 
 ### Responsables de oficios
 
@@ -87,6 +95,10 @@ La referencia interna tiene el formato **`UDC-OFICIO-AAAAMMDD-NNNN`**.
 El secuencial `NNNN` (4 dígitos, desde `0000`) se reinicia por cada **día de
 recepción**. Si prefieres usar la fecha de registro o un contador global que
 nunca reinicie, se cambia únicamente en `almacen_oficios._generar_referencia`.
+
+Además de la referencia interna (siempre única), el **código de oficio** que
+ingresa el usuario **no puede repetirse**: al registrar se rechaza un código ya
+existente (sin distinguir mayúsculas/minúsculas ni espacios).
 
 ## 4. Compilar a ejecutable (lo más ligero posible)
 
@@ -178,6 +190,20 @@ al `.exe` el ícono (`datos/bdp_icon_alt.ico`) si quieres que se vea en las vent
     modificar ni borrar con normalidad.
   - En **Linux/macOS**, el borrado depende de los permisos de la carpeta, por
     eso `datos/` queda en `0o700`.
+- **Sobre el borrado (importante):** los permisos de archivo (`chmod`/solo
+  lectura) **impiden modificar** el contenido, pero **no impiden borrar**. El
+  borrado lo controla el **directorio contenedor**, y su dueño siempre puede
+  eliminar lo que contiene (por eso puedes borrar `actividad.log` e incluso la
+  carpeta `datos/`). No existe una forma **portable** desde Python de impedir
+  que el dueño borre sus propios archivos o carpetas. Para impedirlo de verdad
+  hacen falta mecanismos del sistema operativo, y todos requieren privilegios y
+  pueden revertirse por un administrador:
+  - **Windows (NTFS):** ACL con `icacls` denegando *Delete*/*Delete subfolders
+    and files* a la cuenta (`icacls datos /deny "usuario:(DE,DC)"`).
+  - **Linux:** atributo inmutable `sudo chattr +i archivo` (requiere root).
+  - **La solución real** es sacar el almacén del control del usuario: una **base
+    de datos** o un **destino de log remoto/append-only** donde el usuario solo
+    pueda *agregar*, no borrar ni editar (ver sección 6).
 - **Límite honesto:** la cuenta que **ejecuta la app es dueña** de los archivos,
   y `root`/Administrador ignora estos permisos; con esfuerzo podría revertirlos.
   La `clave_maestra.key` también vive en disco junto a los datos. El endurecimiento
