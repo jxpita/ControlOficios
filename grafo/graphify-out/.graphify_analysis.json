@@ -1,52 +1,34 @@
 {
   "communities": {
     "0": [
-      "aplicacion_aplicacionprincipal",
-      "aplicacion_aplicacionprincipal_adjuntar_respuesta",
-      "aplicacion_aplicacionprincipal_al_cambiar_pestana",
-      "aplicacion_aplicacionprincipal_al_seleccionar_oficio",
-      "aplicacion_aplicacionprincipal_al_seleccionar_usuario",
-      "aplicacion_aplicacionprincipal_aplicar_cambios",
-      "aplicacion_aplicacionprincipal_configurar_estilos",
-      "aplicacion_aplicacionprincipal_construir_listado",
-      "aplicacion_aplicacionprincipal_construir_registro",
-      "aplicacion_aplicacionprincipal_construir_tablero",
-      "aplicacion_aplicacionprincipal_construir_usuarios",
-      "aplicacion_aplicacionprincipal_crear_cabecera",
-      "aplicacion_aplicacionprincipal_dibujar_barras",
-      "aplicacion_aplicacionprincipal_display_responsable",
-      "aplicacion_aplicacionprincipal_editar_usuario_seleccionado",
-      "aplicacion_aplicacionprincipal_eliminar_usuario_seleccionado",
-      "aplicacion_aplicacionprincipal_guardar_oficio",
-      "aplicacion_aplicacionprincipal_guardar_usuario",
-      "aplicacion_aplicacionprincipal_init",
-      "aplicacion_aplicacionprincipal_nuevo_usuario",
-      "aplicacion_aplicacionprincipal_oficio_por_referencia",
-      "aplicacion_aplicacionprincipal_pedir_nueva_clave",
-      "aplicacion_aplicacionprincipal_puede_gestionar_usuarios",
-      "aplicacion_aplicacionprincipal_refrescar_listado",
-      "aplicacion_aplicacionprincipal_refrescar_responsables",
-      "aplicacion_aplicacionprincipal_refrescar_tablero",
-      "aplicacion_aplicacionprincipal_refrescar_usuarios",
-      "aplicacion_aplicacionprincipal_responsable_por_display",
-      "aplicacion_aplicacionprincipal_restablecer_clave_seleccionado",
-      "aplicacion_aplicacionprincipal_tarjeta",
-      "aplicacion_aplicacionprincipal_usuarios_sistema",
-      "aplicacion_aplicacionprincipal_valores_responsables",
-      "aplicacion_aplicacionprincipal_ver_respuesta",
-      "aplicacion_rationale_292",
-      "aplicacion_rationale_353",
-      "aplicacion_rationale_365",
-      "aplicacion_rationale_375",
-      "aplicacion_rationale_392",
-      "aplicacion_rationale_581",
-      "aplicacion_rationale_607",
-      "aplicacion_rationale_639",
-      "aplicacion_rationale_659",
-      "aplicacion_rationale_742",
-      "aplicacion_rationale_839",
-      "aplicacion_rationale_858",
-      "aplicacion_selectorfecha_get"
+      "almacen_oficios",
+      "almacen_oficios_actualizar_estado_asignado",
+      "almacen_oficios_actualizar_oficio",
+      "almacen_oficios_adjuntar_respuesta",
+      "almacen_oficios_eliminar_respuesta",
+      "almacen_oficios_generar_referencia",
+      "almacen_oficios_guardar_registros",
+      "almacen_oficios_leer_registros",
+      "almacen_oficios_listar_oficios_visibles",
+      "almacen_oficios_puede_editar",
+      "almacen_oficios_rationale_1",
+      "almacen_oficios_rationale_105",
+      "almacen_oficios_rationale_187",
+      "almacen_oficios_rationale_207",
+      "almacen_oficios_rationale_271",
+      "almacen_oficios_rationale_320",
+      "almacen_oficios_rationale_329",
+      "almacen_oficios_rationale_342",
+      "almacen_oficios_rationale_382",
+      "almacen_oficios_rationale_52",
+      "almacen_oficios_rationale_64",
+      "almacen_oficios_rationale_80",
+      "almacen_oficios_registrar_oficio",
+      "almacen_oficios_resolver_estado",
+      "almacen_oficios_ruta_respuesta",
+      "almacen_oficios_validar_fecha",
+      "almacen_oficios_validar_fecha_respuesta",
+      "path"
     ],
     "1": [
       "autenticacion",
@@ -77,37 +59,11 @@
       "registro_actividad_registrar"
     ],
     "2": [
-      "almacen_oficios",
-      "almacen_oficios_actualizar_estado_asignado",
-      "almacen_oficios_actualizar_oficio",
-      "almacen_oficios_adjuntar_respuesta",
-      "almacen_oficios_generar_referencia",
-      "almacen_oficios_guardar_registros",
-      "almacen_oficios_leer_registros",
-      "almacen_oficios_puede_editar",
-      "almacen_oficios_rationale_1",
-      "almacen_oficios_rationale_105",
-      "almacen_oficios_rationale_190",
-      "almacen_oficios_rationale_254",
-      "almacen_oficios_rationale_303",
-      "almacen_oficios_rationale_312",
-      "almacen_oficios_rationale_325",
-      "almacen_oficios_rationale_52",
-      "almacen_oficios_rationale_64",
-      "almacen_oficios_rationale_80",
-      "almacen_oficios_registrar_oficio",
-      "almacen_oficios_resolver_estado",
-      "almacen_oficios_ruta_respuesta",
-      "almacen_oficios_validar_fecha",
-      "almacen_oficios_validar_fecha_respuesta",
-      "path"
-    ],
-    "3": [
       "aplicacion",
       "aplicacion_aplicacionprincipal_cerrar_sesion",
       "aplicacion_iniciar",
-      "aplicacion_rationale_1042",
-      "aplicacion_rationale_1074",
+      "aplicacion_rationale_1275",
+      "aplicacion_rationale_1307",
       "aplicacion_rationale_337",
       "aplicacion_ventanaingreso",
       "aplicacion_ventanaingreso_boton_principal",
@@ -125,7 +81,7 @@
       "aplicacion_ventanaingreso_init",
       "aplicacion_ventanaingreso_limpiar"
     ],
-    "4": [
+    "3": [
       "visor_pdf",
       "visor_pdf_abrir_con_sistema",
       "visor_pdf_abrir_visor",
@@ -146,7 +102,43 @@
       "visor_pdf_visorpdf_pagina_anterior",
       "visor_pdf_visorpdf_pagina_siguiente"
     ],
+    "4": [
+      "almacen_oficios_listar_oficios",
+      "metricas",
+      "metricas_convertir_fecha",
+      "metricas_dias_promedio_respuesta",
+      "metricas_distribucion_estados",
+      "metricas_por_responsable",
+      "metricas_rationale_1",
+      "metricas_rationale_118",
+      "metricas_rationale_127",
+      "metricas_rationale_72",
+      "metricas_rationale_84",
+      "metricas_rationale_98",
+      "metricas_registros",
+      "metricas_resumen",
+      "metricas_serie_por_dia",
+      "metricas_serie_por_mes"
+    ],
     "5": [
+      "aplicacion_aplicacionprincipal",
+      "aplicacion_aplicacionprincipal_al_seleccionar_usuario",
+      "aplicacion_aplicacionprincipal_configurar_estilos",
+      "aplicacion_aplicacionprincipal_dibujar_anillo_estados",
+      "aplicacion_aplicacionprincipal_dibujar_barras",
+      "aplicacion_aplicacionprincipal_dibujar_barras_horizontales",
+      "aplicacion_aplicacionprincipal_dibujar_barras_meses",
+      "aplicacion_aplicacionprincipal_editar_usuario_seleccionado",
+      "aplicacion_aplicacionprincipal_refrescar_tablero",
+      "aplicacion_aplicacionprincipal_tarjeta",
+      "aplicacion_aplicacionprincipal_ver_respuesta",
+      "aplicacion_rationale_1088",
+      "aplicacion_rationale_1114",
+      "aplicacion_rationale_1138",
+      "aplicacion_rationale_1189",
+      "aplicacion_rationale_683"
+    ],
+    "6": [
       "cifrado",
       "cifrado_cifrador",
       "cifrado_cifrar",
@@ -164,7 +156,23 @@
       "herramienta_admin_mostrar_json",
       "herramienta_admin_rationale_1"
     ],
-    "6": [
+    "7": [
+      "aplicacion_aplicacionprincipal_al_seleccionar_oficio",
+      "aplicacion_aplicacionprincipal_construir_listado",
+      "aplicacion_aplicacionprincipal_construir_registro",
+      "aplicacion_aplicacionprincipal_crear_cabecera",
+      "aplicacion_aplicacionprincipal_display_responsable",
+      "aplicacion_aplicacionprincipal_init",
+      "aplicacion_aplicacionprincipal_oficio_por_referencia",
+      "aplicacion_aplicacionprincipal_puede_gestionar_usuarios",
+      "aplicacion_aplicacionprincipal_valores_responsables",
+      "aplicacion_rationale_292",
+      "aplicacion_rationale_353",
+      "aplicacion_rationale_386",
+      "aplicacion_rationale_394",
+      "aplicacion_rationale_585"
+    ],
+    "8": [
       "aplicacion_rationale_105",
       "aplicacion_rationale_25",
       "aplicacion_rationale_37",
@@ -180,7 +188,7 @@
       "aplicacion_selectorfecha_set",
       "aplicacion_selectorfecha_ubicar_popup"
     ],
-    "7": [
+    "9": [
       "permisos",
       "permisos_anexar_texto_protegido",
       "permisos_chmod",
@@ -195,32 +203,66 @@
       "permisos_rationale_58",
       "permisos_rationale_66"
     ],
-    "8": [
-      "almacen_oficios_listar_oficios",
-      "metricas",
-      "metricas_convertir_fecha",
-      "metricas_rationale_1",
-      "metricas_rationale_51",
-      "metricas_resumen",
-      "metricas_serie_por_dia"
+    "10": [
+      "aplicacion_aplicacionprincipal_adjuntar_respuesta",
+      "aplicacion_aplicacionprincipal_aplicar_cambios",
+      "aplicacion_aplicacionprincipal_eliminar_respuesta",
+      "aplicacion_aplicacionprincipal_guardar_oficio",
+      "aplicacion_aplicacionprincipal_refrescar_listado",
+      "aplicacion_aplicacionprincipal_responsable_por_display",
+      "aplicacion_aplicacionprincipal_usuarios_sistema",
+      "aplicacion_rationale_365",
+      "aplicacion_rationale_611",
+      "aplicacion_rationale_643",
+      "aplicacion_rationale_663",
+      "aplicacion_selectorfecha_get"
+    ],
+    "11": [
+      "aplicacion_aplicacionprincipal_al_cambiar_pestana",
+      "aplicacion_aplicacionprincipal_construir_usuarios",
+      "aplicacion_aplicacionprincipal_eliminar_usuario_seleccionado",
+      "aplicacion_aplicacionprincipal_guardar_usuario",
+      "aplicacion_aplicacionprincipal_nuevo_usuario",
+      "aplicacion_aplicacionprincipal_refrescar_responsables",
+      "aplicacion_aplicacionprincipal_refrescar_usuarios",
+      "aplicacion_rationale_375",
+      "aplicacion_rationale_766"
+    ],
+    "12": [
+      "aplicacion_aplicacionprincipal_activar_rueda",
+      "aplicacion_aplicacionprincipal_construir_tablero",
+      "aplicacion_aplicacionprincipal_crear_lienzo",
+      "aplicacion_rationale_1010",
+      "aplicacion_rationale_958"
+    ],
+    "13": [
+      "aplicacion_aplicacionprincipal_pedir_nueva_clave",
+      "aplicacion_aplicacionprincipal_restablecer_clave_seleccionado",
+      "aplicacion_rationale_863",
+      "aplicacion_rationale_882"
     ]
   },
   "cohesion": {
-    "0": 0.08985507246376812,
+    "0": 0.13227513227513227,
     "1": 0.16,
-    "2": 0.15217391304347827,
-    "3": 0.19047619047619047,
-    "4": 0.18128654970760233,
-    "5": 0.2,
-    "6": 0.23076923076923078,
-    "7": 0.24358974358974358,
-    "8": 0.47619047619047616
+    "2": 0.19047619047619047,
+    "3": 0.18128654970760233,
+    "4": 0.225,
+    "5": 0.16666666666666666,
+    "6": 0.2,
+    "7": 0.18681318681318682,
+    "8": 0.23076923076923078,
+    "9": 0.24358974358974358,
+    "10": 0.24242424242424243,
+    "11": 0.3055555555555556,
+    "12": 0.4,
+    "13": 0.5
   },
   "gods": [
     {
       "id": "aplicacion_aplicacionprincipal",
       "label": "AplicacionPrincipal",
-      "degree": 35
+      "degree": 41
     },
     {
       "id": "aplicacion_ventanaingreso",
@@ -235,12 +277,17 @@
     {
       "id": "registro_actividad_registrar",
       "label": "registrar()",
-      "degree": 13
+      "degree": 14
     },
     {
       "id": "visor_pdf_visorpdf",
       "label": "VisorPDF",
       "degree": 13
+    },
+    {
+      "id": "almacen_oficios_leer_registros",
+      "label": "_leer_registros()",
+      "degree": 10
     },
     {
       "id": "autenticacion_leer_usuarios",
@@ -258,13 +305,8 @@
       "degree": 9
     },
     {
-      "id": "almacen_oficios_leer_registros",
-      "label": "_leer_registros()",
-      "degree": 8
-    },
-    {
-      "id": "almacen_oficios_registrar_oficio",
-      "label": "registrar_oficio()",
+      "id": "almacen_oficios_guardar_registros",
+      "label": "_guardar_registros()",
       "degree": 8
     }
   ],
@@ -328,18 +370,18 @@
   "questions": [
     {
       "type": "bridge_node",
-      "question": "Why does `AplicacionPrincipal` connect `Community 0` to `Community 3`?",
-      "why": "High betweenness centrality (0.373) - this node is a cross-community bridge."
+      "question": "Why does `AplicacionPrincipal` connect `Community 5` to `Community 2`, `Community 7`, `Community 10`, `Community 11`, `Community 12`, `Community 13`?",
+      "why": "High betweenness centrality (0.421) - this node is a cross-community bridge."
     },
     {
       "type": "bridge_node",
-      "question": "Why does `SelectorFecha` connect `Community 6` to `Community 0`, `Community 3`?",
-      "why": "High betweenness centrality (0.136) - this node is a cross-community bridge."
+      "question": "Why does `SelectorFecha` connect `Community 8` to `Community 2`, `Community 10`, `Community 7`?",
+      "why": "High betweenness centrality (0.118) - this node is a cross-community bridge."
     },
     {
       "type": "low_cohesion",
       "question": "Should `Community 0` be split into smaller, more focused modules?",
-      "why": "Cohesion score 0.08985507246376812 - nodes in this community are weakly interconnected."
+      "why": "Cohesion score 0.13227513227513227 - nodes in this community are weakly interconnected."
     }
   ]
 }

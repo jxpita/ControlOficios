@@ -383,7 +383,9 @@ class AplicacionPrincipal(ttk.Frame):
                     pass
 
     def _oficio_por_referencia(self, referencia):
-        for registro in oficios.listar_oficios():
+        """Busca solo entre los oficios visibles para el usuario en sesión."""
+        for registro in oficios.listar_oficios_visibles(
+                self.usuario["usuario"], self.usuario.get("rol")):
             if registro["referencia"] == referencia:
                 return registro
         return None
@@ -545,8 +547,8 @@ class AplicacionPrincipal(ttk.Frame):
                    command=self._adjuntar_respuesta).pack(side="left", padx=6)
         ttk.Button(barra, text="Ver respuesta (PDF)",
                    command=self._ver_respuesta).pack(side="left")
-        ttk.Button(barra, text="Actualizar lista",
-                   command=self._refrescar_listado).pack(side="left", padx=6)
+        ttk.Button(barra, text="Eliminar PDF",
+                   command=self._eliminar_respuesta).pack(side="left", padx=6)
 
         # Al seleccionar un oficio, precargar sus valores actuales.
         self.tabla.bind("<<TreeviewSelect>>", self._al_seleccionar_oficio)
@@ -558,7 +560,9 @@ class AplicacionPrincipal(ttk.Frame):
         seleccion_previa = self.tabla.selection()
         self.tabla.delete(*self.tabla.get_children())
         try:
-            for registro in oficios.listar_oficios():
+            # Un usuario regular solo ve sus oficios (registrados o asignados).
+            for registro in oficios.listar_oficios_visibles(
+                    self.usuario["usuario"], self.usuario.get("rol")):
                 observacion = " ".join(registro.get("observacion", "").split())
                 if len(observacion) > 60:
                     observacion = observacion[:57] + "..."
@@ -653,6 +657,26 @@ class AplicacionPrincipal(ttk.Frame):
             messagebox.showerror("Error", str(error))
             return
         messagebox.showinfo("Listo", "Respuesta en PDF adjuntada correctamente.")
+        self._refrescar_listado()
+
+    def _eliminar_respuesta(self):
+        """Elimina el PDF adjunto (por si se cargó el archivo equivocado)."""
+        seleccion = self.tabla.selection()
+        if not seleccion:
+            messagebox.showwarning("Sin selección", "Seleccione un oficio en la lista.")
+            return
+        if not messagebox.askyesno(
+                "Confirmar",
+                "¿Eliminar la respuesta en PDF adjunta a este oficio?\n"
+                "Podrá volver a adjuntar el archivo correcto."):
+            return
+        try:
+            oficios.eliminar_respuesta(seleccion[0], self.usuario["usuario"],
+                                       self.usuario.get("rol"))
+        except ValueError as error:
+            messagebox.showerror("Error", str(error))
+            return
+        messagebox.showinfo("Listo", "Respuesta en PDF eliminada.")
         self._refrescar_listado()
 
     def _ver_respuesta(self):
@@ -924,51 +948,155 @@ class AplicacionPrincipal(ttk.Frame):
             self.tabla_usuarios.insert("", "end",
                                        values=(usu["usuario"], usu["nombre"], usu["rol"]))
 
+    # ---- Tablero (dashboard) -----------------------------------------------
+    # Paleta de los estados, reutilizada en tarjetas y gráficos.
+    COLOR_POR_ASIGNAR = "#b45309"
+    COLOR_EN_PROCESO = "#1d4ed8"
+    COLOR_FINALIZADO = "#15803d"
+
     def _construir_tablero(self):
+        """Tablero con scroll vertical: tarjetas de indicadores y gráficos."""
         marco = self.pestana_tablero
-        ttk.Label(marco, text="Tablero de oficios",
-                  font=("Helvetica", 13, "bold")).pack(anchor="w")
-        self.marco_tarjetas = ttk.Frame(marco)
-        self.marco_tarjetas.pack(fill="x", pady=12)
-        self.lienzo = tk.Canvas(marco, height=220, background=COLOR_BLANCO,
-                                highlightthickness=1, highlightbackground="#ccc")
-        self.lienzo.pack(fill="x", pady=8)
-        # El tablero se actualiza solo al entrar a la pestaña (ver _al_cambiar_pestana).
+
+        # Lienzo desplazable que contiene todo el tablero.
+        self.tablero_lienzo = tk.Canvas(marco, background=COLOR_BLANCO,
+                                        highlightthickness=0)
+        barra = ttk.Scrollbar(marco, orient="vertical",
+                              command=self.tablero_lienzo.yview)
+        self.tablero_lienzo.configure(yscrollcommand=barra.set)
+        barra.pack(side="right", fill="y")
+        self.tablero_lienzo.pack(side="left", fill="both", expand=True)
+
+        self.tablero = ttk.Frame(self.tablero_lienzo)
+        self._id_tablero = self.tablero_lienzo.create_window(
+            (0, 0), window=self.tablero, anchor="nw")
+
+        def al_redimensionar_contenido(evento):
+            self.tablero_lienzo.configure(
+                scrollregion=self.tablero_lienzo.bbox("all"))
+
+        def al_redimensionar_lienzo(evento):
+            # El contenido ocupa siempre todo el ancho disponible.
+            self.tablero_lienzo.itemconfigure(self._id_tablero, width=evento.width)
+
+        self.tablero.bind("<Configure>", al_redimensionar_contenido)
+        self.tablero_lienzo.bind("<Configure>", al_redimensionar_lienzo)
+        self.tablero_lienzo.bind("<Enter>", lambda e: self._activar_rueda(True))
+        self.tablero_lienzo.bind("<Leave>", lambda e: self._activar_rueda(False))
+
+        ttk.Label(self.tablero, text="Tablero de oficios",
+                  font=("Helvetica", 13, "bold")).pack(anchor="w", pady=(0, 2))
+        self.lbl_alcance = ttk.Label(self.tablero, text="", foreground="#6B7280",
+                                     font=("Helvetica", 8))
+        self.lbl_alcance.pack(anchor="w")
+
+        # Dos filas de tarjetas de indicadores.
+        self.marco_tarjetas = ttk.Frame(self.tablero)
+        self.marco_tarjetas.pack(fill="x", pady=(10, 4))
+        self.marco_tarjetas2 = ttk.Frame(self.tablero)
+        self.marco_tarjetas2.pack(fill="x", pady=(0, 8))
+
+        # Gráfico 1: recepciones por día.
+        self.lienzo = self._crear_lienzo(self.tablero, 210)
+        # Gráficos 2 y 3, lado a lado: estados (anillo) y responsables (barras).
+        fila = ttk.Frame(self.tablero)
+        fila.pack(fill="x", pady=6)
+        self.lienzo_estados = self._crear_lienzo(fila, 240, lado="left", expandir=True)
+        self.lienzo_responsables = self._crear_lienzo(fila, 240, lado="left", expandir=True)
+        # Gráfico 4: recepciones por mes.
+        self.lienzo_meses = self._crear_lienzo(self.tablero, 210)
+
+    def _activar_rueda(self, activar):
+        """Activa la rueda del ratón solo mientras el cursor está en el tablero."""
+        if activar:
+            self.tablero_lienzo.bind_all(
+                "<MouseWheel>",
+                lambda e: self.tablero_lienzo.yview_scroll(int(-e.delta / 120), "units"))
+            self.tablero_lienzo.bind_all(
+                "<Button-4>", lambda e: self.tablero_lienzo.yview_scroll(-1, "units"))
+            self.tablero_lienzo.bind_all(
+                "<Button-5>", lambda e: self.tablero_lienzo.yview_scroll(1, "units"))
+        else:
+            for evento in ("<MouseWheel>", "<Button-4>", "<Button-5>"):
+                try:
+                    self.tablero_lienzo.unbind_all(evento)
+                except tk.TclError:
+                    pass
+
+    def _crear_lienzo(self, contenedor, alto, lado=None, expandir=False):
+        lienzo = tk.Canvas(contenedor, height=alto, background=COLOR_BLANCO,
+                           highlightthickness=1, highlightbackground="#DDE3EC")
+        if lado:
+            lienzo.pack(side=lado, fill="both", expand=expandir, padx=(0, 6))
+        else:
+            lienzo.pack(fill="x", pady=6)
+        return lienzo
 
     def _tarjeta(self, contenedor, titulo, valor, color):
-        marco = tk.Frame(contenedor, bg=color, padx=14, pady=10)
-        marco.pack(side="left", padx=6)
+        marco = tk.Frame(contenedor, bg=color, padx=12, pady=8)
+        marco.pack(side="left", padx=4)
         tk.Label(marco, text=str(valor), bg=color, fg=COLOR_BLANCO,
-                 font=("Helvetica", 18, "bold")).pack()
+                 font=("Helvetica", 17, "bold")).pack()
         tk.Label(marco, text=titulo, bg=color, fg=COLOR_BLANCO,
                  font=("Helvetica", 9)).pack()
 
     def _refrescar_tablero(self):
-        for hijo in self.marco_tarjetas.winfo_children():
-            hijo.destroy()
-        datos = metricas.resumen()
+        for contenedor in (self.marco_tarjetas, self.marco_tarjetas2):
+            for hijo in contenedor.winfo_children():
+                hijo.destroy()
+
+        # El tablero refleja únicamente los oficios que el usuario puede ver.
+        registros = oficios.listar_oficios_visibles(
+            self.usuario["usuario"], self.usuario.get("rol"))
+        datos = metricas.resumen(registros)
+        self.lbl_alcance.config(
+            text="Todos los oficios" if self._puede_gestionar_usuarios()
+            else "Solo sus oficios (registrados o asignados a usted)")
+
+        # Fila 1: volumen y estados.
         self._tarjeta(self.marco_tarjetas, "Total", datos["total"], COLOR_AZUL)
-        self._tarjeta(self.marco_tarjetas, "Por asignar", datos["por_estado"]["Por asignar"], "#b45309")
-        self._tarjeta(self.marco_tarjetas, "En proceso", datos["por_estado"]["En proceso"], "#1d4ed8")
-        self._tarjeta(self.marco_tarjetas, "Finalizados", datos["finalizados"], "#15803d")
-        self._tarjeta(self.marco_tarjetas, "Hoy", datos["recibidos_hoy"], "#0f766e")
-        self._tarjeta(self.marco_tarjetas, "Semana", datos["recibidos_semana"], "#7c3aed")
-        self._tarjeta(self.marco_tarjetas, "Mes", datos["recibidos_mes"], "#be123c")
-        self._dibujar_barras(metricas.serie_por_dia(14))
+        self._tarjeta(self.marco_tarjetas, "Por asignar",
+                      datos["por_estado"]["Por asignar"], self.COLOR_POR_ASIGNAR)
+        self._tarjeta(self.marco_tarjetas, "En proceso",
+                      datos["por_estado"]["En proceso"], self.COLOR_EN_PROCESO)
+        self._tarjeta(self.marco_tarjetas, "Finalizados",
+                      datos["finalizados"], self.COLOR_FINALIZADO)
+        self._tarjeta(self.marco_tarjetas, "% finalizados",
+                      f"{datos['porcentaje_finalizados']}%", "#0f766e")
+        promedio = datos["dias_promedio_respuesta"]
+        self._tarjeta(self.marco_tarjetas, "Días prom. respuesta",
+                      promedio if promedio is not None else "—", "#334155")
+
+        # Fila 2: recepción reciente y seguimiento de respuestas.
+        self._tarjeta(self.marco_tarjetas2, "Hoy", datos["recibidos_hoy"], "#0f766e")
+        self._tarjeta(self.marco_tarjetas2, "Semana", datos["recibidos_semana"], "#7c3aed")
+        self._tarjeta(self.marco_tarjetas2, "Mes", datos["recibidos_mes"], "#be123c")
+        self._tarjeta(self.marco_tarjetas2, "Con respuesta", datos["con_respuesta"], "#15803d")
+        self._tarjeta(self.marco_tarjetas2, "Sin respuesta", datos["sin_respuesta"], "#b45309")
+        self._tarjeta(self.marco_tarjetas2, "Con PDF", datos["con_pdf"], "#1d4ed8")
+        self._tarjeta(self.marco_tarjetas2, "Sin responsable",
+                      datos["sin_responsable"], "#64748b")
+
+        # Gráficos.
+        self._dibujar_barras(metricas.serie_por_dia(14, registros))
+        self._dibujar_anillo_estados(metricas.distribucion_estados(registros))
+        self._dibujar_barras_horizontales(metricas.por_responsable(registros))
+        self._dibujar_barras_meses(metricas.serie_por_mes(6, registros))
+        self.tablero_lienzo.configure(scrollregion=self.tablero_lienzo.bbox("all"))
 
     def _dibujar_barras(self, serie):
+        """Barras verticales: oficios recibidos por día."""
         lienzo = self.lienzo
         lienzo.delete("all")
         lienzo.update_idletasks()
         ancho_lienzo = lienzo.winfo_width() or 800
-        alto_lienzo = 220
-        margen_izq, margen_inf, margen_sup = 30, 30, 20
+        alto_lienzo = 210
+        margen_izq, margen_inf, margen_sup = 30, 30, 26
         valor_max = max([valor for _, valor in serie] + [1])
         cantidad = len(serie)
         ancho_barra = (ancho_lienzo - margen_izq - 10) / cantidad
-        lienzo.create_text(margen_izq, margen_sup - 8,
-                           text="Oficios recibidos por día (14 días)",
-                           anchor="w", font=("Helvetica", 9, "bold"))
+        lienzo.create_text(margen_izq, 12, text="Oficios recibidos por día (14 días)",
+                           anchor="w", font=("Helvetica", 9, "bold"), fill=COLOR_TEXTO)
         for indice, (dia, valor) in enumerate(serie):
             x0 = margen_izq + indice * ancho_barra + 4
             x1 = x0 + ancho_barra - 8
@@ -981,6 +1109,111 @@ class AplicacionPrincipal(ttk.Frame):
                                    font=("Helvetica", 8))
             lienzo.create_text((x0 + x1) / 2, y1 + 12, text=dia[5:],
                                font=("Helvetica", 7))
+
+    def _dibujar_barras_meses(self, serie):
+        """Barras verticales: oficios recibidos por mes."""
+        lienzo = self.lienzo_meses
+        lienzo.delete("all")
+        lienzo.update_idletasks()
+        ancho_lienzo = lienzo.winfo_width() or 800
+        alto_lienzo = 210
+        margen_izq, margen_inf, margen_sup = 30, 30, 26
+        valor_max = max([valor for _, valor in serie] + [1])
+        ancho_barra = (ancho_lienzo - margen_izq - 10) / max(len(serie), 1)
+        lienzo.create_text(margen_izq, 12, text="Oficios recibidos por mes (6 meses)",
+                           anchor="w", font=("Helvetica", 9, "bold"), fill=COLOR_TEXTO)
+        for indice, (mes, valor) in enumerate(serie):
+            x0 = margen_izq + indice * ancho_barra + 12
+            x1 = x0 + ancho_barra - 24
+            altura = (alto_lienzo - margen_inf - margen_sup) * (valor / valor_max)
+            y1 = alto_lienzo - margen_inf
+            y0 = y1 - altura
+            lienzo.create_rectangle(x0, y0, x1, y1, fill="#7c3aed", outline="")
+            lienzo.create_text((x0 + x1) / 2, y0 - 8, text=str(valor),
+                               font=("Helvetica", 8))
+            lienzo.create_text((x0 + x1) / 2, y1 + 12, text=mes,
+                               font=("Helvetica", 7))
+
+    def _dibujar_anillo_estados(self, distribucion):
+        """Gráfico de anillo con la distribución por estado."""
+        lienzo = self.lienzo_estados
+        lienzo.delete("all")
+        lienzo.update_idletasks()
+        ancho = lienzo.winfo_width() or 380
+        alto = 240
+        lienzo.create_text(16, 12, text="Distribución por estado", anchor="w",
+                           font=("Helvetica", 9, "bold"), fill=COLOR_TEXTO)
+
+        total = sum(valor for _, valor in distribucion)
+        colores = {"Por asignar": self.COLOR_POR_ASIGNAR,
+                   "En proceso": self.COLOR_EN_PROCESO,
+                   "Finalizado": self.COLOR_FINALIZADO}
+        # Círculo a la izquierda, leyenda a la derecha.
+        diametro = min(alto - 70, 140)
+        x0, y0 = 30, 46
+        x1, y1 = x0 + diametro, y0 + diametro
+
+        if not total:
+            lienzo.create_oval(x0, y0, x1, y1, outline="#DDE3EC", width=18)
+            lienzo.create_text((x0 + x1) / 2, (y0 + y1) / 2, text="Sin datos",
+                               font=("Helvetica", 9), fill="#6B7280")
+            return
+
+        inicio = 90.0
+        for estado, valor in distribucion:
+            if not valor:
+                continue
+            extension = -360.0 * valor / total
+            # 'arc' con ancho grueso da el efecto de anillo sin rellenar el centro.
+            lienzo.create_arc(x0, y0, x1, y1, start=inicio, extent=extension,
+                              style="arc", width=22, outline=colores.get(estado, COLOR_AZUL))
+            inicio += extension
+        lienzo.create_text((x0 + x1) / 2, (y0 + y1) / 2 - 8, text=str(total),
+                           font=("Helvetica", 16, "bold"), fill=COLOR_TEXTO)
+        lienzo.create_text((x0 + x1) / 2, (y0 + y1) / 2 + 12, text="oficios",
+                           font=("Helvetica", 8), fill="#6B7280")
+
+        # Leyenda.
+        leyenda_x = x1 + 24
+        leyenda_y = y0 + 10
+        for estado, valor in distribucion:
+            porcentaje = round(valor * 100 / total) if total else 0
+            lienzo.create_rectangle(leyenda_x, leyenda_y, leyenda_x + 12, leyenda_y + 12,
+                                    fill=colores.get(estado, COLOR_AZUL), outline="")
+            lienzo.create_text(leyenda_x + 20, leyenda_y + 6, anchor="w",
+                               text=f"{estado}: {valor} ({porcentaje}%)",
+                               font=("Helvetica", 9), fill=COLOR_TEXTO)
+            leyenda_y += 26
+
+    def _dibujar_barras_horizontales(self, datos):
+        """Barras horizontales: cantidad de oficios por responsable."""
+        lienzo = self.lienzo_responsables
+        lienzo.delete("all")
+        lienzo.update_idletasks()
+        ancho = lienzo.winfo_width() or 380
+        lienzo.create_text(16, 12, text="Oficios por responsable", anchor="w",
+                           font=("Helvetica", 9, "bold"), fill=COLOR_TEXTO)
+        if not datos:
+            lienzo.create_text(ancho / 2, 120, text="Sin datos",
+                               font=("Helvetica", 9), fill="#6B7280")
+            return
+
+        margen_izq = 130          # espacio para el nombre
+        margen_der = 40           # espacio para el valor
+        ancho_util = max(ancho - margen_izq - margen_der, 40)
+        valor_max = max(valor for _, valor in datos)
+        alto_fila = min(26, max(16, int((240 - 50) / max(len(datos), 1))))
+        y = 42
+        for nombre, valor in datos:
+            etiqueta = nombre if len(nombre) <= 18 else nombre[:17] + "…"
+            lienzo.create_text(margen_izq - 8, y + alto_fila / 2, text=etiqueta,
+                               anchor="e", font=("Helvetica", 8), fill=COLOR_TEXTO)
+            largo = ancho_util * (valor / valor_max)
+            lienzo.create_rectangle(margen_izq, y + 3, margen_izq + max(largo, 2),
+                                    y + alto_fila - 3, fill=COLOR_AZUL, outline="")
+            lienzo.create_text(margen_izq + largo + 8, y + alto_fila / 2,
+                               text=str(valor), anchor="w", font=("Helvetica", 8))
+            y += alto_fila
 
     def _al_cambiar_pestana(self, evento):
         # Se identifica la pestaña por su widget (no por índice), porque la

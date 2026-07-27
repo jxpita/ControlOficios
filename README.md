@@ -48,11 +48,23 @@ En el primer arranque no hay usuarios: la pantalla pedirá crear el
 - **Administrador:** puede crear, editar y eliminar otros usuarios (excepto
   eliminar al superusuario) y usar toda la aplicación.
 - **Usuario (regular):** usa la aplicación (registrar oficios, tablero) pero
-  **no ve la pestaña "Usuarios"** ni puede gestionar cuentas. Sobre los oficios
-  **asignados a él** puede modificar la **fecha de respuesta**, la
-  **observación** y **alternar el estado entre "En proceso" y "Finalizado"**
-  (por si finalizó por error y quiere reabrirlo); no puede reasignar
-  responsables ni dejarlo en "Por asignar".
+  **no ve la pestaña "Usuarios"** ni puede gestionar cuentas. **Solo ve los
+  oficios que él registró o que tiene asignados**, no los del resto. Sobre esos
+  oficios puede modificar la **fecha de respuesta**, la **observación** y
+  **alternar el estado entre "En proceso" y "Finalizado"** (por si finalizó por
+  error y quiere reabrirlo); no puede reasignar responsables ni dejarlo en
+  "Por asignar".
+
+### Visibilidad de los oficios
+
+| Rol | Oficios que ve |
+|---|---|
+| Superusuario / Administrador | **Todos** |
+| Usuario (regular) | Solo los que **registró** o tiene **asignados** |
+
+El filtro se aplica en la capa de almacenamiento
+(`almacen_oficios.listar_oficios_visibles`), y alcanza tanto a la tabla de la
+pestaña *Oficios* como a las métricas del *Tablero*.
 
 La gestión de usuarios (crear, editar, eliminar, asignar rol y **restablecer
 contraseñas**) está disponible solo para superusuario y administrador. Nadie
@@ -111,9 +123,30 @@ Cada oficio puede llevar adjunta **la respuesta en PDF**:
 - **"Ver respuesta (PDF)"** lo muestra **dentro de la aplicación** (visor con
   navegación de páginas, zoom y desplazamiento) si PyMuPDF está instalado; si
   no, ofrece abrirlo con el lector del sistema.
+- **"Eliminar PDF"** borra el archivo adjunto (por si se cargó el equivocado) y
+  permite volver a adjuntar el correcto.
 - La columna **PDF** de la tabla indica con "Sí" qué oficios ya tienen respuesta.
-- Un usuario regular solo puede adjuntar respuestas a **sus** oficios; los
-  gestores, a cualquiera.
+- Un usuario regular solo puede adjuntar o eliminar respuestas en **sus**
+  oficios; los gestores, en cualquiera.
+
+## 2.3 Tablero (dashboard)
+
+El tablero tiene **desplazamiento vertical** y muestra únicamente los oficios
+que el usuario puede ver (ver *Visibilidad de los oficios*).
+
+**Indicadores:** total, por estado (por asignar / en proceso / finalizados),
+% finalizados, días promedio de respuesta, recibidos hoy / semana / mes,
+con y sin respuesta, con PDF adjunto y sin responsable.
+
+**Gráficos:**
+
+- Oficios recibidos **por día** (últimos 14 días).
+- **Distribución por estado** (gráfico de anillo con leyenda y porcentajes).
+- Oficios **por responsable** (barras horizontales).
+- Oficios recibidos **por mes** (últimos 6 meses).
+
+Todos los gráficos se dibujan con el `Canvas` de Tkinter: **no requieren
+matplotlib ni ninguna librería de gráficos**.
 
 ## 2.2 Bitácora de auditoría
 

@@ -183,6 +183,23 @@ def listar_oficios() -> List[Dict]:
     return _leer_registros()
 
 
+def listar_oficios_visibles(actor: str, actor_rol: str) -> List[Dict]:
+    """Oficios que puede VER el usuario en sesión.
+
+    - Superusuario y administrador: todos.
+    - Usuario regular: solo los que él registró o los que tiene asignados.
+    """
+    registros = _leer_registros()
+    if actor_rol in ROLES_GESTORES:
+        return registros
+    actor_norm = (actor or "").strip().lower()
+    return [
+        registro for registro in registros
+        if (registro.get("id_empleado", "") or "").strip().lower() == actor_norm
+        or (registro.get("registrado_por", "") or "").strip().lower() == actor_norm
+    ]
+
+
 def actualizar_oficio(referencia: str, nuevo_estado: str, id_empleado: str,
                      nombre_empleado: str, actualizado_por: str,
                      actor_rol: str = None, fecha_respuesta: str = None,
@@ -358,4 +375,36 @@ def adjuntar_respuesta(referencia: str, ruta_origen: str, actor: str,
                 "ADJUNTAR_RESPUESTA",
                 f"referencia={referencia}; archivo={nombre}", actor)
             return nombre
+    raise ValueError("No se encontró la referencia indicada.")
+
+
+def eliminar_respuesta(referencia: str, actor: str, actor_rol: str) -> None:
+    """Elimina el PDF de respuesta adjunto (por si se cargó el archivo
+    equivocado). Mismos permisos que adjuntar: un usuario regular solo sobre
+    los oficios asignados a él."""
+    registros = _leer_registros()
+    for registro in registros:
+        if registro["referencia"] == referencia:
+            if not _puede_editar(registro, actor, actor_rol):
+                raise ValueError("Solo puede eliminar respuestas de oficios asignados a usted.")
+            nombre = registro.get("archivo_respuesta", "")
+            if not nombre:
+                raise ValueError("Este oficio no tiene una respuesta en PDF adjunta.")
+            ruta = DIR_RESPUESTAS / nombre
+            try:
+                permisos.hacer_escribible(ruta)
+                ruta.unlink(missing_ok=True)
+            except OSError as error:
+                raise ValueError(f"No se pudo eliminar el PDF: {error}")
+            registro["archivo_respuesta"] = ""
+            registro.setdefault("historial", []).append({
+                "evento": "Respuesta en PDF eliminada",
+                "por": actor,
+                "cuando": datetime.now().isoformat(timespec="seconds"),
+            })
+            _guardar_registros(registros)
+            registro_actividad.registrar(
+                "ELIMINAR_RESPUESTA",
+                f"referencia={referencia}; archivo={nombre}", actor)
+            return
     raise ValueError("No se encontró la referencia indicada.")
