@@ -18,7 +18,7 @@ from typing import List, Dict
 
 from cryptography.fernet import InvalidToken
 
-from configuracion import ARCHIVO_OFICIOS, PREFIJO_REFERENCIA, ESTADOS
+from configuracion import ARCHIVO_OFICIOS, PREFIJO_REFERENCIA, ESTADOS, ROLES_GESTORES
 from cifrado import cifrar, descifrar
 import registro_actividad
 import permisos
@@ -144,13 +144,23 @@ def listar_oficios() -> List[Dict]:
 
 
 def actualizar_oficio(referencia: str, nuevo_estado: str, id_empleado: str,
-                     nombre_empleado: str, actualizado_por: str) -> str:
+                     nombre_empleado: str, actualizado_por: str,
+                     actor_rol: str = None) -> str:
     """Actualiza estado y/o responsable de un oficio en una sola operación,
     respetando las reglas de negocio (ver `_resolver_estado`).
+
+    Reservado a GESTORES (administrador / superusuario): pueden reasignar el
+    responsable y fijar cualquier estado. Los usuarios regulares no pueden usar
+    esta vía (ver `finalizar_oficio`).
 
     Devuelve el estado final aplicado (puede diferir del solicitado si las
     reglas lo ajustaron, p. ej. al asignar responsable a un "Por asignar").
     """
+    if actor_rol is not None and actor_rol not in ROLES_GESTORES:
+        raise ValueError(
+            "No tiene permisos para reasignar el responsable ni cambiar "
+            "libremente el estado del oficio."
+        )
     if nuevo_estado not in ESTADOS:
         raise ValueError("Estado no válido.")
     nombre_empleado = (nombre_empleado or "").strip()
@@ -182,4 +192,35 @@ def actualizar_oficio(referencia: str, nuevo_estado: str, id_empleado: str,
                     f"referencia={referencia}; " + "; ".join(cambios),
                     actualizado_por)
             return estado_final
+    raise ValueError("No se encontró la referencia indicada.")
+
+
+def finalizar_oficio(referencia: str, actor: str) -> str:
+    """Finaliza un oficio desde el rol de usuario regular.
+
+    Solo permite la transición "En proceso" -> "Finalizado" y únicamente si el
+    oficio está asignado al propio `actor` (comparando el usuario responsable).
+    """
+    actor_norm = (actor or "").strip().lower()
+    registros = _leer_registros()
+    for registro in registros:
+        if registro["referencia"] == referencia:
+            responsable = (registro.get("id_empleado", "") or "").strip().lower()
+            if not responsable or responsable != actor_norm:
+                raise ValueError("Solo puede finalizar oficios asignados a usted.")
+            if registro.get("estado") != "En proceso":
+                raise ValueError(
+                    "Solo puede finalizar un oficio que esté \"En proceso\"."
+                )
+            registro["estado"] = "Finalizado"
+            registro.setdefault("historial", []).append({
+                "evento": "Estado: Finalizado",
+                "por": actor,
+                "cuando": datetime.now().isoformat(timespec="seconds"),
+            })
+            _guardar_registros(registros)
+            registro_actividad.registrar(
+                "ACTUALIZAR_OFICIO",
+                f"referencia={referencia}; Estado: Finalizado", actor)
+            return "Finalizado"
     raise ValueError("No se encontró la referencia indicada.")

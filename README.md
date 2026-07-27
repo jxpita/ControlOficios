@@ -35,13 +35,22 @@ En el primer arranque no hay usuarios: la pantalla pedirá crear el
   y **no puede eliminarse ni cambiar de rol** bajo ninguna circunstancia.
 - **Administrador:** puede crear, editar y eliminar otros usuarios (excepto
   eliminar al superusuario) y usar toda la aplicación.
-- **Usuario (regular):** usa la aplicación (registrar oficios, gestionar
-  estados/responsables, tablero) pero **no ve la pestaña "Usuarios"** ni puede
-  gestionar cuentas.
+- **Usuario (regular):** usa la aplicación (registrar oficios, tablero) pero
+  **no ve la pestaña "Usuarios"** ni puede gestionar cuentas. Sobre los oficios,
+  solo puede **marcar como "Finalizado"** un oficio que esté **"En proceso" y
+  asignado a él** (no puede reasignar responsables ni fijar otros estados).
 
 La gestión de usuarios (crear/editar/eliminar, asignar rol) está disponible
 solo para superusuario y administrador. Nadie puede eliminarse a sí mismo
 mientras su sesión está activa.
+
+### Responsables de oficios
+
+El **responsable** de un oficio es cualquier **usuario del sistema** (sin
+importar su rol); se elige de la lista de usuarios. Solo **administrador y
+superusuario** pueden reasignar responsables o cambiar libremente el estado de
+cualquier oficio (respetando las reglas: un oficio con responsable no puede
+quedar "Por asignar"; "En proceso"/"Finalizado" exigen responsable).
 
 ## 2.2 Bitácora de auditoría
 
@@ -65,15 +74,13 @@ oficios_tracker/
 ├── autenticacion.py      # Ingreso, usuarios y roles del sistema
 ├── registro_actividad.py # Bitácora de auditoría (log en texto plano)
 ├── permisos.py           # Endurece permisos (solo lectura) de los archivos
-├── almacen_empleados.py  # Lee empleados.csv para el combo
 ├── almacen_oficios.py    # CRUD de oficios + referencia secuencial
 ├── metricas.py           # Cálculo de métricas del tablero
 └── datos/                # Se crea sola; contiene:
     ├── clave_maestra.key   (clave de cifrado — PROTEGER / RESPALDAR)
     ├── credenciales.dat    (usuarios del sistema, cifrado)
     ├── oficios.dat         (registros, cifrado)
-    ├── actividad.log       (bitácora de auditoría, texto plano)
-    └── empleados.csv       (idUsuario,nombreUsuario,nombreEmpleado)
+    └── actividad.log       (bitácora de auditoría, texto plano)
 ```
 
 La referencia interna tiene el formato **`UDC-OFICIO-AAAAMMDD-NNNN`**.
@@ -149,8 +156,9 @@ cuenta que **algunos antivirus** miran con recelo los ejecutables comprimidos
 con UPX; si te da falsos positivos, compila sin UPX.
 
 **Importante sobre las rutas:** el código detecta si corre como `.exe` y guarda
-la carpeta `datos/` **junto al ejecutable** (no en la carpeta temporal). Copia
-tu `empleados.csv` dentro de `datos/` al lado del `.exe`.
+la carpeta `datos/` **junto al ejecutable** (no en la carpeta temporal). Ahí se
+crean solos la clave, las credenciales, los oficios y la bitácora; coloca junto
+al `.exe` el ícono (`datos/bdp_icon_alt.ico`) si quieres que se vea en las ventanas.
 
 ## 5. Notas de seguridad (léelas)
 

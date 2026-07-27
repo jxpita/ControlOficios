@@ -4,7 +4,6 @@ from tkinter import ttk, messagebox
 from datetime import date, datetime
 
 import autenticacion
-import almacen_empleados
 import almacen_oficios as oficios
 import metricas
 from configuracion import (
@@ -162,7 +161,6 @@ class AplicacionPrincipal(ttk.Frame):
         super().__init__(maestro, padding=10)
         self.maestro = maestro
         self.usuario = usuario_sesion
-        self.empleados = almacen_empleados.cargar_empleados()
 
         # --- Configuración de la ventana ---
         maestro.title(f"Control de Oficios · {self.usuario['nombre']} "
@@ -284,12 +282,55 @@ class AplicacionPrincipal(ttk.Frame):
         # Restablecer la ventana a su tamaño de ingreso y mostrar el login.
         VentanaIngreso(self.maestro)
 
-    # ---- Métodos de las pestañas (sin cambios, solo se ajustan los colores) ----
-    def _valores_empleados(self):
-        return [empleado["nombreEmpleado"] for empleado in self.empleados]
+    # ---- Responsables: ahora son los usuarios del sistema (cualquier rol) ----
+    def _usuarios_sistema(self):
+        try:
+            return autenticacion.listar_usuarios()
+        except Exception:
+            return []
+
+    def _display_responsable(self, usuario, nombre):
+        """Texto que se muestra en los desplegables para un responsable.
+        Incluye el usuario entre paréntesis para evitar ambigüedad si dos
+        personas comparten el mismo nombre."""
+        if not usuario:
+            return ""
+        return f"{nombre} ({usuario})" if nombre else usuario
+
+    def _valores_responsables(self):
+        return [self._display_responsable(u["usuario"], u["nombre"])
+                for u in self._usuarios_sistema()]
+
+    def _responsable_por_display(self, display):
+        """A partir del texto del desplegable devuelve (usuario, nombre).
+        Para "(Sin responsable)" o vacío devuelve ("", "")."""
+        if not display or display == self.SIN_RESPONSABLE:
+            return "", ""
+        for u in self._usuarios_sistema():
+            if self._display_responsable(u["usuario"], u["nombre"]) == display:
+                return u["usuario"], u["nombre"]
+        return "", ""
+
+    def _refrescar_responsables(self):
+        """Repuebla los desplegables de responsable con los usuarios actuales."""
+        valores = [self.SIN_RESPONSABLE] + self._valores_responsables()
+        for atributo in ("combo_empleado", "combo_responsable_edicion"):
+            combo = getattr(self, atributo, None)
+            if combo is not None:
+                try:
+                    combo.config(values=valores)
+                except tk.TclError:
+                    pass
+
+    def _oficio_por_referencia(self, referencia):
+        for registro in oficios.listar_oficios():
+            if registro["referencia"] == referencia:
+                return registro
+        return None
 
     def _puede_gestionar_usuarios(self):
-        """True si el usuario en sesión puede crear/editar/eliminar usuarios."""
+        """True si el usuario en sesión puede crear/editar/eliminar usuarios
+        y reasignar/cambiar libremente el estado de los oficios (gestor)."""
         return self.usuario.get("rol") in ROLES_GESTORES
 
     def _construir_registro(self):
@@ -313,14 +354,12 @@ class AplicacionPrincipal(ttk.Frame):
         self.entrada_fecha_oficio = SelectorFecha(marco)
         self.entrada_fecha_oficio.grid(row=3, column=1, sticky="w", pady=4)
 
-        ttk.Label(marco, text="Usuario / empleado responsable (opcional)").grid(row=4, column=0, sticky="w", pady=4)
+        ttk.Label(marco, text="Usuario responsable (opcional)").grid(row=4, column=0, sticky="w", pady=4)
         self.combo_empleado = ttk.Combobox(
             marco, width=37, state="readonly",
-            values=[self.SIN_RESPONSABLE] + self._valores_empleados())
+            values=[self.SIN_RESPONSABLE] + self._valores_responsables())
         self.combo_empleado.current(0)  # por defecto: sin responsable
         self.combo_empleado.grid(row=4, column=1, sticky="w", pady=4)
-        if not self.empleados:
-            ttk.Label(marco, text="(No hay empleados. Cargue datos/empleados.csv)", foreground="#a00").grid(row=5, column=1, sticky="w")
 
         ttk.Label(marco, text="Estado").grid(row=6, column=0, sticky="w", pady=4)
         self.combo_estado = ttk.Combobox(marco, width=25, state="readonly", values=ESTADOS)
@@ -334,22 +373,9 @@ class AplicacionPrincipal(ttk.Frame):
         estilo.configure("Accent.TButton", background=COLOR_AZUL, foreground=COLOR_BLANCO, font=("Helvetica", 10, "bold"))
         btn.config(style="Accent.TButton")
 
-    # Los demás métodos (_guardar_oficio, _construir_listado, etc.) permanecen idénticos.
-    # Para ahorrar espacio, los incluyo a continuación pero son los mismos que antes.
-
-    def _empleado_por_nombre(self, nombre):
-        """Devuelve (id_empleado, nombre_empleado) a partir del texto elegido
-        en un desplegable. Para "(Sin responsable)" o vacío devuelve ("", "")."""
-        if not nombre or nombre == self.SIN_RESPONSABLE:
-            return "", ""
-        for empleado in self.empleados:
-            if empleado["nombreEmpleado"] == nombre:
-                return empleado["idUsuario"], empleado["nombreEmpleado"]
-        return "", nombre
-
     def _guardar_oficio(self):
         # El responsable es opcional: "(Sin responsable)" => sin asignar.
-        id_empleado, nombre_empleado = self._empleado_por_nombre(self.combo_empleado.get())
+        id_empleado, nombre_empleado = self._responsable_por_display(self.combo_empleado.get())
         try:
             referencia = oficios.registrar_oficio(
                 self.entrada_codigo.get(), self.entrada_fecha_recepcion.get(),
@@ -369,33 +395,45 @@ class AplicacionPrincipal(ttk.Frame):
     def _construir_listado(self):
         marco = self.pestana_listado
         columnas = ("referencia", "codigo", "recepcion", "oficio", "empleado", "estado")
-        titulos = ("Referencia", "Código oficio", "F. recepción", "F. oficio", "Empleado", "Estado")
+        titulos = ("Referencia", "Código oficio", "F. recepción", "F. oficio", "Responsable", "Estado")
         self.tabla = ttk.Treeview(marco, columns=columnas, show="headings", height=16)
         for columna, titulo in zip(columnas, titulos):
             self.tabla.heading(columna, text=titulo)
             self.tabla.column(columna, width=140 if columna == "referencia" else 110, anchor="w")
-        self.tabla.column("empleado", width=150)
+        self.tabla.column("empleado", width=180)
         self.tabla.pack(fill="both", expand=True, side="top")
 
         barra = ttk.Frame(marco)
         barra.pack(fill="x", pady=8)
         ttk.Button(barra, text="Actualizar lista", command=self._refrescar_listado).pack(side="left")
 
-        ttk.Label(barra, text="   Responsable:").pack(side="left")
-        self.combo_responsable_edicion = ttk.Combobox(
-            barra, width=20, state="readonly",
-            values=[self.SIN_RESPONSABLE] + self._valores_empleados())
-        self.combo_responsable_edicion.current(0)
-        self.combo_responsable_edicion.pack(side="left", padx=5)
+        if self._puede_gestionar_usuarios():
+            # Gestor (administrador / superusuario): reasigna responsable y
+            # cambia el estado libremente (respetando las reglas de negocio).
+            ttk.Label(barra, text="   Responsable:").pack(side="left")
+            self.combo_responsable_edicion = ttk.Combobox(
+                barra, width=22, state="readonly",
+                values=[self.SIN_RESPONSABLE] + self._valores_responsables())
+            self.combo_responsable_edicion.current(0)
+            self.combo_responsable_edicion.pack(side="left", padx=5)
 
-        ttk.Label(barra, text="Estado:").pack(side="left")
-        self.combo_nuevo_estado = ttk.Combobox(barra, width=14, state="readonly", values=ESTADOS)
-        self.combo_nuevo_estado.current(0)
-        self.combo_nuevo_estado.pack(side="left", padx=5)
+            ttk.Label(barra, text="Estado:").pack(side="left")
+            self.combo_nuevo_estado = ttk.Combobox(barra, width=14, state="readonly", values=ESTADOS)
+            self.combo_nuevo_estado.current(0)
+            self.combo_nuevo_estado.pack(side="left", padx=5)
 
-        ttk.Button(barra, text="Aplicar cambios", command=self._aplicar_cambios).pack(side="left", padx=5)
+            ttk.Button(barra, text="Aplicar cambios", command=self._aplicar_cambios).pack(side="left", padx=5)
+        else:
+            # Usuario regular: solo puede marcar como "Finalizado" los oficios
+            # "En proceso" que tenga asignados.
+            ttk.Label(
+                barra,
+                text="   Puede marcar como \"Finalizado\" un oficio \"En proceso\" asignado a usted:"
+            ).pack(side="left")
+            ttk.Button(barra, text="Marcar como Finalizado",
+                       command=self._finalizar_oficio).pack(side="left", padx=5)
 
-        # Al seleccionar un oficio, precargar sus valores actuales.
+        # Al seleccionar un oficio, precargar sus valores actuales (solo gestor).
         self.tabla.bind("<<TreeviewSelect>>", self._al_seleccionar_oficio)
         self._refrescar_listado()
 
@@ -413,32 +451,37 @@ class AplicacionPrincipal(ttk.Frame):
             messagebox.showerror("Error al cargar oficios", str(e))
 
     def _al_seleccionar_oficio(self, evento=None):
-        """Precarga los desplegables con el responsable y estado del oficio
-        seleccionado en la tabla."""
+        """Precarga los desplegables del gestor con el responsable y estado del
+        oficio seleccionado. Para usuarios regulares no hay desplegables."""
+        if not self._puede_gestionar_usuarios():
+            return
         seleccion = self.tabla.selection()
         if not seleccion:
             return
-        valores = self.tabla.item(seleccion[0], "values")
-        empleado_actual = valores[4] if len(valores) > 4 else ""
-        estado_actual = valores[5] if len(valores) > 5 else ""
-        if empleado_actual and empleado_actual in self._valores_empleados():
-            self.combo_responsable_edicion.set(empleado_actual)
+        registro = self._oficio_por_referencia(seleccion[0])
+        if registro is None:
+            return
+        display = self._display_responsable(
+            registro.get("id_empleado", ""), registro.get("empleado", ""))
+        if display and display in self._valores_responsables():
+            self.combo_responsable_edicion.set(display)
         else:
             self.combo_responsable_edicion.set(self.SIN_RESPONSABLE)
-        if estado_actual in ESTADOS:
-            self.combo_nuevo_estado.set(estado_actual)
+        if registro.get("estado") in ESTADOS:
+            self.combo_nuevo_estado.set(registro["estado"])
 
     def _aplicar_cambios(self):
         seleccion = self.tabla.selection()
         if not seleccion:
             messagebox.showwarning("Sin selección", "Seleccione un oficio en la lista.")
             return
-        id_empleado, nombre_empleado = self._empleado_por_nombre(
+        id_empleado, nombre_empleado = self._responsable_por_display(
             self.combo_responsable_edicion.get())
         try:
             estado_final = oficios.actualizar_oficio(
                 seleccion[0], self.combo_nuevo_estado.get(),
-                id_empleado, nombre_empleado, self.usuario["usuario"])
+                id_empleado, nombre_empleado, self.usuario["usuario"],
+                self.usuario.get("rol"))
         except ValueError as error:
             messagebox.showerror("Error", str(error))
             return
@@ -446,6 +489,21 @@ class AplicacionPrincipal(ttk.Frame):
         # reflejarlo en el desplegable.
         if estado_final in ESTADOS:
             self.combo_nuevo_estado.set(estado_final)
+        self._refrescar_listado()
+
+    def _finalizar_oficio(self):
+        """Usuario regular: marca como 'Finalizado' un oficio 'En proceso'
+        asignado a él (única transición permitida para su rol)."""
+        seleccion = self.tabla.selection()
+        if not seleccion:
+            messagebox.showwarning("Sin selección", "Seleccione un oficio en la lista.")
+            return
+        try:
+            oficios.finalizar_oficio(seleccion[0], self.usuario["usuario"])
+        except ValueError as error:
+            messagebox.showerror("Error", str(error))
+            return
+        messagebox.showinfo("Listo", "Oficio marcado como Finalizado.")
         self._refrescar_listado()
 
     def _construir_usuarios(self):
@@ -482,7 +540,7 @@ class AplicacionPrincipal(ttk.Frame):
                                                command=self._guardar_usuario)
         self.btn_guardar_usuario.pack(side="left")
         self.btn_guardar_usuario.config(style="Accent.TButton")
-        ttk.Button(barra_form, text="Nuevo / limpiar",
+        ttk.Button(barra_form, text="Nuevo",
                    command=self._nuevo_usuario).pack(side="left", padx=6)
 
         ttk.Label(marco, text="Usuarios existentes:").grid(row=8, column=0, sticky="w", pady=(6, 0))
@@ -581,6 +639,7 @@ class AplicacionPrincipal(ttk.Frame):
         messagebox.showinfo("Listo", mensaje)
         self._nuevo_usuario()
         self._refrescar_usuarios()
+        self._refrescar_responsables()
 
     def _eliminar_usuario_seleccionado(self):
         seleccion = self.tabla_usuarios.selection()
@@ -601,6 +660,7 @@ class AplicacionPrincipal(ttk.Frame):
             return
         self._nuevo_usuario()
         self._refrescar_usuarios()
+        self._refrescar_responsables()
 
     def _refrescar_usuarios(self):
         self.tabla_usuarios.delete(*self.tabla_usuarios.get_children())
@@ -673,7 +733,10 @@ class AplicacionPrincipal(ttk.Frame):
             actual = evento.widget.nametowidget(evento.widget.select())
         except (tk.TclError, KeyError):
             return
-        if actual is self.pestana_listado:
+        if actual is self.pestana_registro:
+            self._refrescar_responsables()
+        elif actual is self.pestana_listado:
+            self._refrescar_responsables()
             self._refrescar_listado()
         elif actual is self.pestana_tablero:
             self._refrescar_tablero()

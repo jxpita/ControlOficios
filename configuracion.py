@@ -23,7 +23,6 @@ except (OSError, NotImplementedError):
 ARCHIVO_CLAVE = DIR_DATOS / "clave_maestra.key"
 ARCHIVO_CREDENCIALES = DIR_DATOS / "credenciales.dat"
 ARCHIVO_OFICIOS = DIR_DATOS / "oficios.dat"
-ARCHIVO_EMPLEADOS = DIR_DATOS / "empleados.csv"
 ARCHIVO_LOG = DIR_DATOS / "actividad.log"   # bitácora de auditoría (texto plano)
 
 # --- Imágenes (logo e ícono) ------------------------------------------------
