@@ -25,6 +25,10 @@ ARCHIVO_CREDENCIALES = DIR_DATOS / "credenciales.dat"
 ARCHIVO_OFICIOS = DIR_DATOS / "oficios.dat"
 ARCHIVO_LOG = DIR_DATOS / "actividad.log"   # bitácora de auditoría (texto plano)
 
+# --- Respuestas en PDF adjuntas a los oficios --------------------------------
+DIR_RESPUESTAS = DIR_DATOS / "respuestas"
+DIR_RESPUESTAS.mkdir(exist_ok=True)
+
 # --- Imágenes (logo e ícono) ------------------------------------------------
 ARCHIVO_LOGO = DIR_DATOS / "bdp_icon.ico"      # logo que se muestra junto al título
 ARCHIVO_ICONO = DIR_DATOS / "bdp_icon_alt.ico"          # ícono de la ventana

@@ -11,11 +11,23 @@ permanecen en inglés las palabras propias de Python y de las librerías
 ## 1. Requisitos
 
 - Python 3.9 o superior (recomendado 3.11+).
-- Una sola dependencia externa:
+- Dependencias:
 
 ```bash
-pip install cryptography
+pip install cryptography      # obligatoria (cifrado)
+pip install pymupdf           # para ver los PDF de respuesta DENTRO de la app
+pip install pillow            # opcional: muestra el logo del banco
 ```
+
+Solo **`cryptography`** es obligatoria. Las otras dos son opcionales y la
+aplicación funciona sin ellas:
+
+- **PyMuPDF** habilita el visor de PDF integrado. Si no está instalado, al
+  pulsar "Ver respuesta (PDF)" la app ofrece abrirlo con el lector del sistema.
+  Se eligió PyMuPDF porque se instala como *wheel* (no necesita binarios
+  externos como poppler), funciona en Windows sin instalar nada más y se
+  empaqueta bien con PyInstaller. Añade ~25 MB al ejecutable.
+- **Pillow** solo afecta a que se vea el logo en la cabecera y el login.
 
 `tkinter` viene con Python en Windows y macOS. En Linux, si falta:
 `sudo apt install python3-tk`.
@@ -37,9 +49,10 @@ En el primer arranque no hay usuarios: la pantalla pedirá crear el
   eliminar al superusuario) y usar toda la aplicación.
 - **Usuario (regular):** usa la aplicación (registrar oficios, tablero) pero
   **no ve la pestaña "Usuarios"** ni puede gestionar cuentas. Sobre los oficios
-  **asignados a él** solo puede **alternar el estado entre "En proceso" y
-  "Finalizado"** (por si finalizó por error y quiere reabrirlo); no puede
-  reasignar responsables ni dejarlo en "Por asignar".
+  **asignados a él** puede modificar la **fecha de respuesta**, la
+  **observación** y **alternar el estado entre "En proceso" y "Finalizado"**
+  (por si finalizó por error y quiere reabrirlo); no puede reasignar
+  responsables ni dejarlo en "Por asignar".
 
 La gestión de usuarios (crear, editar, eliminar, asignar rol y **restablecer
 contraseñas**) está disponible solo para superusuario y administrador. Nadie
@@ -59,6 +72,41 @@ importar su rol); se elige de la lista de usuarios. Solo **administrador y
 superusuario** pueden reasignar responsables o cambiar libremente el estado de
 cualquier oficio (respetando las reglas: un oficio con responsable no puede
 quedar "Por asignar"; "En proceso"/"Finalizado" exigen responsable).
+
+### Campos del oficio
+
+En el formulario, los campos **obligatorios se marcan con un asterisco (\*)**;
+el resto son opcionales.
+
+| Campo | Obligatorio | Notas |
+|---|---|---|
+| Código de oficio | **Sí \*** | No puede repetirse |
+| Fecha de oficio | **Sí \*** | No puede ser posterior a la de recepción |
+| Fecha de recepción | **Sí \*** | |
+| Fecha de respuesta | No | No puede ser anterior a la de recepción |
+| Usuario responsable | No | Sin responsable ⇒ "Por asignar" |
+| Estado | **Sí \*** | |
+| Observación | No | Texto libre, editable después |
+
+**Qué puede modificar cada rol** en la pestaña *Oficios*:
+
+| | F. respuesta | Responsable | Estado | Observación |
+|---|---|---|---|---|
+| Superusuario / Administrador | ✅ | ✅ | ✅ (cualquiera) | ✅ |
+| Usuario (en sus oficios) | ✅ | ❌ | ✅ (En proceso ↔ Finalizado) | ✅ |
+
+### Respuesta en PDF
+
+Cada oficio puede llevar adjunta **la respuesta en PDF**:
+
+- **"Adjuntar respuesta (PDF)"** copia el archivo a `datos/respuestas/` con el
+  nombre `<referencia>.pdf` (queda en solo lectura, como el resto de los datos).
+- **"Ver respuesta (PDF)"** lo muestra **dentro de la aplicación** (visor con
+  navegación de páginas, zoom y desplazamiento) si PyMuPDF está instalado; si
+  no, ofrece abrirlo con el lector del sistema.
+- La columna **PDF** de la tabla indica con "Sí" qué oficios ya tienen respuesta.
+- Un usuario regular solo puede adjuntar respuestas a **sus** oficios; los
+  gestores, a cualquiera.
 
 ## 2.2 Bitácora de auditoría
 
@@ -83,12 +131,14 @@ oficios_tracker/
 ├── registro_actividad.py # Bitácora de auditoría (log en texto plano)
 ├── permisos.py           # Endurece permisos (solo lectura) de los archivos
 ├── almacen_oficios.py    # CRUD de oficios + referencia secuencial
+├── visor_pdf.py          # Visor de PDF integrado (requiere PyMuPDF)
 ├── metricas.py           # Cálculo de métricas del tablero
 └── datos/                # Se crea sola; contiene:
     ├── clave_maestra.key   (clave de cifrado — PROTEGER / RESPALDAR)
     ├── credenciales.dat    (usuarios del sistema, cifrado)
     ├── oficios.dat         (registros, cifrado)
-    └── actividad.log       (bitácora de auditoría, texto plano)
+    ├── actividad.log       (bitácora de auditoría, texto plano)
+    └── respuestas/         (PDF de respuesta, uno por oficio)
 ```
 
 La referencia interna tiene el formato **`UDC-OFICIO-AAAAMMDD-NNNN`**.
@@ -129,8 +179,10 @@ pyinstaller --onefile --windowed --name ControlOficios ^
 ### Para reducir tamaño
 
 1. Trabaja dentro de un **entorno virtual** con solo lo necesario instalado
-   (`cryptography`, `pyinstaller` y, si quieres que se vea el logo, `Pillow`).
-   Así PyInstaller no arrastra librerías de más.
+   (`cryptography`, `pyinstaller`, y opcionalmente `Pillow` para el logo y
+   `pymupdf` para el visor de PDF). Así PyInstaller no arrastra librerías de
+   más. Ten en cuenta que `pymupdf` añade ~25 MB al ejecutable: si no necesitas
+   ver los PDF dentro de la app, omítelo y se usará el lector del sistema.
 2. Añade **UPX** (ver abajo): `--upx-dir C:\ruta\upx`.
 3. `--onedir` (en lugar de `--onefile`) arranca más rápido y suele pesar menos
    en total, aunque genera una carpeta en vez de un archivo único.

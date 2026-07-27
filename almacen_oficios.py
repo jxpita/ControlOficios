@@ -13,12 +13,16 @@ El secuencial se reinicia por cada DÍA DE RECEPCIÓN. (Ver _generar_referencia
 si prefieres usar la fecha de registro o un contador global.)
 """
 import json
+import shutil
 from datetime import datetime
-from typing import List, Dict
+from pathlib import Path
+from typing import List, Dict, Optional
 
 from cryptography.fernet import InvalidToken
 
-from configuracion import ARCHIVO_OFICIOS, PREFIJO_REFERENCIA, ESTADOS, ROLES_GESTORES
+from configuracion import (
+    ARCHIVO_OFICIOS, PREFIJO_REFERENCIA, ESTADOS, ROLES_GESTORES, DIR_RESPUESTAS
+)
 from cifrado import cifrar, descifrar
 import registro_actividad
 import permisos
@@ -93,9 +97,26 @@ def _resolver_estado(nombre_empleado: str, estado: str) -> str:
 
 
 # --- Operaciones -------------------------------------------------------------
+def _validar_fecha_respuesta(fecha_respuesta: str, fecha_recepcion: str) -> str:
+    """Valida la fecha de respuesta (opcional). No puede ser anterior a la de
+    recepción: no se responde un oficio antes de recibirlo. Devuelve la fecha
+    normalizada ('' si no se indicó)."""
+    fecha_respuesta = (fecha_respuesta or "").strip()
+    if not fecha_respuesta:
+        return ""
+    _validar_fecha(fecha_respuesta, "Fecha de respuesta")
+    if (datetime.strptime(fecha_respuesta, "%Y-%m-%d")
+            < datetime.strptime(fecha_recepcion, "%Y-%m-%d")):
+        raise ValueError(
+            "La fecha de respuesta no puede ser anterior a la fecha de recepción."
+        )
+    return fecha_respuesta
+
+
 def registrar_oficio(codigo_oficio: str, fecha_recepcion: str, fecha_oficio: str,
                      id_empleado: str, nombre_empleado: str, estado: str,
-                     registrado_por: str) -> str:
+                     registrado_por: str, fecha_respuesta: str = "",
+                     observacion: str = "") -> str:
     codigo_oficio = codigo_oficio.strip()
     if not codigo_oficio:
         raise ValueError("Debe ingresar el código de oficio o circular.")
@@ -107,6 +128,9 @@ def registrar_oficio(codigo_oficio: str, fecha_recepcion: str, fecha_oficio: str
         raise ValueError(
             "La fecha de oficio no puede ser posterior a la fecha de recepción."
         )
+    # Fecha de respuesta y observación son opcionales.
+    fecha_respuesta = _validar_fecha_respuesta(fecha_respuesta, fecha_recepcion)
+    observacion = (observacion or "").strip()
     if estado not in ESTADOS:
         raise ValueError("Estado no válido.")
 
@@ -132,9 +156,12 @@ def registrar_oficio(codigo_oficio: str, fecha_recepcion: str, fecha_oficio: str
         "codigo_oficio": codigo_oficio,
         "fecha_recepcion": fecha_recepcion,
         "fecha_oficio": fecha_oficio,
+        "fecha_respuesta": fecha_respuesta,
         "id_empleado": id_empleado,
         "empleado": nombre_empleado,
         "estado": estado,
+        "observacion": observacion,
+        "archivo_respuesta": "",      # PDF de respuesta adjunto (nombre de archivo)
         "registrado_por": registrado_por,
         "fecha_registro": ahora,
         "historial": [{"estado": estado, "por": registrado_por, "cuando": ahora}],
@@ -154,9 +181,11 @@ def listar_oficios() -> List[Dict]:
 
 def actualizar_oficio(referencia: str, nuevo_estado: str, id_empleado: str,
                      nombre_empleado: str, actualizado_por: str,
-                     actor_rol: str = None) -> str:
-    """Actualiza estado y/o responsable de un oficio en una sola operación,
-    respetando las reglas de negocio (ver `_resolver_estado`).
+                     actor_rol: str = None, fecha_respuesta: str = None,
+                     observacion: str = None) -> str:
+    """Actualiza estado, responsable, fecha de respuesta y/o observación de un
+    oficio en una sola operación, respetando las reglas de negocio
+    (ver `_resolver_estado`).
 
     Reservado a GESTORES (administrador / superusuario): pueden reasignar el
     responsable y fijar cualquier estado. Los usuarios regulares no pueden usar
@@ -180,6 +209,17 @@ def actualizar_oficio(referencia: str, nuevo_estado: str, id_empleado: str,
     for registro in registros:
         if registro["referencia"] == referencia:
             cambios = []
+            if fecha_respuesta is not None:
+                nueva_fecha = _validar_fecha_respuesta(
+                    fecha_respuesta, registro["fecha_recepcion"])
+                if nueva_fecha != registro.get("fecha_respuesta", ""):
+                    registro["fecha_respuesta"] = nueva_fecha
+                    cambios.append(f"F. respuesta: {nueva_fecha or '(sin fecha)'}")
+            if observacion is not None:
+                nueva_obs = observacion.strip()
+                if nueva_obs != registro.get("observacion", ""):
+                    registro["observacion"] = nueva_obs
+                    cambios.append("Observación actualizada")
             if nombre_empleado != registro.get("empleado", ""):
                 registro["id_empleado"] = id_empleado
                 registro["empleado"] = nombre_empleado
@@ -204,12 +244,14 @@ def actualizar_oficio(referencia: str, nuevo_estado: str, id_empleado: str,
     raise ValueError("No se encontró la referencia indicada.")
 
 
-def actualizar_estado_asignado(referencia: str, actor: str, nuevo_estado: str) -> str:
-    """Cambio de estado desde el rol de usuario regular.
+def actualizar_estado_asignado(referencia: str, actor: str, nuevo_estado: str,
+                               fecha_respuesta: str = None,
+                               observacion: str = None) -> str:
+    """Actualización desde el rol de usuario regular, sobre sus propios oficios.
 
-    Solo permite alternar entre "En proceso" y "Finalizado" (por si finalizó por
-    error y quiere reabrirlo) y únicamente en oficios asignados al propio
-    `actor`. No puede dejarlo en "Por asignar" (eso quitaría el responsable).
+    Puede cambiar la fecha de respuesta, la observación y alternar el estado
+    entre "En proceso" y "Finalizado" (por si finalizó por error y quiere
+    reabrirlo). No puede reasignar el responsable ni dejarlo en "Por asignar".
     """
     estados_permitidos = ("En proceso", "Finalizado")
     if nuevo_estado not in estados_permitidos:
@@ -222,18 +264,94 @@ def actualizar_estado_asignado(referencia: str, actor: str, nuevo_estado: str) -
         if registro["referencia"] == referencia:
             responsable = (registro.get("id_empleado", "") or "").strip().lower()
             if not responsable or responsable != actor_norm:
-                raise ValueError("Solo puede cambiar el estado de oficios asignados a usted.")
-            if registro.get("estado") == nuevo_estado:
-                return nuevo_estado  # sin cambios
-            registro["estado"] = nuevo_estado
+                raise ValueError("Solo puede modificar oficios asignados a usted.")
+            cambios = []
+            if fecha_respuesta is not None:
+                nueva_fecha = _validar_fecha_respuesta(
+                    fecha_respuesta, registro["fecha_recepcion"])
+                if nueva_fecha != registro.get("fecha_respuesta", ""):
+                    registro["fecha_respuesta"] = nueva_fecha
+                    cambios.append(f"F. respuesta: {nueva_fecha or '(sin fecha)'}")
+            if observacion is not None:
+                nueva_obs = observacion.strip()
+                if nueva_obs != registro.get("observacion", ""):
+                    registro["observacion"] = nueva_obs
+                    cambios.append("Observación actualizada")
+            if registro.get("estado") != nuevo_estado:
+                registro["estado"] = nuevo_estado
+                cambios.append(f"Estado: {nuevo_estado}")
+            if cambios:
+                registro.setdefault("historial", []).append({
+                    "evento": " · ".join(cambios),
+                    "por": actor,
+                    "cuando": datetime.now().isoformat(timespec="seconds"),
+                })
+                _guardar_registros(registros)
+                registro_actividad.registrar(
+                    "ACTUALIZAR_OFICIO",
+                    f"referencia={referencia}; " + "; ".join(cambios), actor)
+            return nuevo_estado
+    raise ValueError("No se encontró la referencia indicada.")
+
+
+# --- Respuesta en PDF adjunta ------------------------------------------------
+def _puede_editar(registro: Dict, actor: str, actor_rol: str) -> bool:
+    """Un gestor puede sobre cualquier oficio; un usuario regular solo sobre
+    los oficios asignados a él."""
+    if actor_rol in ROLES_GESTORES:
+        return True
+    responsable = (registro.get("id_empleado", "") or "").strip().lower()
+    return bool(responsable) and responsable == (actor or "").strip().lower()
+
+
+def ruta_respuesta(referencia: str) -> Optional[Path]:
+    """Devuelve la ruta del PDF de respuesta adjunto, o None si no hay."""
+    for registro in _leer_registros():
+        if registro["referencia"] == referencia:
+            nombre = registro.get("archivo_respuesta", "")
+            if not nombre:
+                return None
+            ruta = DIR_RESPUESTAS / nombre
+            return ruta if ruta.exists() else None
+    return None
+
+
+def adjuntar_respuesta(referencia: str, ruta_origen: str, actor: str,
+                       actor_rol: str) -> str:
+    """Copia un PDF de respuesta a datos/respuestas/ y lo asocia al oficio.
+
+    El archivo se guarda como '<referencia>.pdf'. Si ya había uno, se
+    reemplaza. Devuelve el nombre del archivo guardado.
+    """
+    origen = Path(ruta_origen)
+    if not origen.exists():
+        raise ValueError("No se encontró el archivo seleccionado.")
+    if origen.suffix.lower() != ".pdf":
+        raise ValueError("La respuesta debe ser un archivo PDF.")
+
+    registros = _leer_registros()
+    for registro in registros:
+        if registro["referencia"] == referencia:
+            if not _puede_editar(registro, actor, actor_rol):
+                raise ValueError("Solo puede adjuntar respuestas a oficios asignados a usted.")
+            nombre = f"{referencia}.pdf"
+            destino = DIR_RESPUESTAS / nombre
+            try:
+                # El destino puede existir en solo lectura de una carga previa.
+                permisos.hacer_escribible(destino)
+                shutil.copyfile(origen, destino)
+                permisos.proteger(destino)
+            except OSError as error:
+                raise ValueError(f"No se pudo guardar el PDF: {error}")
+            registro["archivo_respuesta"] = nombre
             registro.setdefault("historial", []).append({
-                "evento": f"Estado: {nuevo_estado}",
+                "evento": "Respuesta en PDF adjuntada",
                 "por": actor,
                 "cuando": datetime.now().isoformat(timespec="seconds"),
             })
             _guardar_registros(registros)
             registro_actividad.registrar(
-                "ACTUALIZAR_OFICIO",
-                f"referencia={referencia}; Estado: {nuevo_estado}", actor)
-            return nuevo_estado
+                "ADJUNTAR_RESPUESTA",
+                f"referencia={referencia}; archivo={nombre}", actor)
+            return nombre
     raise ValueError("No se encontró la referencia indicada.")

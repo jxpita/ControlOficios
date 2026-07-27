@@ -1,13 +1,13 @@
 {
   "almacen_oficios.py": {
-    "mtime": 1785138012.697481,
-    "ast_hash": "dbc9447e3427e62f7f9071ad89910217",
-    "semantic_hash": "dbc9447e3427e62f7f9071ad89910217"
+    "mtime": 1785163147.4012535,
+    "ast_hash": "8d09d2bc51653759c10b44c3480dbf79",
+    "semantic_hash": "8d09d2bc51653759c10b44c3480dbf79"
   },
   "aplicacion.py": {
-    "mtime": 1785137993.7134814,
-    "ast_hash": "ebe39d9a1823871553bf9c5eda2a8aba",
-    "semantic_hash": "ebe39d9a1823871553bf9c5eda2a8aba"
+    "mtime": 1785163375.2412484,
+    "ast_hash": "a98b8b63b428b67b6d9b1f97b7b34d89",
+    "semantic_hash": "a98b8b63b428b67b6d9b1f97b7b34d89"
   },
   "autenticacion.py": {
     "mtime": 1785137901.8334835,
@@ -20,9 +20,9 @@
     "semantic_hash": "7103051022eb6bb5483a4986a15ffba8"
   },
   "configuracion.py": {
-    "mtime": 1785136257.0191078,
-    "ast_hash": "4f503b7a7738c091dc5b0b3983a6c85c",
-    "semantic_hash": "4f503b7a7738c091dc5b0b3983a6c85c"
+    "mtime": 1785163060.0012555,
+    "ast_hash": "5a36f5960ffb098f6ce0e93ec5e2a362",
+    "semantic_hash": "5a36f5960ffb098f6ce0e93ec5e2a362"
   },
   "herramienta_admin.py": {
     "mtime": 1784736350.8047311,
@@ -43,5 +43,10 @@
     "mtime": 1784748971.496833,
     "ast_hash": "ac74c4cb893e5f09d607f99177ab027b",
     "semantic_hash": "ac74c4cb893e5f09d607f99177ab027b"
+  },
+  "visor_pdf.py": {
+    "mtime": 1785163199.0532525,
+    "ast_hash": "f1c440fb5b089040e8e319f8f30dc520",
+    "semantic_hash": "f1c440fb5b089040e8e319f8f30dc520"
   }
 }

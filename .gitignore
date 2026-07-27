@@ -223,3 +223,6 @@ __marimo__/
 grafo/graphify-out/cache/
 grafo/graphify-out/.graphify_root
 grafo/graphify-out/cost.json
+
+# Respuestas en PDF adjuntas a los oficios (datos de ejecución)
+datos/respuestas/

@@ -20,11 +20,17 @@
       "autenticacion_rationale_97",
       "autenticacion_restablecer_clave",
       "autenticacion_validar_acceso",
+      "cifrado",
+      "cifrado_cifrador",
+      "cifrado_cifrar",
+      "cifrado_descifrar",
       "cifrado_generar_hash_clave",
+      "cifrado_obtener_clave",
+      "cifrado_rationale_15",
+      "cifrado_rationale_33",
       "cifrado_rationale_40",
       "cifrado_verificar_clave",
-      "registro_actividad",
-      "registro_actividad_rationale_1",
+      "fernet",
       "registro_actividad_rationale_24",
       "registro_actividad_registrar"
     ],
@@ -37,27 +43,32 @@
       "almacen_oficios_leer_registros",
       "almacen_oficios_listar_oficios",
       "almacen_oficios_rationale_1",
-      "almacen_oficios_rationale_158",
-      "almacen_oficios_rationale_208",
-      "almacen_oficios_rationale_56",
-      "almacen_oficios_rationale_72",
+      "almacen_oficios_rationale_101",
+      "almacen_oficios_rationale_186",
+      "almacen_oficios_rationale_250",
+      "almacen_oficios_rationale_308",
+      "almacen_oficios_rationale_60",
+      "almacen_oficios_rationale_76",
       "almacen_oficios_registrar_oficio",
       "almacen_oficios_resolver_estado",
+      "almacen_oficios_ruta_respuesta",
       "almacen_oficios_validar_fecha",
+      "almacen_oficios_validar_fecha_respuesta",
       "metricas",
       "metricas_convertir_fecha",
       "metricas_rationale_1",
       "metricas_rationale_51",
       "metricas_resumen",
-      "metricas_serie_por_dia"
+      "metricas_serie_por_dia",
+      "path"
     ],
     "2": [
       "aplicacion",
       "aplicacion_aplicacionprincipal_cerrar_sesion",
       "aplicacion_iniciar",
-      "aplicacion_rationale_277",
-      "aplicacion_rationale_875",
-      "aplicacion_rationale_907",
+      "aplicacion_rationale_1015",
+      "aplicacion_rationale_288",
+      "aplicacion_rationale_983",
       "aplicacion_ventanaingreso",
       "aplicacion_ventanaingreso_boton_principal",
       "aplicacion_ventanaingreso_campo",
@@ -75,24 +86,10 @@
       "aplicacion_ventanaingreso_limpiar"
     ],
     "3": [
-      "cifrado",
-      "cifrado_cifrador",
-      "cifrado_cifrar",
-      "cifrado_descifrar",
-      "cifrado_obtener_clave",
-      "cifrado_rationale_15",
-      "cifrado_rationale_33",
-      "configuracion",
-      "configuracion_rationale_1",
-      "fernet",
-      "herramienta_admin",
-      "herramienta_admin_cargar",
-      "herramienta_admin_exportar_csv_oficios",
-      "herramienta_admin_main",
-      "herramienta_admin_mostrar_json",
-      "herramienta_admin_rationale_1"
-    ],
-    "4": [
+      "almacen_oficios_adjuntar_respuesta",
+      "almacen_oficios_puede_editar",
+      "almacen_oficios_rationale_299",
+      "almacen_oficios_rationale_321",
       "permisos",
       "permisos_anexar_texto_protegido",
       "permisos_chmod",
@@ -107,9 +104,29 @@
       "permisos_rationale_58",
       "permisos_rationale_66"
     ],
+    "4": [
+      "visor_pdf",
+      "visor_pdf_abrir_con_sistema",
+      "visor_pdf_abrir_visor",
+      "visor_pdf_rationale_1",
+      "visor_pdf_rationale_183",
+      "visor_pdf_rationale_42",
+      "visor_pdf_rationale_57",
+      "visor_pdf_visorpdf",
+      "visor_pdf_visorpdf_acercar",
+      "visor_pdf_visorpdf_alejar",
+      "visor_pdf_visorpdf_construir_barra",
+      "visor_pdf_visorpdf_construir_lienzo",
+      "visor_pdf_visorpdf_destroy",
+      "visor_pdf_visorpdf_dibujar_pagina",
+      "visor_pdf_visorpdf_init",
+      "visor_pdf_visorpdf_pagina_anterior",
+      "visor_pdf_visorpdf_pagina_siguiente"
+    ],
     "5": [
-      "aplicacion_rationale_24",
-      "aplicacion_rationale_57",
+      "aplicacion_rationale_25",
+      "aplicacion_rationale_36",
+      "aplicacion_rationale_64",
       "aplicacion_selectorfecha",
       "aplicacion_selectorfecha_alternar_calendario",
       "aplicacion_selectorfecha_cambiar_mes",
@@ -128,27 +145,33 @@
       "aplicacion_aplicacionprincipal_dibujar_barras",
       "aplicacion_aplicacionprincipal_editar_usuario_seleccionado",
       "aplicacion_aplicacionprincipal_refrescar_tablero",
-      "aplicacion_aplicacionprincipal_tarjeta"
+      "aplicacion_aplicacionprincipal_tarjeta",
+      "aplicacion_aplicacionprincipal_ver_respuesta",
+      "aplicacion_rationale_600"
     ],
     "7": [
-      "aplicacion_aplicacionprincipal_aplicar_cambios",
-      "aplicacion_aplicacionprincipal_aplicar_estado_usuario",
-      "aplicacion_aplicacionprincipal_guardar_oficio",
-      "aplicacion_aplicacionprincipal_refrescar_listado",
+      "aplicacion_aplicacionprincipal_al_seleccionar_oficio",
+      "aplicacion_aplicacionprincipal_construir_registro",
+      "aplicacion_aplicacionprincipal_display_responsable",
+      "aplicacion_aplicacionprincipal_oficio_por_referencia",
       "aplicacion_aplicacionprincipal_responsable_por_display",
-      "aplicacion_rationale_305",
-      "aplicacion_rationale_499",
-      "aplicacion_selectorfecha_get"
+      "aplicacion_aplicacionprincipal_usuarios_sistema",
+      "aplicacion_aplicacionprincipal_valores_responsables",
+      "aplicacion_rationale_304",
+      "aplicacion_rationale_316",
+      "aplicacion_rationale_522"
     ],
     "8": [
-      "aplicacion_aplicacionprincipal_construir_listado",
-      "aplicacion_aplicacionprincipal_construir_registro",
-      "aplicacion_aplicacionprincipal_construir_tablero",
-      "aplicacion_aplicacionprincipal_crear_cabecera",
-      "aplicacion_aplicacionprincipal_init",
-      "aplicacion_aplicacionprincipal_puede_gestionar_usuarios",
-      "aplicacion_rationale_232",
-      "aplicacion_rationale_332"
+      "configuracion",
+      "configuracion_rationale_1",
+      "herramienta_admin",
+      "herramienta_admin_cargar",
+      "herramienta_admin_exportar_csv_oficios",
+      "herramienta_admin_main",
+      "herramienta_admin_mostrar_json",
+      "herramienta_admin_rationale_1",
+      "registro_actividad",
+      "registro_actividad_rationale_1"
     ],
     "9": [
       "aplicacion_aplicacionprincipal_construir_usuarios",
@@ -157,44 +180,54 @@
       "aplicacion_aplicacionprincipal_nuevo_usuario",
       "aplicacion_aplicacionprincipal_refrescar_responsables",
       "aplicacion_aplicacionprincipal_refrescar_usuarios",
-      "aplicacion_rationale_315",
-      "aplicacion_rationale_575"
+      "aplicacion_rationale_326",
+      "aplicacion_rationale_683"
     ],
     "10": [
-      "aplicacion_aplicacionprincipal_al_seleccionar_oficio",
-      "aplicacion_aplicacionprincipal_display_responsable",
-      "aplicacion_aplicacionprincipal_oficio_por_referencia",
-      "aplicacion_aplicacionprincipal_usuarios_sistema",
-      "aplicacion_aplicacionprincipal_valores_responsables",
-      "aplicacion_rationale_293",
-      "aplicacion_rationale_455"
+      "aplicacion_aplicacionprincipal_adjuntar_respuesta",
+      "aplicacion_aplicacionprincipal_aplicar_cambios",
+      "aplicacion_aplicacionprincipal_guardar_oficio",
+      "aplicacion_aplicacionprincipal_refrescar_listado",
+      "aplicacion_rationale_548",
+      "aplicacion_rationale_580",
+      "aplicacion_selectorfecha_get"
     ],
     "11": [
+      "aplicacion_aplicacionprincipal_construir_listado",
+      "aplicacion_aplicacionprincipal_construir_tablero",
+      "aplicacion_aplicacionprincipal_crear_cabecera",
+      "aplicacion_aplicacionprincipal_init",
+      "aplicacion_aplicacionprincipal_puede_gestionar_usuarios",
+      "aplicacion_rationale_243",
+      "aplicacion_rationale_343"
+    ],
+    "12": [
       "aplicacion_aplicacionprincipal_pedir_nueva_clave",
       "aplicacion_aplicacionprincipal_restablecer_clave_seleccionado",
-      "aplicacion_rationale_672",
-      "aplicacion_rationale_691"
+      "aplicacion_rationale_780",
+      "aplicacion_rationale_799"
     ]
   },
   "cohesion": {
-    "0": 0.16,
-    "1": 0.17142857142857143,
+    "0": 0.13306451612903225,
+    "1": 0.14153846153846153,
     "2": 0.19047619047619047,
-    "3": 0.2,
-    "4": 0.24358974358974358,
-    "5": 0.3090909090909091,
-    "6": 0.35714285714285715,
-    "7": 0.39285714285714285,
-    "8": 0.2857142857142857,
+    "3": 0.17647058823529413,
+    "4": 0.19852941176470587,
+    "5": 0.2727272727272727,
+    "6": 0.26666666666666666,
+    "7": 0.24444444444444444,
+    "8": 0.26666666666666666,
     "9": 0.35714285714285715,
-    "10": 0.3333333333333333,
-    "11": 0.5
+    "10": 0.42857142857142855,
+    "11": 0.3333333333333333,
+    "12": 0.5
   },
   "gods": [
     {
       "id": "aplicacion_aplicacionprincipal",
       "label": "AplicacionPrincipal",
-      "degree": 34
+      "degree": 35
     },
     {
       "id": "aplicacion_ventanaingreso",
@@ -204,11 +237,16 @@
     {
       "id": "aplicacion_selectorfecha",
       "label": "SelectorFecha",
-      "degree": 12
+      "degree": 13
     },
     {
       "id": "registro_actividad_registrar",
       "label": "registrar()",
+      "degree": 13
+    },
+    {
+      "id": "visor_pdf_visorpdf",
+      "label": "VisorPDF",
       "degree": 12
     },
     {
@@ -217,29 +255,24 @@
       "degree": 10
     },
     {
+      "id": "almacen_oficios_adjuntar_respuesta",
+      "label": "adjuntar_respuesta()",
+      "degree": 9
+    },
+    {
       "id": "cifrado_descifrar",
       "label": "descifrar()",
       "degree": 9
     },
     {
+      "id": "almacen_oficios_leer_registros",
+      "label": "_leer_registros()",
+      "degree": 8
+    },
+    {
       "id": "almacen_oficios_registrar_oficio",
       "label": "registrar_oficio()",
-      "degree": 7
-    },
-    {
-      "id": "autenticacion_guardar_usuarios",
-      "label": "_guardar_usuarios()",
-      "degree": 7
-    },
-    {
-      "id": "autenticacion_crear_usuario",
-      "label": "crear_usuario()",
-      "degree": 7
-    },
-    {
-      "id": "autenticacion_editar_usuario",
-      "label": "editar_usuario()",
-      "degree": 7
+      "degree": 8
     }
   ],
   "surprises": [
@@ -302,13 +335,23 @@
   "questions": [
     {
       "type": "bridge_node",
-      "question": "Why does `AplicacionPrincipal` connect `Community 6` to `Community 2`, `Community 7`, `Community 8`, `Community 9`, `Community 10`, `Community 11`?",
-      "why": "High betweenness centrality (0.414) - this node is a cross-community bridge."
+      "question": "Why does `AplicacionPrincipal` connect `Community 6` to `Community 2`, `Community 7`, `Community 9`, `Community 10`, `Community 11`, `Community 12`?",
+      "why": "High betweenness centrality (0.384) - this node is a cross-community bridge."
     },
     {
       "type": "bridge_node",
-      "question": "Why does `SelectorFecha` connect `Community 5` to `Community 8`, `Community 2`, `Community 7`?",
-      "why": "High betweenness centrality (0.123) - this node is a cross-community bridge."
+      "question": "Why does `SelectorFecha` connect `Community 5` to `Community 10`, `Community 2`, `Community 11`, `Community 7`?",
+      "why": "High betweenness centrality (0.119) - this node is a cross-community bridge."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `Community 0` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.13306451612903225 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `Community 1` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.14153846153846153 - nodes in this community are weakly interconnected."
     }
   ]
 }
