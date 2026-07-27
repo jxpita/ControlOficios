@@ -317,16 +317,16 @@ class AplicacionPrincipal(ttk.Frame):
                                 fg=COLOR_BLANCO, bg=COLOR_AZUL)
         lbl_titulo.pack(side="left", padx=3, pady=10)
 
-        # Botón de cerrar sesión (extremo derecho).
+        # Botón de cerrar sesión (extremo derecho). Relleno sólido en contraste
+        # con la cabecera azul para que se lea claramente como un botón.
         btn_salir = tk.Button(cabecera, text="Cerrar sesión", command=self._cerrar_sesion,
-                              bg=COLOR_AZUL, fg=COLOR_BLANCO, relief="flat", cursor="hand2",
-                              activebackground="#1A2E5A", activeforeground=COLOR_BLANCO,
-                              font=("Helvetica", 10, "bold"), padx=12, pady=6,
-                              highlightbackground=COLOR_BLANCO, highlightthickness=1,
-                              takefocus=0)
+                              bg=COLOR_BLANCO, fg=COLOR_AZUL, relief="flat", cursor="hand2",
+                              activebackground="#DDE3EC", activeforeground=COLOR_AZUL,
+                              font=("Helvetica", 10, "bold"), padx=14, pady=6,
+                              bd=0, highlightthickness=0, takefocus=0)
         btn_salir.pack(side="right", padx=15, pady=10)
-        btn_salir.bind("<Enter>", lambda e: btn_salir.config(bg="#1A2E5A"))
-        btn_salir.bind("<Leave>", lambda e: btn_salir.config(bg=COLOR_AZUL))
+        btn_salir.bind("<Enter>", lambda e: btn_salir.config(bg="#DDE3EC"))
+        btn_salir.bind("<Leave>", lambda e: btn_salir.config(bg=COLOR_BLANCO))
 
         # Título de la aplicación
         lbl_app = tk.Label(cabecera, text="Control de Oficios — Unidad de Cumplimiento",
@@ -668,7 +668,7 @@ class AplicacionPrincipal(ttk.Frame):
         if not messagebox.askyesno(
                 "Confirmar",
                 "¿Eliminar la respuesta en PDF adjunta a este oficio?\n"
-                "Podrá volver a adjuntar el archivo correcto."):
+                "Podrá volver a adjuntar un archivo."):
             return
         try:
             oficios.eliminar_respuesta(seleccion[0], self.usuario["usuario"],
