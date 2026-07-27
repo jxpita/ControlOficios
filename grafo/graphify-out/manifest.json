@@ -1,0 +1,52 @@
+{
+  "almacen_empleados.py": {
+    "mtime": 1784736350.788731,
+    "ast_hash": "f7d26c1d5431e0ec8ed006dd7e373dff",
+    "semantic_hash": "f7d26c1d5431e0ec8ed006dd7e373dff"
+  },
+  "almacen_oficios.py": {
+    "mtime": 1784748971.496833,
+    "ast_hash": "ee23414952ad318a47b3ad7b38392ab5",
+    "semantic_hash": "ee23414952ad318a47b3ad7b38392ab5"
+  },
+  "aplicacion.py": {
+    "mtime": 1784745729.9213629,
+    "ast_hash": "ee2598012172cd19c5f264f564173ed4",
+    "semantic_hash": "ee2598012172cd19c5f264f564173ed4"
+  },
+  "autenticacion.py": {
+    "mtime": 1784748971.496833,
+    "ast_hash": "532ad3548d07d4723b94890d22ba2282",
+    "semantic_hash": "532ad3548d07d4723b94890d22ba2282"
+  },
+  "cifrado.py": {
+    "mtime": 1784748971.496833,
+    "ast_hash": "7103051022eb6bb5483a4986a15ffba8",
+    "semantic_hash": "7103051022eb6bb5483a4986a15ffba8"
+  },
+  "configuracion.py": {
+    "mtime": 1784748971.496833,
+    "ast_hash": "f717a51fc0b7581a64062003b1e7eaa5",
+    "semantic_hash": "f717a51fc0b7581a64062003b1e7eaa5"
+  },
+  "herramienta_admin.py": {
+    "mtime": 1784736350.8047311,
+    "ast_hash": "ae55ad43b80c880e904c807ed4a434a7",
+    "semantic_hash": "ae55ad43b80c880e904c807ed4a434a7"
+  },
+  "metricas.py": {
+    "mtime": 1784736350.8047311,
+    "ast_hash": "6ce9b24f39a47dcd58118687411bb781",
+    "semantic_hash": "6ce9b24f39a47dcd58118687411bb781"
+  },
+  "permisos.py": {
+    "mtime": 1784748971.496833,
+    "ast_hash": "bb48ac65b804e8bcf43818136a2c1686",
+    "semantic_hash": "bb48ac65b804e8bcf43818136a2c1686"
+  },
+  "registro_actividad.py": {
+    "mtime": 1784748971.496833,
+    "ast_hash": "ac74c4cb893e5f09d607f99177ab027b",
+    "semantic_hash": "ac74c4cb893e5f09d607f99177ab027b"
+  }
+}
