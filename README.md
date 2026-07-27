@@ -229,10 +229,16 @@ python herramienta_admin.py credenciales
 
 # Exportar los oficios a un CSV que abre directo en Excel (con tildes)
 python herramienta_admin.py oficios --csv reporte.csv
+
+# Eliminar los oficios que aún usan la referencia ANTIGUA
+# (UDC-OFICIO-AAAAMMDD-NNNN), previa confirmación
+python herramienta_admin.py oficios --purgar-formato-anterior
 ```
 
-Es de **solo lectura y exportación**: no modifica los datos. Si la ejecutas sin
-argumentos, imprime su propia ayuda.
+Salvo `--purgar-formato-anterior`, es de **solo lectura y exportación**. Esa
+purga lista primero los registros afectados, exige escribir `PURGAR` para
+confirmar y deja constancia en la bitácora. Si la ejecutas sin argumentos, la
+herramienta imprime su propia ayuda.
 
 ## 3.2 Referencia UDC y secuencial inicial
 
@@ -257,6 +263,12 @@ Detalles:
 - Reconfigurarlo **nunca genera duplicados**: la numeración usa
   `max(valor configurado, mayor secuencial ya existente) + 1`.
 - Si nunca se configura, la numeración arranca en `REQ-INF-<año>-0001`.
+
+**El formato anterior (`UDC-OFICIO-AAAAMMDD-NNNN`) quedó descartado:** el
+sistema no lo genera nunca, lo rechaza si se intenta usar como secuencial
+inicial, y los registros antiguos que pudieran existir **no influyen en la
+numeración** (aunque tuvieran un secuencial más alto). Para eliminarlos, use
+`herramienta_admin.py oficios --purgar-formato-anterior` (ver 3.1).
 
 Además de la Referencia UDC (siempre única), la **Referencia oficio** que
 ingresa el usuario **no puede repetirse**: al registrar se rechaza una

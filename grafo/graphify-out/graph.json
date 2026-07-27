@@ -109,8 +109,8 @@
       "source_location": "L204",
       "_origin": "ast",
       "id": "almacen_oficios_listar_oficios",
-      "community": 0,
-      "community_name": "Community 0",
+      "community": 5,
+      "community_name": "Community 5",
       "norm_label": "listar_oficios()"
     },
     {
@@ -395,8 +395,8 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "aplicacion_selectorfecha",
-      "community": 5,
-      "community_name": "Community 5",
+      "community": 6,
+      "community_name": "Community 6",
       "norm_label": "selectorfecha"
     },
     {
@@ -406,8 +406,8 @@
       "source_location": "L36",
       "_origin": "ast",
       "id": "aplicacion_selectorfecha_init",
-      "community": 5,
-      "community_name": "Community 5",
+      "community": 6,
+      "community_name": "Community 6",
       "norm_label": ".__init__()"
     },
     {
@@ -417,8 +417,8 @@
       "source_location": "L62",
       "_origin": "ast",
       "id": "aplicacion_selectorfecha_get",
-      "community": 8,
-      "community_name": "Community 8",
+      "community": 10,
+      "community_name": "Community 10",
       "norm_label": ".get()"
     },
     {
@@ -428,8 +428,8 @@
       "source_location": "L65",
       "_origin": "ast",
       "id": "aplicacion_selectorfecha_set",
-      "community": 5,
-      "community_name": "Community 5",
+      "community": 6,
+      "community_name": "Community 6",
       "norm_label": ".set()"
     },
     {
@@ -439,8 +439,8 @@
       "source_location": "L72",
       "_origin": "ast",
       "id": "aplicacion_selectorfecha_fecha_base",
-      "community": 5,
-      "community_name": "Community 5",
+      "community": 6,
+      "community_name": "Community 6",
       "norm_label": "._fecha_base()"
     },
     {
@@ -450,8 +450,8 @@
       "source_location": "L79",
       "_origin": "ast",
       "id": "aplicacion_selectorfecha_alternar_calendario",
-      "community": 5,
-      "community_name": "Community 5",
+      "community": 6,
+      "community_name": "Community 6",
       "norm_label": "._alternar_calendario()"
     },
     {
@@ -461,8 +461,8 @@
       "source_location": "L105",
       "_origin": "ast",
       "id": "aplicacion_selectorfecha_ubicar_popup",
-      "community": 5,
-      "community_name": "Community 5",
+      "community": 6,
+      "community_name": "Community 6",
       "norm_label": "._ubicar_popup()"
     },
     {
@@ -472,8 +472,8 @@
       "source_location": "L128",
       "_origin": "ast",
       "id": "aplicacion_selectorfecha_cerrar",
-      "community": 5,
-      "community_name": "Community 5",
+      "community": 6,
+      "community_name": "Community 6",
       "norm_label": "._cerrar()"
     },
     {
@@ -483,8 +483,8 @@
       "source_location": "L133",
       "_origin": "ast",
       "id": "aplicacion_selectorfecha_cambiar_mes",
-      "community": 5,
-      "community_name": "Community 5",
+      "community": 6,
+      "community_name": "Community 6",
       "norm_label": "._cambiar_mes()"
     },
     {
@@ -494,8 +494,8 @@
       "source_location": "L139",
       "_origin": "ast",
       "id": "aplicacion_selectorfecha_dibujar_calendario",
-      "community": 5,
-      "community_name": "Community 5",
+      "community": 6,
+      "community_name": "Community 6",
       "norm_label": "._dibujar_calendario()"
     },
     {
@@ -505,8 +505,8 @@
       "source_location": "L211",
       "_origin": "ast",
       "id": "aplicacion_selectorfecha_elegir",
-      "community": 5,
-      "community_name": "Community 5",
+      "community": 6,
+      "community_name": "Community 6",
       "norm_label": "._elegir()"
     },
     {
@@ -571,8 +571,8 @@
       "source_location": "L353",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_usuarios_sistema",
-      "community": 12,
-      "community_name": "Community 12",
+      "community": 14,
+      "community_name": "Community 14",
       "norm_label": "._usuarios_sistema()"
     },
     {
@@ -582,8 +582,8 @@
       "source_location": "L359",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_display_responsable",
-      "community": 12,
-      "community_name": "Community 12",
+      "community": 14,
+      "community_name": "Community 14",
       "norm_label": "._display_responsable()"
     },
     {
@@ -593,8 +593,8 @@
       "source_location": "L367",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_valores_responsables",
-      "community": 12,
-      "community_name": "Community 12",
+      "community": 14,
+      "community_name": "Community 14",
       "norm_label": "._valores_responsables()"
     },
     {
@@ -604,8 +604,8 @@
       "source_location": "L371",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_responsable_por_display",
-      "community": 12,
-      "community_name": "Community 12",
+      "community": 14,
+      "community_name": "Community 14",
       "norm_label": "._responsable_por_display()"
     },
     {
@@ -615,8 +615,8 @@
       "source_location": "L381",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_refrescar_responsables",
-      "community": 11,
-      "community_name": "Community 11",
+      "community": 13,
+      "community_name": "Community 13",
       "norm_label": "._refrescar_responsables()"
     },
     {
@@ -626,8 +626,8 @@
       "source_location": "L392",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_oficio_por_referencia",
-      "community": 8,
-      "community_name": "Community 8",
+      "community": 10,
+      "community_name": "Community 10",
       "norm_label": "._oficio_por_referencia()"
     },
     {
@@ -637,8 +637,8 @@
       "source_location": "L400",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_puede_gestionar_usuarios",
-      "community": 8,
-      "community_name": "Community 8",
+      "community": 10,
+      "community_name": "Community 10",
       "norm_label": "._puede_gestionar_usuarios()"
     },
     {
@@ -670,8 +670,8 @@
       "source_location": "L472",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_guardar_oficio",
-      "community": 12,
-      "community_name": "Community 12",
+      "community": 14,
+      "community_name": "Community 14",
       "norm_label": "._guardar_oficio()"
     },
     {
@@ -681,8 +681,8 @@
       "source_location": "L501",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_construir_filtros",
-      "community": 10,
-      "community_name": "Community 10",
+      "community": 12,
+      "community_name": "Community 12",
       "norm_label": "._construir_filtros()"
     },
     {
@@ -692,8 +692,8 @@
       "source_location": "L550",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_limpiar_filtros",
-      "community": 10,
-      "community_name": "Community 10",
+      "community": 12,
+      "community_name": "Community 12",
       "norm_label": "._limpiar_filtros()"
     },
     {
@@ -703,8 +703,8 @@
       "source_location": "L558",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_clave_por_etiqueta",
-      "community": 10,
-      "community_name": "Community 10",
+      "community": 12,
+      "community_name": "Community 12",
       "norm_label": "._clave_por_etiqueta()"
     },
     {
@@ -714,8 +714,8 @@
       "source_location": "L565",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_construir_listado",
-      "community": 10,
-      "community_name": "Community 10",
+      "community": 12,
+      "community_name": "Community 12",
       "norm_label": "._construir_listado()"
     },
     {
@@ -725,8 +725,8 @@
       "source_location": "L651",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_refrescar_listado",
-      "community": 10,
-      "community_name": "Community 10",
+      "community": 12,
+      "community_name": "Community 12",
       "norm_label": "._refrescar_listado()"
     },
     {
@@ -736,8 +736,8 @@
       "source_location": "L700",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_al_seleccionar_oficio",
-      "community": 8,
-      "community_name": "Community 8",
+      "community": 10,
+      "community_name": "Community 10",
       "norm_label": "._al_seleccionar_oficio()"
     },
     {
@@ -747,8 +747,8 @@
       "source_location": "L726",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_aplicar_cambios",
-      "community": 8,
-      "community_name": "Community 8",
+      "community": 10,
+      "community_name": "Community 10",
       "norm_label": "._aplicar_cambios()"
     },
     {
@@ -758,8 +758,8 @@
       "source_location": "L758",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_adjuntar_respuesta",
-      "community": 8,
-      "community_name": "Community 8",
+      "community": 10,
+      "community_name": "Community 10",
       "norm_label": "._adjuntar_respuesta()"
     },
     {
@@ -769,8 +769,8 @@
       "source_location": "L778",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_eliminar_respuesta",
-      "community": 10,
-      "community_name": "Community 10",
+      "community": 12,
+      "community_name": "Community 12",
       "norm_label": "._eliminar_respuesta()"
     },
     {
@@ -791,8 +791,8 @@
       "source_location": "L820",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_construir_usuarios",
-      "community": 11,
-      "community_name": "Community 11",
+      "community": 13,
+      "community_name": "Community 13",
       "norm_label": "._construir_usuarios()"
     },
     {
@@ -802,8 +802,8 @@
       "source_location": "L881",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_nuevo_usuario",
-      "community": 11,
-      "community_name": "Community 11",
+      "community": 13,
+      "community_name": "Community 13",
       "norm_label": "._nuevo_usuario()"
     },
     {
@@ -835,8 +835,8 @@
       "source_location": "L928",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_guardar_usuario",
-      "community": 11,
-      "community_name": "Community 11",
+      "community": 13,
+      "community_name": "Community 13",
       "norm_label": "._guardar_usuario()"
     },
     {
@@ -846,8 +846,8 @@
       "source_location": "L957",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_eliminar_usuario_seleccionado",
-      "community": 11,
-      "community_name": "Community 11",
+      "community": 13,
+      "community_name": "Community 13",
       "norm_label": "._eliminar_usuario_seleccionado()"
     },
     {
@@ -857,8 +857,8 @@
       "source_location": "L978",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_restablecer_clave_seleccionado",
-      "community": 13,
-      "community_name": "Community 13",
+      "community": 15,
+      "community_name": "Community 15",
       "norm_label": "._restablecer_clave_seleccionado()"
     },
     {
@@ -868,8 +868,8 @@
       "source_location": "L997",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_pedir_nueva_clave",
-      "community": 13,
-      "community_name": "Community 13",
+      "community": 15,
+      "community_name": "Community 15",
       "norm_label": "._pedir_nueva_clave()"
     },
     {
@@ -879,8 +879,8 @@
       "source_location": "L1061",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_refrescar_usuarios",
-      "community": 11,
-      "community_name": "Community 11",
+      "community": 13,
+      "community_name": "Community 13",
       "norm_label": "._refrescar_usuarios()"
     },
     {
@@ -956,8 +956,8 @@
       "source_location": "L1235",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_tarjeta",
-      "community": 9,
-      "community_name": "Community 9",
+      "community": 11,
+      "community_name": "Community 11",
       "norm_label": "._tarjeta()"
     },
     {
@@ -967,8 +967,8 @@
       "source_location": "L1243",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_refrescar_tablero",
-      "community": 9,
-      "community_name": "Community 9",
+      "community": 11,
+      "community_name": "Community 11",
       "norm_label": "._refrescar_tablero()"
     },
     {
@@ -978,8 +978,8 @@
       "source_location": "L1287",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_dibujar_barras",
-      "community": 9,
-      "community_name": "Community 9",
+      "community": 11,
+      "community_name": "Community 11",
       "norm_label": "._dibujar_barras()"
     },
     {
@@ -989,8 +989,8 @@
       "source_location": "L1313",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_dibujar_barras_meses",
-      "community": 9,
-      "community_name": "Community 9",
+      "community": 11,
+      "community_name": "Community 11",
       "norm_label": "._dibujar_barras_meses()"
     },
     {
@@ -1000,8 +1000,8 @@
       "source_location": "L1337",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_dibujar_anillo_estados",
-      "community": 9,
-      "community_name": "Community 9",
+      "community": 11,
+      "community_name": "Community 11",
       "norm_label": "._dibujar_anillo_estados()"
     },
     {
@@ -1011,8 +1011,8 @@
       "source_location": "L1388",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_dibujar_barras_horizontales",
-      "community": 9,
-      "community_name": "Community 9",
+      "community": 11,
+      "community_name": "Community 11",
       "norm_label": "._dibujar_barras_horizontales()"
     },
     {
@@ -1209,8 +1209,8 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "aplicacion_rationale_26",
-      "community": 5,
-      "community_name": "Community 5",
+      "community": 6,
+      "community_name": "Community 6",
       "norm_label": "campo de fecha con calendario emergente. no requiere librerias externas.      mu"
     },
     {
@@ -1220,8 +1220,8 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "aplicacion_rationale_38",
-      "community": 5,
-      "community_name": "Community 5",
+      "community": 6,
+      "community_name": "Community 6",
       "norm_label": "`permitir_vacio=true` deja el campo en blanco y ofrece un boton         \"limpiar"
     },
     {
@@ -1231,8 +1231,8 @@
       "source_location": "L73",
       "_origin": "ast",
       "id": "aplicacion_rationale_73",
-      "community": 5,
-      "community_name": "Community 5",
+      "community": 6,
+      "community_name": "Community 6",
       "norm_label": "fecha desde la que se abre el calendario (la escrita, o hoy)."
     },
     {
@@ -1242,8 +1242,8 @@
       "source_location": "L106",
       "_origin": "ast",
       "id": "aplicacion_rationale_106",
-      "community": 5,
-      "community_name": "Community 5",
+      "community": 6,
+      "community_name": "Community 6",
       "norm_label": "coloca el calendario junto al campo, abriendose hacia arriba si no         cabe"
     },
     {
@@ -1275,8 +1275,8 @@
       "source_location": "L360",
       "_origin": "ast",
       "id": "aplicacion_rationale_360",
-      "community": 12,
-      "community_name": "Community 12",
+      "community": 14,
+      "community_name": "Community 14",
       "norm_label": "texto que se muestra en los desplegables para un responsable.         incluye el"
     },
     {
@@ -1286,8 +1286,8 @@
       "source_location": "L372",
       "_origin": "ast",
       "id": "aplicacion_rationale_372",
-      "community": 12,
-      "community_name": "Community 12",
+      "community": 14,
+      "community_name": "Community 14",
       "norm_label": "a partir del texto del desplegable devuelve (usuario, nombre).         para \"(si"
     },
     {
@@ -1297,8 +1297,8 @@
       "source_location": "L382",
       "_origin": "ast",
       "id": "aplicacion_rationale_382",
-      "community": 11,
-      "community_name": "Community 11",
+      "community": 13,
+      "community_name": "Community 13",
       "norm_label": "repuebla los desplegables de responsable con los usuarios actuales."
     },
     {
@@ -1308,8 +1308,8 @@
       "source_location": "L393",
       "_origin": "ast",
       "id": "aplicacion_rationale_393",
-      "community": 8,
-      "community_name": "Community 8",
+      "community": 10,
+      "community_name": "Community 10",
       "norm_label": "busca solo entre los oficios visibles para el usuario en sesion."
     },
     {
@@ -1319,8 +1319,8 @@
       "source_location": "L401",
       "_origin": "ast",
       "id": "aplicacion_rationale_401",
-      "community": 8,
-      "community_name": "Community 8",
+      "community": 10,
+      "community_name": "Community 10",
       "norm_label": "true si el usuario en sesion puede crear/editar/eliminar usuarios         y reas"
     },
     {
@@ -1330,8 +1330,8 @@
       "source_location": "L502",
       "_origin": "ast",
       "id": "aplicacion_rationale_502",
-      "community": 10,
-      "community_name": "Community 10",
+      "community": 12,
+      "community_name": "Community 12",
       "norm_label": "panel de busqueda: por texto (referencia udc / referencia oficio /         causa"
     },
     {
@@ -1341,8 +1341,8 @@
       "source_location": "L559",
       "_origin": "ast",
       "id": "aplicacion_rationale_559",
-      "community": 10,
-      "community_name": "Community 10",
+      "community": 12,
+      "community_name": "Community 12",
       "norm_label": "devuelve la clave interna a partir de la etiqueta mostrada."
     },
     {
@@ -1352,8 +1352,8 @@
       "source_location": "L701",
       "_origin": "ast",
       "id": "aplicacion_rationale_701",
-      "community": 8,
-      "community_name": "Community 8",
+      "community": 10,
+      "community_name": "Community 10",
       "norm_label": "precarga el panel de edicion con los datos del oficio seleccionado."
     },
     {
@@ -1363,8 +1363,8 @@
       "source_location": "L727",
       "_origin": "ast",
       "id": "aplicacion_rationale_727",
-      "community": 8,
-      "community_name": "Community 8",
+      "community": 10,
+      "community_name": "Community 10",
       "norm_label": "guarda los cambios del panel segun el rol: el gestor puede cambiar         respo"
     },
     {
@@ -1374,8 +1374,8 @@
       "source_location": "L759",
       "_origin": "ast",
       "id": "aplicacion_rationale_759",
-      "community": 8,
-      "community_name": "Community 8",
+      "community": 10,
+      "community_name": "Community 10",
       "norm_label": "carga un pdf con la respuesta del oficio seleccionado."
     },
     {
@@ -1385,8 +1385,8 @@
       "source_location": "L779",
       "_origin": "ast",
       "id": "aplicacion_rationale_779",
-      "community": 10,
-      "community_name": "Community 10",
+      "community": 12,
+      "community_name": "Community 12",
       "norm_label": "elimina el pdf adjunto (por si se cargo el archivo equivocado)."
     },
     {
@@ -1407,8 +1407,8 @@
       "source_location": "L882",
       "_origin": "ast",
       "id": "aplicacion_rationale_882",
-      "community": 11,
-      "community_name": "Community 11",
+      "community": 13,
+      "community_name": "Community 13",
       "norm_label": "restablece el formulario para crear un usuario nuevo."
     },
     {
@@ -1418,8 +1418,8 @@
       "source_location": "L979",
       "_origin": "ast",
       "id": "aplicacion_rationale_979",
-      "community": 13,
-      "community_name": "Community 13",
+      "community": 15,
+      "community_name": "Community 15",
       "norm_label": "el gestor selecciona un usuario y le cede el teclado para que escriba         su"
     },
     {
@@ -1429,8 +1429,8 @@
       "source_location": "L998",
       "_origin": "ast",
       "id": "aplicacion_rationale_998",
-      "community": 13,
-      "community_name": "Community 13",
+      "community": 15,
+      "community_name": "Community 15",
       "norm_label": "dialogo modal para escribir y confirmar una nueva contrasena.         devuelve l"
     },
     {
@@ -1473,8 +1473,8 @@
       "source_location": "L1288",
       "_origin": "ast",
       "id": "aplicacion_rationale_1288",
-      "community": 9,
-      "community_name": "Community 9",
+      "community": 11,
+      "community_name": "Community 11",
       "norm_label": "barras verticales: oficios recibidos por dia."
     },
     {
@@ -1484,8 +1484,8 @@
       "source_location": "L1314",
       "_origin": "ast",
       "id": "aplicacion_rationale_1314",
-      "community": 9,
-      "community_name": "Community 9",
+      "community": 11,
+      "community_name": "Community 11",
       "norm_label": "barras verticales: oficios recibidos por mes."
     },
     {
@@ -1495,8 +1495,8 @@
       "source_location": "L1338",
       "_origin": "ast",
       "id": "aplicacion_rationale_1338",
-      "community": 9,
-      "community_name": "Community 9",
+      "community": 11,
+      "community_name": "Community 11",
       "norm_label": "grafico de anillo con la distribucion por estado."
     },
     {
@@ -1506,8 +1506,8 @@
       "source_location": "L1389",
       "_origin": "ast",
       "id": "aplicacion_rationale_1389",
-      "community": 9,
-      "community_name": "Community 9",
+      "community": 11,
+      "community_name": "Community 11",
       "norm_label": "barras horizontales: cantidad de oficios por responsable."
     },
     {
@@ -1869,8 +1869,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "configuracion",
-      "community": 1,
-      "community_name": "Community 1",
+      "community": 7,
+      "community_name": "Community 7",
       "norm_label": "configuracion.py"
     },
     {
@@ -1880,8 +1880,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "configuracion_rationale_1",
-      "community": 1,
-      "community_name": "Community 1",
+      "community": 7,
+      "community_name": "Community 7",
       "norm_label": "configuracion central de la aplicacion. define rutas, nombres de archivo y const"
     },
     {
@@ -1891,52 +1891,74 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "herramienta_admin",
-      "community": 1,
-      "community_name": "Community 1",
+      "community": 7,
+      "community_name": "Community 7",
       "norm_label": "herramienta_admin.py"
     },
     {
       "label": "_cargar()",
       "file_type": "code",
       "source_file": "herramienta_admin.py",
-      "source_location": "L28",
+      "source_location": "L37",
       "_origin": "ast",
       "id": "herramienta_admin_cargar",
-      "community": 1,
-      "community_name": "Community 1",
+      "community": 7,
+      "community_name": "Community 7",
       "norm_label": "_cargar()"
     },
     {
       "label": "mostrar_json()",
       "file_type": "code",
       "source_file": "herramienta_admin.py",
-      "source_location": "L39",
+      "source_location": "L48",
       "_origin": "ast",
       "id": "herramienta_admin_mostrar_json",
-      "community": 1,
-      "community_name": "Community 1",
+      "community": 7,
+      "community_name": "Community 7",
       "norm_label": "mostrar_json()"
     },
     {
       "label": "exportar_csv_oficios()",
       "file_type": "code",
       "source_file": "herramienta_admin.py",
-      "source_location": "L43",
+      "source_location": "L52",
       "_origin": "ast",
       "id": "herramienta_admin_exportar_csv_oficios",
-      "community": 1,
-      "community_name": "Community 1",
+      "community": 7,
+      "community_name": "Community 7",
       "norm_label": "exportar_csv_oficios()"
+    },
+    {
+      "label": "_es_formato_actual()",
+      "file_type": "code",
+      "source_file": "herramienta_admin.py",
+      "source_location": "L68",
+      "_origin": "ast",
+      "id": "herramienta_admin_es_formato_actual",
+      "community": 7,
+      "community_name": "Community 7",
+      "norm_label": "_es_formato_actual()"
+    },
+    {
+      "label": "purgar_formato_anterior()",
+      "file_type": "code",
+      "source_file": "herramienta_admin.py",
+      "source_location": "L73",
+      "_origin": "ast",
+      "id": "herramienta_admin_purgar_formato_anterior",
+      "community": 7,
+      "community_name": "Community 7",
+      "norm_label": "purgar_formato_anterior()"
     },
     {
       "label": "main()",
       "file_type": "code",
       "source_file": "herramienta_admin.py",
-      "source_location": "L59",
+      "source_location": "L103",
       "_origin": "ast",
       "id": "herramienta_admin_main",
-      "community": 1,
-      "community_name": "Community 1",
+      "community": 7,
+      "community_name": "Community 7",
       "norm_label": "main()"
     },
     {
@@ -1946,9 +1968,31 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "herramienta_admin_rationale_1",
-      "community": 1,
-      "community_name": "Community 1",
+      "community": 7,
+      "community_name": "Community 7",
       "norm_label": "herramienta_admin.py \u2014 utilidad solo para el administrador. descifra y muestra e"
+    },
+    {
+      "label": "True si la referencia usa el formato vigente REQ-INF-AAAA-NNNN.",
+      "file_type": "rationale",
+      "source_file": "herramienta_admin.py",
+      "source_location": "L69",
+      "_origin": "ast",
+      "id": "herramienta_admin_rationale_69",
+      "community": 7,
+      "community_name": "Community 7",
+      "norm_label": "true si la referencia usa el formato vigente req-inf-aaaa-nnnn."
+    },
+    {
+      "label": "Elimina los oficios cuya Referencia UDC usa el formato antiguo     (UDC-OFICIO-A",
+      "file_type": "rationale",
+      "source_file": "herramienta_admin.py",
+      "source_location": "L74",
+      "_origin": "ast",
+      "id": "herramienta_admin_rationale_74",
+      "community": 7,
+      "community_name": "Community 7",
+      "norm_label": "elimina los oficios cuya referencia udc usa el formato antiguo     (udc-oficio-a"
     },
     {
       "label": "metricas.py",
@@ -1957,8 +2001,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "metricas",
-      "community": 0,
-      "community_name": "Community 0",
+      "community": 5,
+      "community_name": "Community 5",
       "norm_label": "metricas.py"
     },
     {
@@ -1968,8 +2012,8 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "metricas_convertir_fecha",
-      "community": 0,
-      "community_name": "Community 0",
+      "community": 5,
+      "community_name": "Community 5",
       "norm_label": "_convertir_fecha()"
     },
     {
@@ -1979,8 +2023,8 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "metricas_registros",
-      "community": 0,
-      "community_name": "Community 0",
+      "community": 5,
+      "community_name": "Community 5",
       "norm_label": "_registros()"
     },
     {
@@ -1990,8 +2034,8 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "metricas_resumen",
-      "community": 0,
-      "community_name": "Community 0",
+      "community": 5,
+      "community_name": "Community 5",
       "norm_label": "resumen()"
     },
     {
@@ -2001,8 +2045,8 @@
       "source_location": "L71",
       "_origin": "ast",
       "id": "metricas_dias_promedio_respuesta",
-      "community": 0,
-      "community_name": "Community 0",
+      "community": 5,
+      "community_name": "Community 5",
       "norm_label": "dias_promedio_respuesta()"
     },
     {
@@ -2012,8 +2056,8 @@
       "source_location": "L83",
       "_origin": "ast",
       "id": "metricas_serie_por_dia",
-      "community": 0,
-      "community_name": "Community 0",
+      "community": 5,
+      "community_name": "Community 5",
       "norm_label": "serie_por_dia()"
     },
     {
@@ -2023,8 +2067,8 @@
       "source_location": "L97",
       "_origin": "ast",
       "id": "metricas_serie_por_mes",
-      "community": 0,
-      "community_name": "Community 0",
+      "community": 5,
+      "community_name": "Community 5",
       "norm_label": "serie_por_mes()"
     },
     {
@@ -2034,8 +2078,8 @@
       "source_location": "L116",
       "_origin": "ast",
       "id": "metricas_por_responsable",
-      "community": 0,
-      "community_name": "Community 0",
+      "community": 5,
+      "community_name": "Community 5",
       "norm_label": "por_responsable()"
     },
     {
@@ -2045,8 +2089,8 @@
       "source_location": "L126",
       "_origin": "ast",
       "id": "metricas_distribucion_estados",
-      "community": 0,
-      "community_name": "Community 0",
+      "community": 5,
+      "community_name": "Community 5",
       "norm_label": "distribucion_estados()"
     },
     {
@@ -2056,8 +2100,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "metricas_rationale_1",
-      "community": 0,
-      "community_name": "Community 0",
+      "community": 5,
+      "community_name": "Community 5",
       "norm_label": "calculo de metricas para el tablero (dashboard). no depende de la interfaz: solo"
     },
     {
@@ -2067,8 +2111,8 @@
       "source_location": "L72",
       "_origin": "ast",
       "id": "metricas_rationale_72",
-      "community": 0,
-      "community_name": "Community 0",
+      "community": 5,
+      "community_name": "Community 5",
       "norm_label": "promedio de dias entre la recepcion y la respuesta, sobre los oficios     que ya"
     },
     {
@@ -2078,8 +2122,8 @@
       "source_location": "L84",
       "_origin": "ast",
       "id": "metricas_rationale_84",
-      "community": 0,
-      "community_name": "Community 0",
+      "community": 5,
+      "community_name": "Community 5",
       "norm_label": "oficios recibidos por dia en los ultimos n dias (para el grafico)."
     },
     {
@@ -2089,8 +2133,8 @@
       "source_location": "L98",
       "_origin": "ast",
       "id": "metricas_rationale_98",
-      "community": 0,
-      "community_name": "Community 0",
+      "community": 5,
+      "community_name": "Community 5",
       "norm_label": "oficios recibidos por mes en los ultimos n meses (aaaa-mm, cantidad)."
     },
     {
@@ -2100,8 +2144,8 @@
       "source_location": "L118",
       "_origin": "ast",
       "id": "metricas_rationale_118",
-      "community": 0,
-      "community_name": "Community 0",
+      "community": 5,
+      "community_name": "Community 5",
       "norm_label": "cantidad de oficios por responsable, de mayor a menor.     los oficios sin respo"
     },
     {
@@ -2111,8 +2155,8 @@
       "source_location": "L127",
       "_origin": "ast",
       "id": "metricas_rationale_127",
-      "community": 0,
-      "community_name": "Community 0",
+      "community": 5,
+      "community_name": "Community 5",
       "norm_label": "cantidad por estado, en el orden definido en configuracion.estados."
     },
     {
@@ -2122,8 +2166,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "parametros",
-      "community": 6,
-      "community_name": "Community 6",
+      "community": 8,
+      "community_name": "Community 8",
       "norm_label": "parametros.py"
     },
     {
@@ -2133,8 +2177,8 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "parametros_leer",
-      "community": 6,
-      "community_name": "Community 6",
+      "community": 8,
+      "community_name": "Community 8",
       "norm_label": "_leer()"
     },
     {
@@ -2144,8 +2188,8 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "parametros_guardar",
-      "community": 6,
-      "community_name": "Community 6",
+      "community": 8,
+      "community_name": "Community 8",
       "norm_label": "_guardar()"
     },
     {
@@ -2155,8 +2199,8 @@
       "source_location": "L52",
       "_origin": "ast",
       "id": "parametros_analizar_referencia",
-      "community": 6,
-      "community_name": "Community 6",
+      "community": 8,
+      "community_name": "Community 8",
       "norm_label": "analizar_referencia()"
     },
     {
@@ -2166,8 +2210,8 @@
       "source_location": "L73",
       "_origin": "ast",
       "id": "parametros_obtener_secuencial_inicial",
-      "community": 6,
-      "community_name": "Community 6",
+      "community": 8,
+      "community_name": "Community 8",
       "norm_label": "obtener_secuencial_inicial()"
     },
     {
@@ -2177,8 +2221,8 @@
       "source_location": "L83",
       "_origin": "ast",
       "id": "parametros_obtener_referencia_inicial",
-      "community": 6,
-      "community_name": "Community 6",
+      "community": 8,
+      "community_name": "Community 8",
       "norm_label": "obtener_referencia_inicial()"
     },
     {
@@ -2188,8 +2232,8 @@
       "source_location": "L91",
       "_origin": "ast",
       "id": "parametros_esta_configurado",
-      "community": 6,
-      "community_name": "Community 6",
+      "community": 8,
+      "community_name": "Community 8",
       "norm_label": "esta_configurado()"
     },
     {
@@ -2199,8 +2243,8 @@
       "source_location": "L95",
       "_origin": "ast",
       "id": "parametros_definir_secuencial_inicial",
-      "community": 6,
-      "community_name": "Community 6",
+      "community": 8,
+      "community_name": "Community 8",
       "norm_label": "definir_secuencial_inicial()"
     },
     {
@@ -2210,8 +2254,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "parametros_rationale_1",
-      "community": 6,
-      "community_name": "Community 6",
+      "community": 8,
+      "community_name": "Community 8",
       "norm_label": "parametros del sistema (archivo cifrado `datos/parametros.dat`).  hoy guarda un"
     },
     {
@@ -2221,8 +2265,8 @@
       "source_location": "L53",
       "_origin": "ast",
       "id": "parametros_rationale_53",
-      "community": 6,
-      "community_name": "Community 6",
+      "community": 8,
+      "community_name": "Community 8",
       "norm_label": "descompone una referencia udc en (ano, secuencial).      acepta la referencia co"
     },
     {
@@ -2232,8 +2276,8 @@
       "source_location": "L74",
       "_origin": "ast",
       "id": "parametros_rationale_74",
-      "community": 6,
-      "community_name": "Community 6",
+      "community": 8,
+      "community_name": "Community 8",
       "norm_label": "ultimo secuencial ya usado (fuera del sistema) para ese ano.     devuelve 0 si n"
     },
     {
@@ -2243,8 +2287,8 @@
       "source_location": "L84",
       "_origin": "ast",
       "id": "parametros_rationale_84",
-      "community": 6,
-      "community_name": "Community 6",
+      "community": 8,
+      "community_name": "Community 8",
       "norm_label": "referencia configurada tal como se mostraria, o '' si no hay ninguna."
     },
     {
@@ -2254,8 +2298,8 @@
       "source_location": "L96",
       "_origin": "ast",
       "id": "parametros_rationale_96",
-      "community": 6,
-      "community_name": "Community 6",
+      "community": 8,
+      "community_name": "Community 8",
       "norm_label": "fija la ultima referencia registrada antes de usar el sistema.      solo el **su"
     },
     {
@@ -2265,8 +2309,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "permisos",
-      "community": 7,
-      "community_name": "Community 7",
+      "community": 9,
+      "community_name": "Community 9",
       "norm_label": "permisos.py"
     },
     {
@@ -2276,8 +2320,8 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "permisos_chmod",
-      "community": 7,
-      "community_name": "Community 7",
+      "community": 9,
+      "community_name": "Community 9",
       "norm_label": "_chmod()"
     },
     {
@@ -2287,8 +2331,8 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "permisos_hacer_escribible",
-      "community": 7,
-      "community_name": "Community 7",
+      "community": 9,
+      "community_name": "Community 9",
       "norm_label": "hacer_escribible()"
     },
     {
@@ -2298,8 +2342,8 @@
       "source_location": "L47",
       "_origin": "ast",
       "id": "permisos_proteger",
-      "community": 7,
-      "community_name": "Community 7",
+      "community": 9,
+      "community_name": "Community 9",
       "norm_label": "proteger()"
     },
     {
@@ -2309,8 +2353,8 @@
       "source_location": "L52",
       "_origin": "ast",
       "id": "permisos_proteger_directorio",
-      "community": 7,
-      "community_name": "Community 7",
+      "community": 9,
+      "community_name": "Community 9",
       "norm_label": "proteger_directorio()"
     },
     {
@@ -2320,8 +2364,8 @@
       "source_location": "L57",
       "_origin": "ast",
       "id": "permisos_escribir_bytes_protegido",
-      "community": 7,
-      "community_name": "Community 7",
+      "community": 9,
+      "community_name": "Community 9",
       "norm_label": "escribir_bytes_protegido()"
     },
     {
@@ -2331,8 +2375,8 @@
       "source_location": "L65",
       "_origin": "ast",
       "id": "permisos_anexar_texto_protegido",
-      "community": 7,
-      "community_name": "Community 7",
+      "community": 9,
+      "community_name": "Community 9",
       "norm_label": "anexar_texto_protegido()"
     },
     {
@@ -2342,8 +2386,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "permisos_rationale_1",
-      "community": 7,
-      "community_name": "Community 7",
+      "community": 9,
+      "community_name": "Community 9",
       "norm_label": "endurecimiento de permisos de los archivos que crea la aplicacion.  objetivo: qu"
     },
     {
@@ -2353,8 +2397,8 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "permisos_rationale_42",
-      "community": 7,
-      "community_name": "Community 7",
+      "community": 9,
+      "community_name": "Community 9",
       "norm_label": "devuelve el permiso de escritura al propietario si el archivo existe."
     },
     {
@@ -2364,8 +2408,8 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "permisos_rationale_48",
-      "community": 7,
-      "community_name": "Community 7",
+      "community": 9,
+      "community_name": "Community 9",
       "norm_label": "deja el archivo en solo lectura para el propietario (0o400)."
     },
     {
@@ -2375,8 +2419,8 @@
       "source_location": "L53",
       "_origin": "ast",
       "id": "permisos_rationale_53",
-      "community": 7,
-      "community_name": "Community 7",
+      "community": 9,
+      "community_name": "Community 9",
       "norm_label": "restringe una carpeta al propietario (0o700)."
     },
     {
@@ -2386,8 +2430,8 @@
       "source_location": "L58",
       "_origin": "ast",
       "id": "permisos_rationale_58",
-      "community": 7,
-      "community_name": "Community 7",
+      "community": 9,
+      "community_name": "Community 9",
       "norm_label": "escribe (reemplaza) el contenido y deja el archivo en solo lectura."
     },
     {
@@ -2397,8 +2441,8 @@
       "source_location": "L66",
       "_origin": "ast",
       "id": "permisos_rationale_66",
-      "community": 7,
-      "community_name": "Community 7",
+      "community": 9,
+      "community_name": "Community 9",
       "norm_label": "anade texto al final del archivo y lo deja de nuevo en solo lectura."
     },
     {
@@ -2408,8 +2452,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "registro_actividad",
-      "community": 1,
-      "community_name": "Community 1",
+      "community": 7,
+      "community_name": "Community 7",
       "norm_label": "registro_actividad.py"
     },
     {
@@ -2430,8 +2474,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "registro_actividad_rationale_1",
-      "community": 1,
-      "community_name": "Community 1",
+      "community": 7,
+      "community_name": "Community 7",
       "norm_label": "registro de actividad (auditoria) en un archivo de texto plano.  guarda toda acc"
     },
     {
@@ -2951,6 +2995,18 @@
       "confidence_score": 1.0
     },
     {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "herramienta_admin.py",
+      "source_location": "L33",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "herramienta_admin",
+      "target": "almacen_oficios",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -3165,6 +3221,18 @@
       "source": "almacen_oficios_registrar_oficio",
       "target": "almacen_oficios_guardar_registros",
       "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "herramienta_admin.py",
+      "source_location": "L92",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "herramienta_admin_purgar_formato_anterior",
+      "target": "almacen_oficios_guardar_registros"
     },
     {
       "relation": "calls",
@@ -6893,7 +6961,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "herramienta_admin.py",
-      "source_location": "L25",
+      "source_location": "L32",
       "weight": 1.0,
       "_origin": "ast",
       "source": "herramienta_admin",
@@ -7023,7 +7091,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "herramienta_admin.py",
-      "source_location": "L25",
+      "source_location": "L32",
       "weight": 1.0,
       "_origin": "ast",
       "source": "herramienta_admin",
@@ -7035,7 +7103,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "herramienta_admin.py",
-      "source_location": "L33",
+      "source_location": "L42",
       "weight": 1.0,
       "_origin": "ast",
       "source": "herramienta_admin_cargar",
@@ -7105,7 +7173,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "herramienta_admin.py",
-      "source_location": "L24",
+      "source_location": "L31",
       "weight": 1.0,
       "_origin": "ast",
       "source": "herramienta_admin",
@@ -7164,7 +7232,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "herramienta_admin.py",
-      "source_location": "L28",
+      "source_location": "L37",
       "weight": 1.0,
       "_origin": "ast",
       "source": "herramienta_admin",
@@ -7175,7 +7243,18 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "herramienta_admin.py",
-      "source_location": "L43",
+      "source_location": "L68",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "herramienta_admin",
+      "target": "herramienta_admin_es_formato_actual",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "herramienta_admin.py",
+      "source_location": "L52",
       "weight": 1.0,
       "_origin": "ast",
       "source": "herramienta_admin",
@@ -7186,7 +7265,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "herramienta_admin.py",
-      "source_location": "L59",
+      "source_location": "L103",
       "weight": 1.0,
       "_origin": "ast",
       "source": "herramienta_admin",
@@ -7197,11 +7276,34 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "herramienta_admin.py",
-      "source_location": "L39",
+      "source_location": "L48",
       "weight": 1.0,
       "_origin": "ast",
       "source": "herramienta_admin",
       "target": "herramienta_admin_mostrar_json",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "herramienta_admin.py",
+      "source_location": "L73",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "herramienta_admin",
+      "target": "herramienta_admin_purgar_formato_anterior",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "herramienta_admin.py",
+      "source_location": "L34",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "herramienta_admin",
+      "target": "registro_actividad",
       "confidence_score": 1.0
     },
     {
@@ -7220,7 +7322,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "herramienta_admin.py",
-      "source_location": "L67",
+      "source_location": "L111",
       "weight": 1.0,
       "_origin": "ast",
       "source": "herramienta_admin_main",
@@ -7232,7 +7334,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "herramienta_admin.py",
-      "source_location": "L77",
+      "source_location": "L126",
       "weight": 1.0,
       "_origin": "ast",
       "source": "herramienta_admin_main",
@@ -7244,11 +7346,69 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "herramienta_admin.py",
-      "source_location": "L75",
+      "source_location": "L124",
       "weight": 1.0,
       "_origin": "ast",
       "source": "herramienta_admin_main",
       "target": "herramienta_admin_exportar_csv_oficios",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "herramienta_admin.py",
+      "source_location": "L76",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "herramienta_admin_purgar_formato_anterior",
+      "target": "herramienta_admin_es_formato_actual",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "herramienta_admin.py",
+      "source_location": "L69",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "herramienta_admin_rationale_69",
+      "target": "herramienta_admin_es_formato_actual",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "herramienta_admin.py",
+      "source_location": "L117",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "herramienta_admin_main",
+      "target": "herramienta_admin_purgar_formato_anterior",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "herramienta_admin.py",
+      "source_location": "L93",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "herramienta_admin_purgar_formato_anterior",
+      "target": "registro_actividad_registrar"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "herramienta_admin.py",
+      "source_location": "L74",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "herramienta_admin_rationale_74",
+      "target": "herramienta_admin_purgar_formato_anterior",
       "confidence_score": 1.0
     },
     {
@@ -8418,5 +8578,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "3262aac77783f5b82dd5b7e315fac0411dc7fd90"
+  "built_at_commit": "617c00cfc193e0c924dc9dbf03bfa34d5d4946e4"
 }
