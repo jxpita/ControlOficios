@@ -41,8 +41,10 @@ def mostrar_json(registros):
 
 
 def exportar_csv_oficios(registros, ruta_csv):
-    columnas = ["referencia", "codigo_oficio", "fecha_recepcion", "fecha_oficio",
-                "empleado", "estado", "registrado_por", "fecha_registro"]
+    # Orden de fechas: oficio -> recepción -> respuesta; la observación al final.
+    columnas = ["referencia", "codigo_oficio", "fecha_oficio", "fecha_recepcion",
+                "fecha_respuesta", "empleado", "estado", "registrado_por",
+                "fecha_registro", "archivo_respuesta", "observacion"]
     # utf-8-sig para que Excel respete las tildes al abrir el CSV
     with open(ruta_csv, "w", newline="", encoding="utf-8-sig") as archivo:
         escritor = csv.DictWriter(archivo, fieldnames=columnas, extrasaction="ignore")

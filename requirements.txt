@@ -1,0 +1,28 @@
+# Dependencias de ControlOficios
+#
+# Instalación completa (recomendada, habilita todas las funciones):
+#     pip install -r requirements.txt
+#
+# Si solo necesitas lo mínimo para que la app arranque, basta con:
+#     pip install cryptography
+#
+# tkinter NO se instala con pip: viene incluido con Python en Windows y macOS.
+# En Linux, si falta:  sudo apt install python3-tk
+
+# --- Obligatoria -------------------------------------------------------------
+# Cifrado Fernet de oficios.dat / credenciales.dat y hashing PBKDF2 de
+# contraseñas. Sin esta librería la aplicación no arranca.
+cryptography>=41.0
+
+# --- Opcionales --------------------------------------------------------------
+# Se importan con try/except y tienen alternativa: la app funciona sin ellas.
+
+# Visor de PDF integrado (visor_pdf.py): renderiza la respuesta del oficio
+# dentro de la aplicación. Sin ella, se ofrece abrir el PDF con el lector del
+# sistema. Añade ~25 MB al ejecutable si compilas con PyInstaller.
+pymupdf>=1.24
+
+# Logo del banco en la cabecera y el login, y mayor nitidez del visor de PDF
+# (render a 2x reducido con LANCZOS). Sin ella no se ve el logo y el visor usa
+# el modo PPM nativo de Tk.
+pillow>=10.0

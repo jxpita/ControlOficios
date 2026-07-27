@@ -1767,7 +1767,7 @@
       "label": "main()",
       "file_type": "code",
       "source_file": "herramienta_admin.py",
-      "source_location": "L55",
+      "source_location": "L57",
       "_origin": "ast",
       "id": "herramienta_admin_main",
       "community": 6,
@@ -6413,7 +6413,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "herramienta_admin.py",
-      "source_location": "L55",
+      "source_location": "L57",
       "weight": 1.0,
       "_origin": "ast",
       "source": "herramienta_admin",
@@ -6447,7 +6447,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "herramienta_admin.py",
-      "source_location": "L63",
+      "source_location": "L65",
       "weight": 1.0,
       "_origin": "ast",
       "source": "herramienta_admin_main",
@@ -6459,7 +6459,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "herramienta_admin.py",
-      "source_location": "L73",
+      "source_location": "L75",
       "weight": 1.0,
       "_origin": "ast",
       "source": "herramienta_admin_main",
@@ -6471,7 +6471,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "herramienta_admin.py",
-      "source_location": "L71",
+      "source_location": "L73",
       "weight": 1.0,
       "_origin": "ast",
       "source": "herramienta_admin_main",
@@ -7393,5 +7393,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "1d5bbf56a3bad0d65d33b417375d1692e985526f"
+  "built_at_commit": "cc10c41e0e334200bf84f76251ac6ad2855e79f6"
 }

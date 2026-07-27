@@ -18,6 +18,12 @@ La aplicación usa **solo tres** librerías de terceros. Instalación completa
 (recomendada, para tener todas las funciones):
 
 ```bash
+pip install -r requirements.txt
+```
+
+O, si prefieres instalarlas a mano:
+
+```bash
 pip install cryptography pymupdf pillow
 ```
 
@@ -190,6 +196,8 @@ oficios_tracker/
 ├── almacen_oficios.py    # CRUD de oficios + referencia secuencial
 ├── visor_pdf.py          # Visor de PDF integrado (requiere PyMuPDF)
 ├── metricas.py           # Cálculo de métricas del tablero
+├── herramienta_admin.py  # Utilidad de consola para el administrador (ver 3.1)
+├── requirements.txt      # Dependencias del proyecto
 └── datos/                # Se crea sola; contiene:
     ├── clave_maestra.key   (clave de cifrado — PROTEGER / RESPALDAR)
     ├── credenciales.dat    (usuarios del sistema, cifrado)
@@ -197,6 +205,28 @@ oficios_tracker/
     ├── actividad.log       (bitácora de auditoría, texto plano)
     └── respuestas/         (PDF de respuesta, uno por oficio)
 ```
+
+### 3.1 `herramienta_admin.py` (utilidad de consola)
+
+**No forma parte de la aplicación**: ningún módulo la importa. Es un script
+independiente que se ejecuta a mano desde la consola, en la carpeta del
+proyecto (necesita `datos/clave_maestra.key` para descifrar). Sirve para
+inspeccionar o exportar los datos sin pasar por la interfaz:
+
+```bash
+# Ver todos los oficios en JSON legible
+python herramienta_admin.py oficios
+
+# Ver los usuarios del sistema (sin contraseñas: solo se guardan hashes con
+# sal, no se pueden recuperar, solo verificar en el ingreso)
+python herramienta_admin.py credenciales
+
+# Exportar los oficios a un CSV que abre directo en Excel (con tildes)
+python herramienta_admin.py oficios --csv reporte.csv
+```
+
+Es de **solo lectura y exportación**: no modifica los datos. Si la ejecutas sin
+argumentos, imprime su propia ayuda.
 
 La referencia interna tiene el formato **`UDC-OFICIO-AAAAMMDD-NNNN`**.
 El secuencial `NNNN` (4 dígitos, desde `0000`) se reinicia por cada **día de
