@@ -4,12 +4,12 @@
 - cluster-only mode — file stats not available
 
 ## Summary
-- 246 nodes · 509 edges · 15 communities (13 shown, 2 thin omitted)
+- 246 nodes · 510 edges · 15 communities (13 shown, 2 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `fb59fd7b`
+- Built from commit: `bb56816b`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -43,16 +43,16 @@
 10. `registrar_oficio()` - 9 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `_leer_registros()` --calls--> `descifrar()`  [EXTRACTED]
-  almacen_oficios.py → cifrado.py
-- `_guardar_registros()` --calls--> `cifrar()`  [EXTRACTED]
-  almacen_oficios.py → cifrado.py
 - `_guardar_registros()` --calls--> `escribir_bytes_protegido()`  [EXTRACTED]
   almacen_oficios.py → permisos.py
-- `purgar_formato_anterior()` --calls--> `_guardar_registros()`  [EXTRACTED]
-  herramienta_admin.py → almacen_oficios.py
 - `_generar_referencia()` --calls--> `obtener_secuencial_inicial()`  [EXTRACTED]
   almacen_oficios.py → parametros.py
+- `registrar_oficio()` --calls--> `registrar()`  [EXTRACTED]
+  almacen_oficios.py → registro_actividad.py
+- `actualizar_oficio()` --calls--> `registrar()`  [EXTRACTED]
+  almacen_oficios.py → registro_actividad.py
+- `actualizar_estado_asignado()` --calls--> `registrar()`  [EXTRACTED]
+  almacen_oficios.py → registro_actividad.py
 
 ## Import Cycles
 - None detected.
@@ -60,24 +60,24 @@
 ## Communities (15 total, 2 thin omitted)
 
 ### Community 0 - "Community 0"
-Cohesion: 0.10
-Nodes (30): _cifrador(), cifrar(), descifrar(), obtener_clave(), Devuelve la clave Fernet; la genera la primera vez que se ejecuta., Descifra. Lanza cryptography.fernet.InvalidToken si el archivo     fue alterado, Configuración central de la aplicación. Define rutas, nombres de archivo y const, Fernet (+22 more)
+Cohesion: 0.07
+Nodes (45): actualizar_estado_asignado(), actualizar_oficio(), eliminar_respuesta(), filtrar_oficios(), _generar_referencia(), _guardar_registros(), _leer_registros(), listar_oficios_visibles() (+37 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.11
-Nodes (32): actualizar_estado_asignado(), actualizar_oficio(), adjuntar_respuesta(), eliminar_respuesta(), filtrar_oficios(), _generar_referencia(), _guardar_registros(), _leer_registros() (+24 more)
-
-### Community 2 - "Community 2"
 Cohesion: 0.18
 Nodes (23): _buscar(), cerrar_sesion(), crear_usuario(), editar_usuario(), eliminar_usuario(), existe_algun_usuario(), _guardar_usuarios(), _leer_usuarios() (+15 more)
 
-### Community 3 - "Community 3"
+### Community 2 - "Community 2"
 Cohesion: 0.19
 Nodes (5): iniciar(), Centra la ventana en la pantalla., Crea el banner corporativo y la tarjeta central. Devuelve el         contenedor, Cierra la sesión actual y vuelve a la pantalla de ingreso., VentanaIngreso
 
-### Community 4 - "Community 4"
+### Community 3 - "Community 3"
 Cohesion: 0.18
 Nodes (8): abrir_con_sistema(), abrir_visor(), Visor de PDF integrado en la aplicación (para ver la respuesta de un oficio sin, Centra horizontalmente la página dentro del lienzo (y verticalmente         si s, Abre el PDF dentro de la aplicación.      Devuelve True si se mostró en la app;, Abre el PDF con el lector predeterminado del sistema operativo.     Alternativa, Ventana con el PDF renderizado página a página., VisorPDF
+
+### Community 4 - "Community 4"
+Cohesion: 0.16
+Nodes (17): adjuntar_respuesta(), Devuelve la ruta del PDF de respuesta adjunto, o None si no hay., Copia un PDF de respuesta a datos/respuestas/ y lo asocia al oficio.      El arc, ruta_respuesta(), Path, anexar_texto_protegido(), _chmod(), escribir_bytes_protegido() (+9 more)
 
 ### Community 5 - "Community 5"
 Cohesion: 0.23
@@ -96,8 +96,8 @@ Cohesion: 0.19
 Nodes (4): AplicacionPrincipal, Permite al superusuario o a un administrador indicar la última         Referenci, Desplaza el área que está bajo el puntero.          Si el cursor está sobre una, Muestra el PDF de respuesta dentro de la aplicación.
 
 ### Community 9 - "Community 9"
-Cohesion: 0.24
-Nodes (12): anexar_texto_protegido(), _chmod(), escribir_bytes_protegido(), hacer_escribible(), proteger(), proteger_directorio(), Endurecimiento de permisos de los archivos que crea la aplicación.  Objetivo: qu, Devuelve el permiso de escritura al propietario si el archivo existe. (+4 more)
+Cohesion: 0.23
+Nodes (12): analizar_referencia(), definir_secuencial_inicial(), esta_configurado(), _guardar(), _leer(), obtener_referencia_inicial(), obtener_secuencial_inicial(), Parámetros del sistema (archivo cifrado `datos/parametros.dat`).  Hoy guarda un (+4 more)
 
 ### Community 10 - "Community 10"
 Cohesion: 0.22
@@ -117,11 +117,9 @@ Nodes (3): Tablero con scroll vertical: tarjetas de indicadores y gráficos., Ma
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `AplicacionPrincipal` connect `Community 8` to `Community 3`, `Community 6`, `Community 10`, `Community 11`, `Community 12`, `Community 13`, `Community 14`?**
+- **Why does `AplicacionPrincipal` connect `Community 8` to `Community 2`, `Community 6`, `Community 10`, `Community 11`, `Community 12`, `Community 13`, `Community 14`?**
   _High betweenness centrality (0.433) - this node is a cross-community bridge._
-- **Why does `SelectorFecha` connect `Community 7` to `Community 3`, `Community 12`, `Community 6`?**
+- **Why does `SelectorFecha` connect `Community 7` to `Community 2`, `Community 12`, `Community 6`?**
   _High betweenness centrality (0.109) - this node is a cross-community bridge._
 - **Should `Community 0` be split into smaller, more focused modules?**
-  _Cohesion score 0.09747899159663866 - nodes in this community are weakly interconnected._
-- **Should `Community 1` be split into smaller, more focused modules?**
-  _Cohesion score 0.10984848484848485 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.07428571428571429 - nodes in this community are weakly interconnected._

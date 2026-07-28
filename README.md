@@ -108,6 +108,14 @@ superusuario** pueden reasignar responsables o cambiar libremente el estado de
 cualquier oficio (respetando las reglas: un oficio con responsable no puede
 quedar "Por asignar"; "En proceso"/"Finalizado" exigen responsable).
 
+**Fecha de respuesta y estado:** si un oficio tiene fecha de respuesta es
+porque ya fue respondido, así que su estado es siempre **"Finalizado"**. La
+regla se aplica al registrar y al modificar, para cualquier rol: si se indica
+una fecha de respuesta, el estado pasa a "Finalizado" aunque se haya elegido
+otro. Para **reabrir** un oficio hay que **borrar antes esa fecha** (el
+calendario tiene un botón "Limpiar"). Además, indicar una fecha de respuesta
+exige que el oficio tenga responsable.
+
 ### Campos del oficio
 
 En el formulario, los campos **obligatorios se marcan con un asterisco (\*)**;
@@ -120,7 +128,7 @@ el resto son opcionales.
 | Referencia SB | No | Texto libre |
 | Fecha de oficio | **Sí \*** | No puede ser posterior a la de recepción |
 | Fecha de recepción | **Sí \*** | |
-| Fecha de respuesta | No | No puede ser anterior a la de recepción |
+| Fecha de respuesta | No | No puede ser anterior a la de recepción. **Si se indica, el oficio pasa a "Finalizado"** y exige responsable |
 | Usuario responsable | No | Sin responsable ⇒ "Por asignar" |
 | Estado | **Sí \*** | |
 | Observación | No | Texto libre, editable después |

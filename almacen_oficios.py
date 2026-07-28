@@ -86,9 +86,13 @@ def _generar_referencia(registros: List[Dict], anio: int = None) -> str:
 
 
 # --- Reglas de negocio: relación responsable / estado -----------------------
-def _resolver_estado(nombre_empleado: str, estado: str) -> str:
-    """Aplica las reglas de negocio entre responsable y estado.
+def _resolver_estado(nombre_empleado: str, estado: str,
+                     fecha_respuesta: str = "") -> str:
+    """Aplica las reglas de negocio entre responsable, fecha de respuesta y
+    estado.
 
+    - Con fecha de respuesta: el oficio ya fue respondido, así que el estado es
+      siempre "Finalizado" (y exige responsable).
     - Sin responsable: el único estado válido es "Por asignar". Si se pidió
       "En proceso" o "Finalizado" se lanza un error (esos estados exigen
       responsable).
@@ -98,6 +102,14 @@ def _resolver_estado(nombre_empleado: str, estado: str) -> str:
     Devuelve el estado ya corregido.
     """
     tiene_responsable = bool((nombre_empleado or "").strip())
+    if (fecha_respuesta or "").strip():
+        # Si ya hay respuesta, el oficio está finalizado.
+        if not tiene_responsable:
+            raise ValueError(
+                "Para registrar una fecha de respuesta debe asignar un "
+                "responsable (el oficio pasa a \"Finalizado\")."
+            )
+        return "Finalizado"
     if not tiene_responsable:
         if estado in ("En proceso", "Finalizado"):
             raise ValueError(
@@ -153,10 +165,11 @@ def registrar_oficio(codigo_oficio: str, fecha_recepcion: str, fecha_oficio: str
     if estado not in ESTADOS:
         raise ValueError("Estado no válido.")
 
-    # El responsable es opcional. Las reglas ajustan el estado en consecuencia.
+    # El responsable es opcional. Las reglas ajustan el estado en consecuencia
+    # (incluida la fecha de respuesta, que implica "Finalizado").
     nombre_empleado = (nombre_empleado or "").strip()
     id_empleado = (id_empleado or "").strip()
-    estado = _resolver_estado(nombre_empleado, estado)
+    estado = _resolver_estado(nombre_empleado, estado, fecha_respuesta)
 
     registros = _leer_registros()
     # La referencia del oficio no puede repetirse (aunque la Referencia UDC sea
@@ -246,15 +259,19 @@ def actualizar_oficio(referencia: str, nuevo_estado: str, id_empleado: str,
         raise ValueError("Estado no válido.")
     nombre_empleado = (nombre_empleado or "").strip()
     id_empleado = (id_empleado or "").strip()
-    estado_final = _resolver_estado(nombre_empleado, nuevo_estado)
-
     registros = _leer_registros()
     for registro in registros:
         if registro["referencia"] == referencia:
             cambios = []
+            # La fecha de respuesta se resuelve primero: si el oficio queda con
+            # respuesta, el estado pasa obligatoriamente a "Finalizado".
             if fecha_respuesta is not None:
                 nueva_fecha = _validar_fecha_respuesta(
                     fecha_respuesta, registro["fecha_recepcion"])
+            else:
+                nueva_fecha = registro.get("fecha_respuesta", "")
+            estado_final = _resolver_estado(nombre_empleado, nuevo_estado, nueva_fecha)
+            if fecha_respuesta is not None:
                 if nueva_fecha != registro.get("fecha_respuesta", ""):
                     registro["fecha_respuesta"] = nueva_fecha
                     cambios.append(f"F. respuesta: {nueva_fecha or '(sin fecha)'}")
@@ -295,6 +312,9 @@ def actualizar_estado_asignado(referencia: str, actor: str, nuevo_estado: str,
     Puede cambiar la fecha de respuesta, la observación y alternar el estado
     entre "En proceso" y "Finalizado" (por si finalizó por error y quiere
     reabrirlo). No puede reasignar el responsable ni dejarlo en "Por asignar".
+
+    Si el oficio queda con fecha de respuesta, el estado pasa siempre a
+    "Finalizado": para reabrirlo hay que borrar antes esa fecha.
     """
     estados_permitidos = ("En proceso", "Finalizado")
     if nuevo_estado not in estados_permitidos:
@@ -309,9 +329,15 @@ def actualizar_estado_asignado(referencia: str, actor: str, nuevo_estado: str,
             if not responsable or responsable != actor_norm:
                 raise ValueError("Solo puede modificar oficios asignados a usted.")
             cambios = []
+            # La fecha de respuesta manda sobre el estado.
             if fecha_respuesta is not None:
                 nueva_fecha = _validar_fecha_respuesta(
                     fecha_respuesta, registro["fecha_recepcion"])
+            else:
+                nueva_fecha = registro.get("fecha_respuesta", "")
+            estado_final = _resolver_estado(
+                registro.get("empleado", ""), nuevo_estado, nueva_fecha)
+            if fecha_respuesta is not None:
                 if nueva_fecha != registro.get("fecha_respuesta", ""):
                     registro["fecha_respuesta"] = nueva_fecha
                     cambios.append(f"F. respuesta: {nueva_fecha or '(sin fecha)'}")
@@ -320,9 +346,9 @@ def actualizar_estado_asignado(referencia: str, actor: str, nuevo_estado: str,
                 if nueva_obs != registro.get("observacion", ""):
                     registro["observacion"] = nueva_obs
                     cambios.append("Observación actualizada")
-            if registro.get("estado") != nuevo_estado:
-                registro["estado"] = nuevo_estado
-                cambios.append(f"Estado: {nuevo_estado}")
+            if registro.get("estado") != estado_final:
+                registro["estado"] = estado_final
+                cambios.append(f"Estado: {estado_final}")
             if cambios:
                 registro.setdefault("historial", []).append({
                     "evento": " · ".join(cambios),
@@ -333,7 +359,7 @@ def actualizar_estado_asignado(referencia: str, actor: str, nuevo_estado: str,
                 registro_actividad.registrar(
                     "ACTUALIZAR_OFICIO",
                     f"referencia={referencia}; " + "; ".join(cambios), actor)
-            return nuevo_estado
+            return estado_final
     raise ValueError("No se encontró la referencia indicada.")
 
 

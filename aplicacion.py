@@ -597,8 +597,7 @@ class AplicacionPrincipal(ttk.Frame):
                    command=self._limpiar_filtros).pack(side="left")
 
         ttk.Label(panel,
-                  text="El rango de fechas aplica a un solo tipo de fecha. "
-                       "Deje \"hasta\" vacío para buscar por una fecha única.",
+                  text="Deje \"hasta\" vacío para buscar por fecha única",
                   foreground="#6B7280", font=("Helvetica", 8)).pack(anchor="w", pady=(4, 0))
 
         self.lbl_resultados = ttk.Label(panel, text="", foreground="#6B7280",
@@ -694,6 +693,11 @@ class AplicacionPrincipal(ttk.Frame):
                                            font=("Helvetica", 10), relief="flat",
                                            highlightthickness=1, highlightbackground="#CBD2DE")
         self.edicion_observacion.pack(side="left", fill="x", expand=True, padx=6)
+
+        ttk.Label(panel,
+                  text="Al indicar una fecha de respuesta el oficio pasa a "
+                       "\"Finalizado\"; para reabrirlo, borre esa fecha",
+                  foreground="#6B7280", font=("Helvetica", 8)).pack(anchor="w", pady=(6, 0))
 
         barra = ttk.Frame(panel)
         barra.pack(fill="x", pady=(8, 0))
