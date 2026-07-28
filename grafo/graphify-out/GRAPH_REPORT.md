@@ -1,15 +1,15 @@
-# Graph Report - .  (2026-07-27)
+# Graph Report - .  (2026-07-28)
 
 ## Corpus Check
 - cluster-only mode — file stats not available
 
 ## Summary
-- 245 nodes · 509 edges · 16 communities (13 shown, 3 thin omitted)
+- 246 nodes · 509 edges · 15 communities (13 shown, 2 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `617c00cf`
+- Built from commit: `b821a24f`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -29,7 +29,6 @@
 - Community 12
 - Community 13
 - Community 14
-- Community 15
 
 ## God Nodes (most connected - your core abstractions)
 1. `AplicacionPrincipal` - 48 edges
@@ -58,23 +57,23 @@
 ## Import Cycles
 - None detected.
 
-## Communities (16 total, 3 thin omitted)
+## Communities (15 total, 2 thin omitted)
 
 ### Community 0 - "Community 0"
+Cohesion: 0.10
+Nodes (30): _cifrador(), cifrar(), descifrar(), obtener_clave(), Devuelve la clave Fernet; la genera la primera vez que se ejecuta., Descifra. Lanza cryptography.fernet.InvalidToken si el archivo     fue alterado, Configuración central de la aplicación. Define rutas, nombres de archivo y const, Fernet (+22 more)
+
+### Community 1 - "Community 1"
 Cohesion: 0.11
 Nodes (32): actualizar_estado_asignado(), actualizar_oficio(), adjuntar_respuesta(), eliminar_respuesta(), filtrar_oficios(), _generar_referencia(), _guardar_registros(), _leer_registros() (+24 more)
 
-### Community 1 - "Community 1"
-Cohesion: 0.13
-Nodes (30): _buscar(), cerrar_sesion(), crear_usuario(), editar_usuario(), eliminar_usuario(), existe_algun_usuario(), _guardar_usuarios(), _leer_usuarios() (+22 more)
-
 ### Community 2 - "Community 2"
-Cohesion: 0.19
-Nodes (5): iniciar(), Centra la ventana en la pantalla., Crea el banner corporativo y la tarjeta central. Devuelve el         contenedor, Cierra la sesión actual y vuelve a la pantalla de ingreso., VentanaIngreso
+Cohesion: 0.18
+Nodes (23): _buscar(), cerrar_sesion(), crear_usuario(), editar_usuario(), eliminar_usuario(), existe_algun_usuario(), _guardar_usuarios(), _leer_usuarios() (+15 more)
 
 ### Community 3 - "Community 3"
-Cohesion: 0.15
-Nodes (6): AplicacionPrincipal, Permite al superusuario indicar la última Referencia UDC registrada         en e, Tablero con scroll vertical: tarjetas de indicadores y gráficos., Activa la rueda del ratón solo mientras el cursor está en el tablero., Marco superior con logo y título., Muestra el PDF de respuesta dentro de la aplicación.
+Cohesion: 0.19
+Nodes (5): iniciar(), Centra la ventana en la pantalla., Crea el banner corporativo y la tarjeta central. Devuelve el         contenedor, Cierra la sesión actual y vuelve a la pantalla de ingreso., VentanaIngreso
 
 ### Community 4 - "Community 4"
 Cohesion: 0.18
@@ -85,46 +84,44 @@ Cohesion: 0.23
 Nodes (15): listar_oficios(), _convertir_fecha(), dias_promedio_respuesta(), distribucion_estados(), por_responsable(), Cálculo de métricas para el tablero (dashboard). No depende de la interfaz: solo, Cantidad de oficios por responsable, de mayor a menor.     Los oficios sin respo, Cantidad por estado, en el orden definido en configuracion.ESTADOS. (+7 more)
 
 ### Community 6 - "Community 6"
+Cohesion: 0.17
+Nodes (6): True si el usuario en sesión puede crear/editar/eliminar usuarios         y reas, Panel de búsqueda: por texto (Referencia UDC / Referencia oficio /         Causa, Devuelve la clave interna a partir de la etiqueta mostrada., Guarda los cambios del panel según el rol: el gestor puede cambiar         respo, Carga un PDF con la respuesta del oficio seleccionado., Elimina el PDF adjunto (por si se cargó el archivo equivocado).
+
+### Community 7 - "Community 7"
 Cohesion: 0.23
 Nodes (5): Coloca el calendario junto al campo, abriéndose hacia ARRIBA si no         cabe, Campo de fecha con calendario emergente. No requiere librerías externas.      Mu, `permitir_vacio=True` deja el campo en blanco y ofrece un botón         "Limpiar, Fecha desde la que se abre el calendario (la escrita, o hoy)., SelectorFecha
 
-### Community 7 - "Community 7"
-Cohesion: 0.21
-Nodes (11): Configuración central de la aplicación. Define rutas, nombres de archivo y const, _cargar(), _es_formato_actual(), exportar_csv_oficios(), main(), mostrar_json(), purgar_formato_anterior(), herramienta_admin.py — utilidad SOLO para el administrador. Descifra y muestra e (+3 more)
-
 ### Community 8 - "Community 8"
-Cohesion: 0.23
-Nodes (12): analizar_referencia(), definir_secuencial_inicial(), esta_configurado(), _guardar(), _leer(), obtener_referencia_inicial(), obtener_secuencial_inicial(), Parámetros del sistema (archivo cifrado `datos/parametros.dat`).  Hoy guarda un (+4 more)
+Cohesion: 0.19
+Nodes (4): AplicacionPrincipal, Permite al superusuario o a un administrador indicar la última         Referenci, Desplaza el área que está bajo el puntero.          Si el cursor está sobre una, Muestra el PDF de respuesta dentro de la aplicación.
 
 ### Community 9 - "Community 9"
 Cohesion: 0.24
 Nodes (12): anexar_texto_protegido(), _chmod(), escribir_bytes_protegido(), hacer_escribible(), proteger(), proteger_directorio(), Endurecimiento de permisos de los archivos que crea la aplicación.  Objetivo: qu, Devuelve el permiso de escritura al propietario si el archivo existe. (+4 more)
 
 ### Community 10 - "Community 10"
-Cohesion: 0.24
-Nodes (5): Busca solo entre los oficios visibles para el usuario en sesión., True si el usuario en sesión puede crear/editar/eliminar usuarios         y reas, Precarga el panel de edición con los datos del oficio seleccionado., Guarda los cambios del panel según el rol: el gestor puede cambiar         respo, Carga un PDF con la respuesta del oficio seleccionado.
+Cohesion: 0.22
+Nodes (4): Texto que se muestra en los desplegables para un responsable.         Incluye el, A partir del texto del desplegable devuelve (usuario, nombre).         Para "(Si, Busca solo entre los oficios visibles para el usuario en sesión., Precarga el panel de edición con los datos del oficio seleccionado.
 
 ### Community 11 - "Community 11"
 Cohesion: 0.20
 Nodes (4): Barras verticales: oficios recibidos por día., Barras verticales: oficios recibidos por mes., Gráfico de anillo con la distribución por estado., Barras horizontales: cantidad de oficios por responsable.
 
 ### Community 12 - "Community 12"
-Cohesion: 0.25
-Nodes (3): Panel de búsqueda: por texto (Referencia UDC / Referencia oficio /         Causa, Devuelve la clave interna a partir de la etiqueta mostrada., Elimina el PDF adjunto (por si se cargó el archivo equivocado).
+Cohesion: 0.22
+Nodes (3): Tablero con scroll vertical: tarjetas de indicadores y gráficos., Marco superior con logo y título., Convierte un contenedor en un área con scroll vertical.          Devuelve (lienz
 
 ## Knowledge Gaps
-- **3 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **2 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `AplicacionPrincipal` connect `Community 3` to `Community 2`, `Community 10`, `Community 11`, `Community 12`, `Community 13`, `Community 14`, `Community 15`?**
-  _High betweenness centrality (0.429) - this node is a cross-community bridge._
-- **Why does `SelectorFecha` connect `Community 6` to `Community 10`, `Community 2`, `Community 3`, `Community 12`?**
+- **Why does `AplicacionPrincipal` connect `Community 8` to `Community 3`, `Community 6`, `Community 10`, `Community 11`, `Community 12`, `Community 13`, `Community 14`?**
+  _High betweenness centrality (0.433) - this node is a cross-community bridge._
+- **Why does `SelectorFecha` connect `Community 7` to `Community 3`, `Community 12`, `Community 6`?**
   _High betweenness centrality (0.109) - this node is a cross-community bridge._
 - **Should `Community 0` be split into smaller, more focused modules?**
-  _Cohesion score 0.10984848484848485 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.09747899159663866 - nodes in this community are weakly interconnected._
 - **Should `Community 1` be split into smaller, more focused modules?**
-  _Cohesion score 0.13306451612903225 - nodes in this community are weakly interconnected._
-- **Should `Community 3` be split into smaller, more focused modules?**
-  _Cohesion score 0.14761904761904762 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.10984848484848485 - nodes in this community are weakly interconnected._

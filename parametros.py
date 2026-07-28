@@ -18,7 +18,7 @@ from typing import Dict, Optional
 
 from cryptography.fernet import InvalidToken
 
-from configuracion import ARCHIVO_PARAMETROS, PREFIJO_REFERENCIA, ROL_SUPERUSUARIO
+from configuracion import ARCHIVO_PARAMETROS, PREFIJO_REFERENCIA, ROLES_GESTORES
 from cifrado import cifrar, descifrar
 import registro_actividad
 import permisos
@@ -95,12 +95,13 @@ def esta_configurado() -> bool:
 def definir_secuencial_inicial(referencia: str, actor: str, actor_rol: str) -> str:
     """Fija la última referencia registrada antes de usar el sistema.
 
-    Solo el **superusuario** puede definirla. Devuelve la referencia
-    normalizada que quedó guardada.
+    Pueden definirla el **superusuario** y los **administradores**. Devuelve la
+    referencia normalizada que quedó guardada.
     """
-    if actor_rol != ROL_SUPERUSUARIO:
+    if actor_rol not in ROLES_GESTORES:
         raise ValueError(
-            "Solo el superusuario puede definir el secuencial inicial."
+            "Solo el superusuario o un administrador pueden definir el "
+            "secuencial inicial."
         )
     anio, secuencial = analizar_referencia(referencia)
     if anio < 2000 or anio > date.today().year + 1:

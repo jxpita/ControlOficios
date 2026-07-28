@@ -237,6 +237,9 @@ class AplicacionPrincipal(ttk.Frame):
         # --- Estilos personalizados ---
         self._configurar_estilos()
 
+        # Áreas con desplazamiento vertical (pestañas Oficios y Tablero).
+        self._lienzos_desplazables = set()
+
         # --- Marco superior con logo ---
         self._crear_cabecera()
 
@@ -256,8 +259,8 @@ class AplicacionPrincipal(ttk.Frame):
         if self._puede_gestionar_usuarios():
             self.cuaderno.add(self.pestana_usuarios, text="  Usuarios  ")
         self.cuaderno.add(self.pestana_tablero, text="  Tablero  ")
-        # La configuración del secuencial es exclusiva del superusuario.
-        if self._es_superusuario():
+        # La configuración del secuencial está disponible para los gestores.
+        if self._puede_gestionar_usuarios():
             self.cuaderno.add(self.pestana_configuracion, text="  Configuración  ")
 
         self._construir_registro()
@@ -265,10 +268,16 @@ class AplicacionPrincipal(ttk.Frame):
         if self._puede_gestionar_usuarios():
             self._construir_usuarios()
         self._construir_tablero()
-        if self._es_superusuario():
+        if self._puede_gestionar_usuarios():
             self._construir_configuracion()
 
         self.cuaderno.bind("<<NotebookTabChanged>>", self._al_cambiar_pestana)
+
+        # Rueda del ratón: un único manejador que decide qué desplazar según
+        # dónde esté el puntero (Windows/macOS usan <MouseWheel>; Linux, los
+        # botones 4 y 5).
+        for evento in ("<MouseWheel>", "<Button-4>", "<Button-5>"):
+            self.bind_all(evento, self._al_girar_rueda)
 
         self.pack(fill="both", expand=True)
 
@@ -402,8 +411,57 @@ class AplicacionPrincipal(ttk.Frame):
         y reasignar/cambiar libremente el estado de los oficios (gestor)."""
         return self.usuario.get("rol") in ROLES_GESTORES
 
-    def _es_superusuario(self):
-        return self.usuario.get("rol") == ROL_SUPERUSUARIO
+    # ---- Áreas con desplazamiento vertical ---------------------------------
+    def _crear_area_desplazable(self, contenedor):
+        """Convierte un contenedor en un área con scroll vertical.
+
+        Devuelve (lienzo, marco_interno): el contenido se agrega al marco
+        interno y el lienzo se encarga del desplazamiento. Se usa para que en
+        resoluciones pequeñas no queden secciones fuera de la vista.
+        """
+        lienzo = tk.Canvas(contenedor, background=COLOR_BLANCO, highlightthickness=0)
+        barra = ttk.Scrollbar(contenedor, orient="vertical", command=lienzo.yview)
+        lienzo.configure(yscrollcommand=barra.set)
+        barra.pack(side="right", fill="y")
+        lienzo.pack(side="left", fill="both", expand=True)
+
+        interno = ttk.Frame(lienzo)
+        id_ventana = lienzo.create_window((0, 0), window=interno, anchor="nw")
+
+        def al_cambiar_contenido(evento):
+            lienzo.configure(scrollregion=lienzo.bbox("all"))
+
+        def al_cambiar_lienzo(evento):
+            # El contenido ocupa siempre todo el ancho disponible.
+            lienzo.itemconfigure(id_ventana, width=evento.width)
+
+        interno.bind("<Configure>", al_cambiar_contenido)
+        lienzo.bind("<Configure>", al_cambiar_lienzo)
+        self._lienzos_desplazables.add(lienzo)
+        return lienzo, interno
+
+    def _al_girar_rueda(self, evento):
+        """Desplaza el área que está bajo el puntero.
+
+        Si el cursor está sobre una tabla, se desplaza la tabla; si no, se
+        busca un área desplazable entre los contenedores que la rodean.
+        """
+        if getattr(evento, "num", None) == 4:
+            pasos = -1
+        elif getattr(evento, "num", None) == 5:
+            pasos = 1
+        else:
+            pasos = int(-evento.delta / 120) or (-1 if evento.delta > 0 else 1)
+
+        widget = evento.widget
+        if isinstance(widget, ttk.Treeview):
+            widget.yview_scroll(pasos, "units")
+            return
+        while widget is not None:
+            if widget in self._lienzos_desplazables:
+                widget.yview_scroll(pasos, "units")
+                return
+            widget = getattr(widget, "master", None)
 
     def _construir_registro(self):
         marco = self.pestana_registro
@@ -563,13 +621,16 @@ class AplicacionPrincipal(ttk.Frame):
         return ""
 
     def _construir_listado(self):
-        marco = self.pestana_listado
+        # Toda la pestaña va dentro de un lienzo con desplazamiento vertical:
+        # así, en pantallas pequeñas, ninguna de las tres secciones (buscar,
+        # listado y modificar) queda fuera de la vista.
+        self.oficios_lienzo, marco = self._crear_area_desplazable(self.pestana_listado)
         es_gestor = self._puede_gestionar_usuarios()
 
-        # --- Filtros de búsqueda --------------------------------------------
+        # --- 1) Filtros de búsqueda -----------------------------------------
         self._construir_filtros(marco)
 
-        # --- Tabla de oficios (orden: oficio -> recepción -> respuesta) ------
+        # --- 2) Tabla de oficios (orden: oficio -> recepción -> respuesta) --
         columnas = ("referencia", "codigo", "causal", "sb", "oficio", "recepcion",
                     "respuesta", "empleado", "estado", "pdf", "observacion")
         titulos = ("Referencia UDC", "Referencia oficio", "Causal oficio",
@@ -579,8 +640,10 @@ class AplicacionPrincipal(ttk.Frame):
         # completas (p. ej. "REQ-INF-2026-0241").
         anchos = (150, 150, 150, 120, 90, 95, 95, 150, 90, 40, 200)
         contenedor = ttk.Frame(marco)
-        contenedor.pack(fill="both", expand=True, side="top")
-        self.tabla = ttk.Treeview(contenedor, columns=columnas, show="headings", height=8)
+        # Altura fija (no expand): dentro de un área desplazable la tabla debe
+        # tener alto propio para que el panel inferior siga siendo alcanzable.
+        contenedor.pack(fill="x", side="top")
+        self.tabla = ttk.Treeview(contenedor, columns=columnas, show="headings", height=10)
         for columna, titulo, ancho in zip(columnas, titulos, anchos):
             self.tabla.heading(columna, text=titulo)
             self.tabla.column(columna, width=ancho, minwidth=ancho, anchor="w", stretch=False)
@@ -592,7 +655,7 @@ class AplicacionPrincipal(ttk.Frame):
         barra_h.pack(side="bottom", fill="x")
         self.tabla.pack(fill="both", expand=True, side="left")
 
-        # --- Panel de edición del oficio seleccionado ------------------------
+        # --- 3) Panel de edición del oficio seleccionado ---------------------
         # Disposición en una sola fila de campos + observación, para que la
         # pestaña no quede saturada y el calendario tenga espacio.
         panel = ttk.LabelFrame(marco, text=" Modificar oficio seleccionado ", padding=8)
@@ -1064,10 +1127,11 @@ class AplicacionPrincipal(ttk.Frame):
             self.tabla_usuarios.insert("", "end",
                                        values=(usu["usuario"], usu["nombre"], usu["rol"]))
 
-    # ---- Configuración (solo superusuario) ---------------------------------
+    # ---- Configuración (superusuario y administradores) --------------------
     def _construir_configuracion(self):
-        """Permite al superusuario indicar la última Referencia UDC registrada
-        en el Excel anterior, para que el sistema continúe desde ahí."""
+        """Permite al superusuario o a un administrador indicar la última
+        Referencia UDC registrada en el Excel anterior, para que el sistema
+        continúe desde ahí."""
         marco = self.pestana_configuracion
 
         ttk.Label(marco, text="Configuración del sistema",
@@ -1103,9 +1167,9 @@ class AplicacionPrincipal(ttk.Frame):
             panel, foreground="#6B7280", font=("Helvetica", 8), wraplength=760,
             justify="left",
             text="El secuencial es por año: cada año la numeración vuelve a empezar "
-                 "en 0001. Solo el superusuario puede modificar este valor y el "
-                 "cambio queda registrado en la bitácora. Reconfigurarlo nunca "
-                 "genera referencias duplicadas."
+                 "en 0001. Solo el superusuario y los administradores pueden "
+                 "modificar este valor, y el cambio queda registrado en la "
+                 "bitácora. Reconfigurarlo nunca genera referencias duplicadas."
         ).grid(row=4, column=0, columnspan=2, sticky="w", pady=(10, 0))
 
         self._refrescar_configuracion()
@@ -1156,33 +1220,8 @@ class AplicacionPrincipal(ttk.Frame):
 
     def _construir_tablero(self):
         """Tablero con scroll vertical: tarjetas de indicadores y gráficos."""
-        marco = self.pestana_tablero
-
-        # Lienzo desplazable que contiene todo el tablero.
-        self.tablero_lienzo = tk.Canvas(marco, background=COLOR_BLANCO,
-                                        highlightthickness=0)
-        barra = ttk.Scrollbar(marco, orient="vertical",
-                              command=self.tablero_lienzo.yview)
-        self.tablero_lienzo.configure(yscrollcommand=barra.set)
-        barra.pack(side="right", fill="y")
-        self.tablero_lienzo.pack(side="left", fill="both", expand=True)
-
-        self.tablero = ttk.Frame(self.tablero_lienzo)
-        self._id_tablero = self.tablero_lienzo.create_window(
-            (0, 0), window=self.tablero, anchor="nw")
-
-        def al_redimensionar_contenido(evento):
-            self.tablero_lienzo.configure(
-                scrollregion=self.tablero_lienzo.bbox("all"))
-
-        def al_redimensionar_lienzo(evento):
-            # El contenido ocupa siempre todo el ancho disponible.
-            self.tablero_lienzo.itemconfigure(self._id_tablero, width=evento.width)
-
-        self.tablero.bind("<Configure>", al_redimensionar_contenido)
-        self.tablero_lienzo.bind("<Configure>", al_redimensionar_lienzo)
-        self.tablero_lienzo.bind("<Enter>", lambda e: self._activar_rueda(True))
-        self.tablero_lienzo.bind("<Leave>", lambda e: self._activar_rueda(False))
+        self.tablero_lienzo, self.tablero = self._crear_area_desplazable(
+            self.pestana_tablero)
 
         ttk.Label(self.tablero, text="Tablero de oficios",
                   font=("Helvetica", 13, "bold")).pack(anchor="w", pady=(0, 2))
@@ -1205,23 +1244,6 @@ class AplicacionPrincipal(ttk.Frame):
         self.lienzo_responsables = self._crear_lienzo(fila, 240, lado="left", expandir=True)
         # Gráfico 4: recepciones por mes.
         self.lienzo_meses = self._crear_lienzo(self.tablero, 210)
-
-    def _activar_rueda(self, activar):
-        """Activa la rueda del ratón solo mientras el cursor está en el tablero."""
-        if activar:
-            self.tablero_lienzo.bind_all(
-                "<MouseWheel>",
-                lambda e: self.tablero_lienzo.yview_scroll(int(-e.delta / 120), "units"))
-            self.tablero_lienzo.bind_all(
-                "<Button-4>", lambda e: self.tablero_lienzo.yview_scroll(-1, "units"))
-            self.tablero_lienzo.bind_all(
-                "<Button-5>", lambda e: self.tablero_lienzo.yview_scroll(1, "units"))
-        else:
-            for evento in ("<MouseWheel>", "<Button-4>", "<Button-5>"):
-                try:
-                    self.tablero_lienzo.unbind_all(evento)
-                except tk.TclError:
-                    pass
 
     def _crear_lienzo(self, contenedor, alto, lado=None, expandir=False):
         lienzo = tk.Canvas(contenedor, height=alto, background=COLOR_BLANCO,
@@ -1425,7 +1447,7 @@ class AplicacionPrincipal(ttk.Frame):
         if actual is self.pestana_registro:
             self._refrescar_responsables()
         elif actual is self.pestana_configuracion:
-            if self._es_superusuario():
+            if self._puede_gestionar_usuarios():
                 self._refrescar_configuracion()
         elif actual is self.pestana_listado:
             self._refrescar_responsables()

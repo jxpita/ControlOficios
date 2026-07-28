@@ -1,6 +1,43 @@
 {
   "communities": {
     "0": [
+      "cifrado",
+      "cifrado_cifrador",
+      "cifrado_cifrar",
+      "cifrado_descifrar",
+      "cifrado_obtener_clave",
+      "cifrado_rationale_15",
+      "cifrado_rationale_33",
+      "configuracion",
+      "configuracion_rationale_1",
+      "fernet",
+      "herramienta_admin",
+      "herramienta_admin_cargar",
+      "herramienta_admin_es_formato_actual",
+      "herramienta_admin_exportar_csv_oficios",
+      "herramienta_admin_main",
+      "herramienta_admin_mostrar_json",
+      "herramienta_admin_purgar_formato_anterior",
+      "herramienta_admin_rationale_1",
+      "herramienta_admin_rationale_69",
+      "herramienta_admin_rationale_74",
+      "parametros",
+      "parametros_analizar_referencia",
+      "parametros_definir_secuencial_inicial",
+      "parametros_esta_configurado",
+      "parametros_guardar",
+      "parametros_leer",
+      "parametros_obtener_referencia_inicial",
+      "parametros_obtener_secuencial_inicial",
+      "parametros_rationale_1",
+      "parametros_rationale_53",
+      "parametros_rationale_74",
+      "parametros_rationale_84",
+      "parametros_rationale_96",
+      "registro_actividad",
+      "registro_actividad_rationale_1"
+    ],
+    "1": [
       "almacen_oficios",
       "almacen_oficios_actualizar_estado_asignado",
       "almacen_oficios_actualizar_oficio",
@@ -35,7 +72,7 @@
       "almacen_oficios_validar_fecha_respuesta",
       "path"
     ],
-    "1": [
+    "2": [
       "autenticacion",
       "autenticacion_buscar",
       "autenticacion_cerrar_sesion",
@@ -55,27 +92,19 @@
       "autenticacion_rationale_97",
       "autenticacion_restablecer_clave",
       "autenticacion_validar_acceso",
-      "cifrado",
-      "cifrado_cifrador",
-      "cifrado_cifrar",
-      "cifrado_descifrar",
       "cifrado_generar_hash_clave",
-      "cifrado_obtener_clave",
-      "cifrado_rationale_15",
-      "cifrado_rationale_33",
       "cifrado_rationale_40",
       "cifrado_verificar_clave",
-      "fernet",
       "registro_actividad_rationale_24",
       "registro_actividad_registrar"
     ],
-    "2": [
+    "3": [
       "aplicacion",
       "aplicacion_aplicacionprincipal_cerrar_sesion",
       "aplicacion_iniciar",
-      "aplicacion_rationale_1478",
-      "aplicacion_rationale_1510",
-      "aplicacion_rationale_344",
+      "aplicacion_rationale_1500",
+      "aplicacion_rationale_1532",
+      "aplicacion_rationale_353",
       "aplicacion_ventanaingreso",
       "aplicacion_ventanaingreso_boton_principal",
       "aplicacion_ventanaingreso_campo",
@@ -91,29 +120,6 @@
       "aplicacion_ventanaingreso_ingresar",
       "aplicacion_ventanaingreso_init",
       "aplicacion_ventanaingreso_limpiar"
-    ],
-    "3": [
-      "aplicacion_aplicacionprincipal",
-      "aplicacion_aplicacionprincipal_activar_rueda",
-      "aplicacion_aplicacionprincipal_al_cambiar_pestana",
-      "aplicacion_aplicacionprincipal_al_seleccionar_usuario",
-      "aplicacion_aplicacionprincipal_configurar_estilos",
-      "aplicacion_aplicacionprincipal_construir_configuracion",
-      "aplicacion_aplicacionprincipal_construir_registro",
-      "aplicacion_aplicacionprincipal_construir_tablero",
-      "aplicacion_aplicacionprincipal_crear_cabecera",
-      "aplicacion_aplicacionprincipal_crear_lienzo",
-      "aplicacion_aplicacionprincipal_editar_usuario_seleccionado",
-      "aplicacion_aplicacionprincipal_es_superusuario",
-      "aplicacion_aplicacionprincipal_guardar_secuencial",
-      "aplicacion_aplicacionprincipal_init",
-      "aplicacion_aplicacionprincipal_refrescar_configuracion",
-      "aplicacion_aplicacionprincipal_ver_respuesta",
-      "aplicacion_rationale_1069",
-      "aplicacion_rationale_1158",
-      "aplicacion_rationale_1210",
-      "aplicacion_rationale_299",
-      "aplicacion_rationale_799"
     ],
     "4": [
       "visor_pdf",
@@ -155,6 +161,24 @@
       "metricas_serie_por_mes"
     ],
     "6": [
+      "aplicacion_aplicacionprincipal_adjuntar_respuesta",
+      "aplicacion_aplicacionprincipal_aplicar_cambios",
+      "aplicacion_aplicacionprincipal_clave_por_etiqueta",
+      "aplicacion_aplicacionprincipal_construir_filtros",
+      "aplicacion_aplicacionprincipal_construir_listado",
+      "aplicacion_aplicacionprincipal_eliminar_respuesta",
+      "aplicacion_aplicacionprincipal_limpiar_filtros",
+      "aplicacion_aplicacionprincipal_puede_gestionar_usuarios",
+      "aplicacion_aplicacionprincipal_refrescar_listado",
+      "aplicacion_rationale_410",
+      "aplicacion_rationale_560",
+      "aplicacion_rationale_617",
+      "aplicacion_rationale_790",
+      "aplicacion_rationale_822",
+      "aplicacion_rationale_842",
+      "aplicacion_selectorfecha_get"
+    ],
+    "7": [
       "aplicacion_rationale_106",
       "aplicacion_rationale_26",
       "aplicacion_rationale_38",
@@ -170,36 +194,20 @@
       "aplicacion_selectorfecha_set",
       "aplicacion_selectorfecha_ubicar_popup"
     ],
-    "7": [
-      "configuracion",
-      "configuracion_rationale_1",
-      "herramienta_admin",
-      "herramienta_admin_cargar",
-      "herramienta_admin_es_formato_actual",
-      "herramienta_admin_exportar_csv_oficios",
-      "herramienta_admin_main",
-      "herramienta_admin_mostrar_json",
-      "herramienta_admin_purgar_formato_anterior",
-      "herramienta_admin_rationale_1",
-      "herramienta_admin_rationale_69",
-      "herramienta_admin_rationale_74",
-      "registro_actividad",
-      "registro_actividad_rationale_1"
-    ],
     "8": [
-      "parametros",
-      "parametros_analizar_referencia",
-      "parametros_definir_secuencial_inicial",
-      "parametros_esta_configurado",
-      "parametros_guardar",
-      "parametros_leer",
-      "parametros_obtener_referencia_inicial",
-      "parametros_obtener_secuencial_inicial",
-      "parametros_rationale_1",
-      "parametros_rationale_53",
-      "parametros_rationale_74",
-      "parametros_rationale_84",
-      "parametros_rationale_96"
+      "aplicacion_aplicacionprincipal",
+      "aplicacion_aplicacionprincipal_al_cambiar_pestana",
+      "aplicacion_aplicacionprincipal_al_girar_rueda",
+      "aplicacion_aplicacionprincipal_al_seleccionar_usuario",
+      "aplicacion_aplicacionprincipal_configurar_estilos",
+      "aplicacion_aplicacionprincipal_construir_configuracion",
+      "aplicacion_aplicacionprincipal_editar_usuario_seleccionado",
+      "aplicacion_aplicacionprincipal_guardar_secuencial",
+      "aplicacion_aplicacionprincipal_refrescar_configuracion",
+      "aplicacion_aplicacionprincipal_ver_respuesta",
+      "aplicacion_rationale_1132",
+      "aplicacion_rationale_444",
+      "aplicacion_rationale_862"
     ],
     "9": [
       "permisos",
@@ -217,17 +225,17 @@
       "permisos_rationale_66"
     ],
     "10": [
-      "aplicacion_aplicacionprincipal_adjuntar_respuesta",
       "aplicacion_aplicacionprincipal_al_seleccionar_oficio",
-      "aplicacion_aplicacionprincipal_aplicar_cambios",
+      "aplicacion_aplicacionprincipal_display_responsable",
+      "aplicacion_aplicacionprincipal_guardar_oficio",
       "aplicacion_aplicacionprincipal_oficio_por_referencia",
-      "aplicacion_aplicacionprincipal_puede_gestionar_usuarios",
-      "aplicacion_rationale_393",
-      "aplicacion_rationale_401",
-      "aplicacion_rationale_701",
-      "aplicacion_rationale_727",
-      "aplicacion_rationale_759",
-      "aplicacion_selectorfecha_get"
+      "aplicacion_aplicacionprincipal_responsable_por_display",
+      "aplicacion_aplicacionprincipal_usuarios_sistema",
+      "aplicacion_aplicacionprincipal_valores_responsables",
+      "aplicacion_rationale_369",
+      "aplicacion_rationale_381",
+      "aplicacion_rationale_402",
+      "aplicacion_rationale_764"
     ],
     "11": [
       "aplicacion_aplicacionprincipal_dibujar_anillo_estados",
@@ -236,21 +244,21 @@
       "aplicacion_aplicacionprincipal_dibujar_barras_meses",
       "aplicacion_aplicacionprincipal_refrescar_tablero",
       "aplicacion_aplicacionprincipal_tarjeta",
-      "aplicacion_rationale_1288",
-      "aplicacion_rationale_1314",
-      "aplicacion_rationale_1338",
-      "aplicacion_rationale_1389"
+      "aplicacion_rationale_1310",
+      "aplicacion_rationale_1336",
+      "aplicacion_rationale_1360",
+      "aplicacion_rationale_1411"
     ],
     "12": [
-      "aplicacion_aplicacionprincipal_clave_por_etiqueta",
-      "aplicacion_aplicacionprincipal_construir_filtros",
-      "aplicacion_aplicacionprincipal_construir_listado",
-      "aplicacion_aplicacionprincipal_eliminar_respuesta",
-      "aplicacion_aplicacionprincipal_limpiar_filtros",
-      "aplicacion_aplicacionprincipal_refrescar_listado",
-      "aplicacion_rationale_502",
-      "aplicacion_rationale_559",
-      "aplicacion_rationale_779"
+      "aplicacion_aplicacionprincipal_construir_registro",
+      "aplicacion_aplicacionprincipal_construir_tablero",
+      "aplicacion_aplicacionprincipal_crear_area_desplazable",
+      "aplicacion_aplicacionprincipal_crear_cabecera",
+      "aplicacion_aplicacionprincipal_crear_lienzo",
+      "aplicacion_aplicacionprincipal_init",
+      "aplicacion_rationale_1222",
+      "aplicacion_rationale_308",
+      "aplicacion_rationale_416"
     ],
     "13": [
       "aplicacion_aplicacionprincipal_construir_usuarios",
@@ -259,42 +267,32 @@
       "aplicacion_aplicacionprincipal_nuevo_usuario",
       "aplicacion_aplicacionprincipal_refrescar_responsables",
       "aplicacion_aplicacionprincipal_refrescar_usuarios",
-      "aplicacion_rationale_382",
-      "aplicacion_rationale_882"
+      "aplicacion_rationale_391",
+      "aplicacion_rationale_945"
     ],
     "14": [
-      "aplicacion_aplicacionprincipal_display_responsable",
-      "aplicacion_aplicacionprincipal_guardar_oficio",
-      "aplicacion_aplicacionprincipal_responsable_por_display",
-      "aplicacion_aplicacionprincipal_usuarios_sistema",
-      "aplicacion_aplicacionprincipal_valores_responsables",
-      "aplicacion_rationale_360",
-      "aplicacion_rationale_372"
-    ],
-    "15": [
       "aplicacion_aplicacionprincipal_pedir_nueva_clave",
       "aplicacion_aplicacionprincipal_restablecer_clave_seleccionado",
-      "aplicacion_rationale_979",
-      "aplicacion_rationale_998"
+      "aplicacion_rationale_1042",
+      "aplicacion_rationale_1061"
     ]
   },
   "cohesion": {
-    "0": 0.10984848484848485,
-    "1": 0.13306451612903225,
-    "2": 0.19047619047619047,
-    "3": 0.14761904761904762,
+    "0": 0.09747899159663866,
+    "1": 0.10984848484848485,
+    "2": 0.17753623188405798,
+    "3": 0.19047619047619047,
     "4": 0.18128654970760233,
     "5": 0.225,
-    "6": 0.23076923076923078,
-    "7": 0.2087912087912088,
-    "8": 0.23076923076923078,
+    "6": 0.175,
+    "7": 0.23076923076923078,
+    "8": 0.19230769230769232,
     "9": 0.24358974358974358,
-    "10": 0.23636363636363636,
+    "10": 0.21818181818181817,
     "11": 0.2,
-    "12": 0.25,
+    "12": 0.2222222222222222,
     "13": 0.35714285714285715,
-    "14": 0.3333333333333333,
-    "15": 0.5
+    "14": 0.5
   },
   "gods": [
     {
@@ -408,28 +406,23 @@
   "questions": [
     {
       "type": "bridge_node",
-      "question": "Why does `AplicacionPrincipal` connect `Community 3` to `Community 2`, `Community 10`, `Community 11`, `Community 12`, `Community 13`, `Community 14`, `Community 15`?",
-      "why": "High betweenness centrality (0.429) - this node is a cross-community bridge."
+      "question": "Why does `AplicacionPrincipal` connect `Community 8` to `Community 3`, `Community 6`, `Community 10`, `Community 11`, `Community 12`, `Community 13`, `Community 14`?",
+      "why": "High betweenness centrality (0.433) - this node is a cross-community bridge."
     },
     {
       "type": "bridge_node",
-      "question": "Why does `SelectorFecha` connect `Community 6` to `Community 10`, `Community 2`, `Community 3`, `Community 12`?",
+      "question": "Why does `SelectorFecha` connect `Community 7` to `Community 3`, `Community 12`, `Community 6`?",
       "why": "High betweenness centrality (0.109) - this node is a cross-community bridge."
     },
     {
       "type": "low_cohesion",
       "question": "Should `Community 0` be split into smaller, more focused modules?",
-      "why": "Cohesion score 0.10984848484848485 - nodes in this community are weakly interconnected."
+      "why": "Cohesion score 0.09747899159663866 - nodes in this community are weakly interconnected."
     },
     {
       "type": "low_cohesion",
       "question": "Should `Community 1` be split into smaller, more focused modules?",
-      "why": "Cohesion score 0.13306451612903225 - nodes in this community are weakly interconnected."
-    },
-    {
-      "type": "low_cohesion",
-      "question": "Should `Community 3` be split into smaller, more focused modules?",
-      "why": "Cohesion score 0.14761904761904762 - nodes in this community are weakly interconnected."
+      "why": "Cohesion score 0.10984848484848485 - nodes in this community are weakly interconnected."
     }
   ]
 }

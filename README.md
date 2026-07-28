@@ -248,8 +248,8 @@ La **Referencia UDC** la genera el sistema con el formato
 
 **Continuidad con el Excel anterior:** los oficios que se llevaban en Excel no
 se migran; el sistema continúa desde el último registrado allí. Para eso, el
-**superusuario** abre la pestaña **Configuración** (visible solo para él) e
-ingresa **una sola vez** la última Referencia UDC usada, por ejemplo
+**superusuario o un administrador** abre la pestaña **Configuración** (visible
+solo para ellos) e ingresa **una sola vez** la última Referencia UDC usada, por ejemplo
 `REQ-INF-2026-0241`. A partir de ahí el sistema numera `REQ-INF-2026-0242`,
 `REQ-INF-2026-0243`, …
 
@@ -259,7 +259,7 @@ Detalles:
   (`241`, que asume el año en curso).
 - La pestaña muestra siempre cuál será la **próxima** Referencia UDC.
 - El valor se guarda cifrado en `datos/parametros.dat` y el cambio queda en la
-  bitácora de auditoría.
+  bitácora de auditoría, con el usuario que lo definió.
 - Reconfigurarlo **nunca genera duplicados**: la numeración usa
   `max(valor configurado, mayor secuencial ya existente) + 1`.
 - Si nunca se configura, la numeración arranca en `REQ-INF-<año>-0001`.
@@ -290,6 +290,12 @@ combinables:
 
 El panel indica cuántos oficios se están mostrando del total, y "Limpiar
 filtros" restablece la lista completa.
+
+La pestaña *Oficios* tiene **desplazamiento vertical** que abarca sus tres
+secciones (*Buscar oficios*, el listado y *Modificar oficio seleccionado*), de
+modo que en pantallas pequeñas ninguna quede fuera de la vista. La rueda del
+ratón desplaza la tabla cuando el puntero está sobre ella, y la pestaña
+completa en cualquier otro punto.
 
 ## 4. Compilar a ejecutable (lo más ligero posible)
 
