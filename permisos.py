@@ -24,6 +24,8 @@ Límites (importante, sin sobrevender):
   por el cifrado autenticado Fernet.
 """
 import os
+import shutil
+from pathlib import Path
 
 MODO_SOLO_LECTURA = 0o400   # r--------  (solo lectura, solo propietario)
 MODO_ESCRITURA = 0o600      # rw-------  (lectura/escritura, solo propietario)
@@ -55,16 +57,55 @@ def proteger_directorio(ruta) -> None:
 
 
 def escribir_bytes_protegido(ruta, datos: bytes) -> None:
-    """Escribe (reemplaza) el contenido y deja el archivo en solo lectura."""
-    hacer_escribible(ruta)
-    with open(ruta, "wb") as archivo:
+    """Escribe el contenido de forma **atómica** y deja el archivo en solo
+    lectura, conservando una copia de la versión anterior en `<nombre>.bak`.
+
+    Por qué no se escribe directamente sobre el archivo: abrirlo en modo "wb"
+    lo vacía primero, así que quien lo leyera en ese instante (otro usuario en
+    la carpeta compartida) vería un archivo a medias y creería que está
+    corrupto. Escribiendo en un temporal y renombrando, el lector ve **o la
+    versión anterior o la nueva, nunca una mezcla**. El renombrado también
+    protege ante un corte de luz o un cierre forzado a mitad de escritura.
+    """
+    ruta = Path(ruta)
+
+    # 1) Respaldo de la última versión buena, por si hiciera falta recuperarla.
+    if ruta.exists():
+        respaldo = ruta.with_name(ruta.name + ".bak")
+        try:
+            hacer_escribible(respaldo)
+            shutil.copyfile(ruta, respaldo)
+            proteger(respaldo)
+        except OSError:
+            pass          # el respaldo es una ayuda, no debe impedir guardar
+
+    # 2) Escribir en un temporal de la MISMA carpeta (el renombrado solo es
+    #    atómico dentro del mismo sistema de archivos).
+    temporal = ruta.with_name(ruta.name + ".tmp")
+    hacer_escribible(temporal)
+    with open(temporal, "wb") as archivo:
         archivo.write(datos)
+
+    # 3) Reemplazo atómico. En Windows os.replace falla si el destino está en
+    #    solo lectura, por eso primero se le devuelve el permiso de escritura.
+    hacer_escribible(ruta)
+    os.replace(temporal, ruta)
     proteger(ruta)
 
 
-def anexar_texto_protegido(ruta, texto: str) -> None:
-    """Añade texto al final del archivo y lo deja de nuevo en solo lectura."""
-    hacer_escribible(ruta)
+def anexar_texto(ruta, texto: str) -> None:
+    """Añade una línea al final del archivo, dejándolo escribible.
+
+    A diferencia de los archivos de datos, la bitácora **no** se deja en solo
+    lectura tras cada línea: ese vaivén de permisos hacía que, en la carpeta
+    compartida, un proceso pusiera el archivo en solo lectura justo cuando otro
+    intentaba escribir, y esa línea de auditoría se perdía. La marca de solo
+    lectura además nunca protegió realmente el archivo (el propietario puede
+    quitarla), así que no compensa perder registros de auditoría por ella.
+    """
+    nuevo = not os.path.exists(ruta)
     with open(ruta, "a", encoding="utf-8") as archivo:
         archivo.write(texto)
-    proteger(ruta)
+    if nuevo:
+        # Al crearlo, restringirlo al propietario (lectura y escritura).
+        _chmod(ruta, MODO_ESCRITURA)

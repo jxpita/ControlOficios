@@ -22,6 +22,7 @@ from configuracion import ARCHIVO_PARAMETROS, PREFIJO_REFERENCIA, ROLES_GESTORES
 from cifrado import cifrar, descifrar
 import registro_actividad
 import permisos
+import bloqueo
 
 
 # Acepta "REQ-INF-2026-0241" (con el prefijo configurado) sin distinguir
@@ -92,6 +93,7 @@ def esta_configurado() -> bool:
     return bool(_leer().get("secuencial_inicial"))
 
 
+@bloqueo.con_bloqueo("parametros")
 def definir_secuencial_inicial(referencia: str, actor: str, actor_rol: str) -> str:
     """Fija la última referencia registrada antes de usar el sistema.
 

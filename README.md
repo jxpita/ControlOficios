@@ -211,7 +211,8 @@ oficios_tracker/
 ├── cifrado.py            # Cifrado Fernet + hashing de contraseñas
 ├── autenticacion.py      # Ingreso, usuarios y roles del sistema
 ├── registro_actividad.py # Bitácora de auditoría (log en texto plano)
-├── permisos.py           # Endurece permisos (solo lectura) de los archivos
+├── permisos.py           # Endurece permisos y escritura atómica de archivos
+├── bloqueo.py            # Bloqueo entre procesos (uso compartido en red)
 ├── parametros.py         # Parámetros del sistema (secuencial inicial UDC)
 ├── almacen_oficios.py    # CRUD de oficios + referencia secuencial
 ├── visor_pdf.py          # Visor de PDF integrado (requiere PyMuPDF)
@@ -221,7 +222,7 @@ oficios_tracker/
 └── datos/                # Se crea sola; contiene:
     ├── clave_maestra.key   (clave de cifrado — PROTEGER / RESPALDAR)
     ├── credenciales.dat    (usuarios del sistema, cifrado)
-    ├── oficios.dat         (registros, cifrado)
+    ├── oficios.dat         (registros, cifrado; con copia .bak)
     ├── parametros.dat      (secuencial inicial de la Referencia UDC, cifrado)
     ├── actividad.log       (bitácora de auditoría, texto plano)
     └── respuestas/         (PDF de respuesta, uno por oficio)
@@ -473,6 +474,49 @@ Es el precio de tener cifrado serio.
 - **Algunos antivirus** desconfían de los ejecutables comprimidos con UPX. Si
   aparecen falsos positivos, compile sin UPX.
 - No hace falta instalar UPX: basta con la carpeta descomprimida.
+
+## 4.1 Uso compartido por varias personas
+
+La aplicación puede vivir en una **carpeta de red** usada por varias personas a
+la vez (3-4 en la práctica). Estas son las salvaguardas incorporadas:
+
+**Bloqueo entre procesos (`bloqueo.py`).** Guardar implica leer todo el
+archivo, modificarlo y reescribirlo. Si dos personas hacían eso a la vez, la
+segunda escritura pisaba a la primera y **se perdía un registro sin aviso**.
+Ahora cada operación de escritura toma un bloqueo (`datos/oficios.lock`,
+`credenciales.lock`, `parametros.lock`) creado de forma atómica, de modo que la
+secuencia es indivisible. Si otro usuario está guardando, se espera unos
+milisegundos; si tras 10 segundos sigue ocupado, se avisa con un mensaje claro
+en vez de congelar la aplicación.
+
+> Medido en el proyecto: con 8 procesos registrando oficios simultáneamente,
+> **sin** bloqueo se guardaba 1 de 8 (7 oficios perdidos); **con** bloqueo se
+> guardan los 8, sin referencias duplicadas.
+
+Si un equipo se apaga de golpe con el bloqueo tomado, el archivo queda
+huérfano; por eso lleva dentro su marca de tiempo y, pasados 30 segundos, se
+considera abandonado y se rompe solo.
+
+**Escritura atómica y copia de respaldo.** Los datos se escriben en un archivo
+temporal y luego se renombra sobre el definitivo. Quien lea en ese momento ve
+**o la versión anterior o la nueva, nunca una a medias** (antes podía aparecer
+el falso mensaje de "archivo alterado"). Además protege ante un corte de luz a
+mitad de escritura. De cada archivo se conserva la versión anterior en
+`<nombre>.bak`.
+
+**Bitácora sin pérdidas.** El log ya no alterna a solo lectura tras cada línea:
+ese vaivén hacía que un proceso bloqueara al otro y la línea de auditoría se
+perdiera en silencio. Y si aun así la escritura falla, la línea **no se
+descarta**: se guarda en `%TEMP%\controloficios-auditoria-pendiente.log`.
+
+**Vista siempre al día.** Al volver a la ventana de la aplicación, los datos se
+recargan automáticamente, así se ve lo que otras personas hayan registrado. El
+refresco respeta lo que se esté escribiendo: no borra una observación a medio
+redactar.
+
+**Recomendación adicional (no es código):** programe una **copia diaria
+automática de la carpeta `datos/`**. Cubre concurrencia, borrado accidental,
+disco dañado y errores humanos; es la medida más rentable de todas.
 
 ## 5. Notas de seguridad (léelas)
 

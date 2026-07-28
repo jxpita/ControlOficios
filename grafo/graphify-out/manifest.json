@@ -1,18 +1,23 @@
 {
   "almacen_oficios.py": {
-    "mtime": 1785272880.8793511,
-    "ast_hash": "3fd85aef0effeca27a72b286421d21c1",
-    "semantic_hash": "3fd85aef0effeca27a72b286421d21c1"
+    "mtime": 1785274400.9619925,
+    "ast_hash": "da522ed30ef12e0a1dde54cd0afb6294",
+    "semantic_hash": "da522ed30ef12e0a1dde54cd0afb6294"
   },
   "aplicacion.py": {
-    "mtime": 1785272915.5993505,
-    "ast_hash": "d90cf5a8c2adff01314227f80c7324b3",
-    "semantic_hash": "d90cf5a8c2adff01314227f80c7324b3"
+    "mtime": 1785274454.7758827,
+    "ast_hash": "9baecbf599672adc2fc035a96b378635",
+    "semantic_hash": "9baecbf599672adc2fc035a96b378635"
   },
   "autenticacion.py": {
-    "mtime": 1785137901.8334835,
-    "ast_hash": "345d311de3ca10e82a6eb1115f83c1e9",
-    "semantic_hash": "345d311de3ca10e82a6eb1115f83c1e9"
+    "mtime": 1785274400.9623904,
+    "ast_hash": "cecafa7956fb3b7d768100cccb78eecf",
+    "semantic_hash": "cecafa7956fb3b7d768100cccb78eecf"
+  },
+  "bloqueo.py": {
+    "mtime": 1785274390.3968794,
+    "ast_hash": "be68dfef4ef95ed0b58e941cd5c2fd61",
+    "semantic_hash": "be68dfef4ef95ed0b58e941cd5c2fd61"
   },
   "cifrado.py": {
     "mtime": 1784748971.496833,
@@ -25,9 +30,9 @@
     "semantic_hash": "51df264896d7882eb1230a1611c79cf3"
   },
   "herramienta_admin.py": {
-    "mtime": 1785189353.8952963,
-    "ast_hash": "ac72b3022993e9146b94ed9c1f52870e",
-    "semantic_hash": "ac72b3022993e9146b94ed9c1f52870e"
+    "mtime": 1785274412.920879,
+    "ast_hash": "110a800f60db16c47a99d6b0ca52f7ff",
+    "semantic_hash": "110a800f60db16c47a99d6b0ca52f7ff"
   },
   "metricas.py": {
     "mtime": 1785165566.2336574,
@@ -35,19 +40,19 @@
     "semantic_hash": "50d502ac20ae03dcfab0de4e3a2f745f"
   },
   "parametros.py": {
-    "mtime": 1785245918.0175128,
-    "ast_hash": "0344ad54066df50b7da5cb3456b11a65",
-    "semantic_hash": "0344ad54066df50b7da5cb3456b11a65"
+    "mtime": 1785274400.9625113,
+    "ast_hash": "b22d3bfe59e722e633164e2aaf4b11e7",
+    "semantic_hash": "b22d3bfe59e722e633164e2aaf4b11e7"
   },
   "permisos.py": {
-    "mtime": 1784748971.496833,
-    "ast_hash": "bb48ac65b804e8bcf43818136a2c1686",
-    "semantic_hash": "bb48ac65b804e8bcf43818136a2c1686"
+    "mtime": 1785274343.5368805,
+    "ast_hash": "44892fcf08216b02f69ec01e0a2f1b2d",
+    "semantic_hash": "44892fcf08216b02f69ec01e0a2f1b2d"
   },
   "registro_actividad.py": {
-    "mtime": 1784748971.496833,
-    "ast_hash": "ac74c4cb893e5f09d607f99177ab027b",
-    "semantic_hash": "ac74c4cb893e5f09d607f99177ab027b"
+    "mtime": 1785274358.29688,
+    "ast_hash": "7f2c1805d64090690fa2c5d1ef2d18f3",
+    "semantic_hash": "7f2c1805d64090690fa2c5d1ef2d18f3"
   },
   "visor_pdf.py": {
     "mtime": 1785165331.0816433,

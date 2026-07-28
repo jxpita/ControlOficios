@@ -27,6 +27,7 @@ from cifrado import cifrar, descifrar
 import registro_actividad
 import permisos
 import parametros
+import bloqueo
 
 
 # --- Persistencia ------------------------------------------------------------
@@ -139,6 +140,7 @@ def _validar_fecha_respuesta(fecha_respuesta: str, fecha_recepcion: str) -> str:
     return fecha_respuesta
 
 
+@bloqueo.con_bloqueo("oficios")
 def registrar_oficio(codigo_oficio: str, fecha_recepcion: str, fecha_oficio: str,
                      id_empleado: str, nombre_empleado: str, estado: str,
                      registrado_por: str, fecha_respuesta: str = "",
@@ -248,6 +250,7 @@ def listar_oficios_visibles(actor: str, actor_rol: str) -> List[Dict]:
     ]
 
 
+@bloqueo.con_bloqueo("oficios")
 def actualizar_oficio(referencia: str, nuevo_estado: str, id_empleado: str,
                      nombre_empleado: str, actualizado_por: str,
                      actor_rol: str = None, fecha_respuesta: str = None,
@@ -317,6 +320,7 @@ def actualizar_oficio(referencia: str, nuevo_estado: str, id_empleado: str,
     raise ValueError("No se encontró la referencia indicada.")
 
 
+@bloqueo.con_bloqueo("oficios")
 def actualizar_estado_asignado(referencia: str, actor: str, nuevo_estado: str,
                                fecha_respuesta: str = None,
                                observacion: str = None) -> str:
@@ -398,6 +402,7 @@ def ruta_respuesta(referencia: str) -> Optional[Path]:
     return None
 
 
+@bloqueo.con_bloqueo("oficios")
 def adjuntar_respuesta(referencia: str, ruta_origen: str, actor: str,
                        actor_rol: str) -> str:
     """Copia un PDF de respuesta a datos/respuestas/ y lo asocia al oficio.
@@ -439,6 +444,7 @@ def adjuntar_respuesta(referencia: str, ruta_origen: str, actor: str,
     raise ValueError("No se encontró la referencia indicada.")
 
 
+@bloqueo.con_bloqueo("oficios")
 def eliminar_respuesta(referencia: str, actor: str, actor_rol: str) -> None:
     """Elimina el PDF de respuesta adjunto (por si se cargó el archivo
     equivocado). Mismos permisos que adjuntar: un usuario regular solo sobre

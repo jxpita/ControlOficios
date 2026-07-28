@@ -1,4 +1,5 @@
 import calendar
+import time
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 from datetime import date, datetime
@@ -278,6 +279,11 @@ class AplicacionPrincipal(ttk.Frame):
         # botones 4 y 5).
         for evento in ("<MouseWheel>", "<Button-4>", "<Button-5>"):
             self.bind_all(evento, self._al_girar_rueda)
+
+        # Al volver a la ventana se recargan los datos, por si otra persona los
+        # modificó desde la carpeta compartida.
+        self._ultimo_refresco = 0.0
+        maestro.bind("<FocusIn>", self._al_recuperar_foco)
 
         self.pack(fill="both", expand=True)
 
@@ -786,12 +792,21 @@ class AplicacionPrincipal(ttk.Frame):
                 text=f"Mostrando {len(registros)} de {total_visibles} oficios."
                 if len(registros) != total_visibles else "")
         # Conservar la selección tras refrescar, si el oficio sigue existiendo.
-        for referencia in seleccion_previa:
-            if self.tabla.exists(referencia):
-                self.tabla.selection_set(referencia)
+        # Se marca el restablecimiento para que el panel de edición NO se
+        # recargue: si el usuario estaba escribiendo una observación, un
+        # refresco automático no debe borrarle lo escrito.
+        self._restableciendo_seleccion = True
+        try:
+            for referencia in seleccion_previa:
+                if self.tabla.exists(referencia):
+                    self.tabla.selection_set(referencia)
+        finally:
+            self._restableciendo_seleccion = False
 
     def _al_seleccionar_oficio(self, evento=None):
         """Precarga el panel de edición con los datos del oficio seleccionado."""
+        if getattr(self, "_restableciendo_seleccion", False):
+            return          # refresco automático: no pisar lo que se esté editando
         seleccion = self.tabla.selection()
         if not seleccion:
             return
@@ -1481,6 +1496,33 @@ class AplicacionPrincipal(ttk.Frame):
             self._refrescar_listado()
         elif actual is self.pestana_tablero:
             self._refrescar_tablero()
+
+    def _al_recuperar_foco(self, evento):
+        """Refresca la vista al volver a la ventana.
+
+        Con varias personas usando la misma carpeta compartida, lo que se ve en
+        pantalla puede haber quedado desactualizado. Refrescar al recuperar el
+        foco mantiene los datos al día sin botones ni recargas periódicas.
+        """
+        # <FocusIn> también llega desde los widgets hijos: solo interesa cuando
+        # es la ventana entera la que recupera el foco.
+        if evento.widget is not self.maestro:
+            return
+        ahora = time.monotonic()
+        if ahora - self._ultimo_refresco < 2.0:
+            return                      # evitar ráfagas al alternar ventanas
+        self._ultimo_refresco = ahora
+        try:
+            actual = self.cuaderno.nametowidget(self.cuaderno.select())
+        except (tk.TclError, KeyError):
+            return
+        if actual is self.pestana_listado:
+            self._refrescar_responsables()
+            self._refrescar_listado()
+        elif actual is self.pestana_tablero:
+            self._refrescar_tablero()
+        elif actual is self.pestana_usuarios and self._puede_gestionar_usuarios():
+            self._refrescar_usuarios()
 
 
 # ============================================================================

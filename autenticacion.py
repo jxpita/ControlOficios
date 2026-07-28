@@ -11,6 +11,7 @@ from configuracion import (
 from cifrado import cifrar, descifrar, generar_hash_clave, verificar_clave
 import registro_actividad
 import permisos
+import bloqueo
 
 
 def _normalizar_roles(usuarios: List[Dict]) -> List[Dict]:
@@ -58,6 +59,7 @@ def existe_algun_usuario() -> bool:
     return len(_leer_usuarios()) > 0
 
 
+@bloqueo.con_bloqueo("credenciales")
 def crear_usuario(usuario: str, nombre: str, clave: str,
                   rol: str = ROL_USUARIO, actor: str = "sistema") -> str:
     """Crea un usuario. El primer usuario del sistema se crea siempre como
@@ -91,6 +93,7 @@ def crear_usuario(usuario: str, nombre: str, clave: str,
     return rol
 
 
+@bloqueo.con_bloqueo("credenciales")
 def editar_usuario(usuario: str, actor: str, actor_rol: str,
                    nombre: Optional[str] = None, clave: Optional[str] = None,
                    rol: Optional[str] = None) -> None:
@@ -132,6 +135,7 @@ def editar_usuario(usuario: str, actor: str, actor_rol: str,
         "EDITAR_USUARIO", f"usuario={objetivo['usuario']}; {'; '.join(cambios)}", actor)
 
 
+@bloqueo.con_bloqueo("credenciales")
 def eliminar_usuario(usuario: str, actor: str, actor_rol: str) -> None:
     """Elimina un usuario. El superusuario NO puede eliminarse bajo ninguna
     circunstancia y un usuario no puede eliminarse a sí mismo."""
@@ -165,6 +169,7 @@ def validar_acceso(usuario: str, clave: str) -> Optional[Dict]:
     return None
 
 
+@bloqueo.con_bloqueo("credenciales")
 def restablecer_clave(usuario: str, actor: str, actor_rol: str,
                       nueva_clave: str) -> None:
     """Restablece (recupera) la contraseña de un usuario. Pensado para que un

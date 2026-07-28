@@ -32,6 +32,7 @@ from configuracion import ARCHIVO_OFICIOS, ARCHIVO_CREDENCIALES, PREFIJO_REFEREN
 from cifrado import descifrar
 import almacen_oficios
 import registro_actividad
+import bloqueo
 
 
 def _cargar(ruta):
@@ -88,8 +89,13 @@ def purgar_formato_anterior(registros):
         print("Cancelado. No se eliminó ningún registro.")
         return
 
-    quedan = [r for r in registros if _es_formato_actual(r.get("referencia", ""))]
-    almacen_oficios._guardar_registros(quedan)
+    # Bajo bloqueo: releer para no pisar lo que otro usuario haya registrado
+    # mientras se leía la lista y se pedía la confirmación.
+    with bloqueo.bloquear("oficios"):
+        actuales = almacen_oficios._leer_registros()
+        quedan = [r for r in actuales if _es_formato_actual(r.get("referencia", ""))]
+        almacen_oficios._guardar_registros(quedan)
+    antiguos = [r for r in actuales if not _es_formato_actual(r.get("referencia", ""))]
     registro_actividad.registrar(
         "PURGAR_FORMATO_ANTERIOR",
         f"eliminados={len(antiguos)}; "
