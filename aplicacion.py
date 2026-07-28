@@ -701,11 +701,6 @@ class AplicacionPrincipal(ttk.Frame):
                                            highlightthickness=1, highlightbackground="#CBD2DE")
         self.edicion_observacion.pack(side="left", fill="x", expand=True, padx=6)
 
-        ttk.Label(panel,
-                  text="Al indicar una fecha de respuesta el oficio pasa a "
-                       "\"Finalizado\"; para reabrirlo, borre esa fecha",
-                  foreground="#6B7280", font=("Helvetica", 8)).pack(anchor="w", pady=(3, 0))
-
         barra = ttk.Frame(panel)
         barra.pack(fill="x", pady=(6, 0))
         btn_guardar = ttk.Button(barra, text="Guardar cambios", command=self._aplicar_cambios)
@@ -1154,9 +1149,7 @@ class AplicacionPrincipal(ttk.Frame):
 
         ttk.Label(
             panel, wraplength=760, justify="left",
-            text="Los oficios anteriores se llevaban en un Excel y no se migran. "
-                 "Indique la ÚLTIMA Referencia UDC registrada allí y el sistema "
-                 "continuará numerando a partir de la siguiente.\n"
+            text="Indique la ÚLTIMA Referencia UDC registrada.\n"
                  f"Formato: {PREFIJO_REFERENCIA}-AAAA-NNNN  "
                  f"(por ejemplo {PREFIJO_REFERENCIA}-{date.today().year}-0241 → "
                  f"el próximo oficio será {PREFIJO_REFERENCIA}-{date.today().year}-0242)."
@@ -1179,8 +1172,7 @@ class AplicacionPrincipal(ttk.Frame):
             justify="left",
             text="El secuencial es por año: cada año la numeración vuelve a empezar "
                  "en 0001. Solo el superusuario y los administradores pueden "
-                 "modificar este valor, y el cambio queda registrado en la "
-                 "bitácora. Reconfigurarlo nunca genera referencias duplicadas."
+                 "modificar este valor. Reconfigurarlo no genera referencias duplicadas."
         ).grid(row=4, column=0, columnspan=2, sticky="w", pady=(10, 0))
 
         self._refrescar_configuracion()
@@ -1208,7 +1200,7 @@ class AplicacionPrincipal(ttk.Frame):
                 "Confirmar",
                 f"El secuencial inicial ya está configurado como "
                 f"{parametros.obtener_referencia_inicial()}.\n\n"
-                "¿Desea reemplazarlo? El cambio quedará registrado en la bitácora."):
+                "¿Desea reemplazarlo?"):
             return
         try:
             normalizada = parametros.definir_secuencial_inicial(
