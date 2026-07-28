@@ -230,3 +230,6 @@ datos/respuestas/
 # UPX (compresor de ejecutables): herramienta local, no se versiona
 upx-*.zip
 upx-*/
+
+# Ejecutables generados con PyInstaller (bin/CON_DEPENDENCIAS y SIN_DEPENDENCIAS)
+bin/

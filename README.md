@@ -324,52 +324,92 @@ Expand-Archive -Path .\upx-5.2.0-win64.zip -DestinationPath . -Force
 Queda la carpeta `upx-5.2.0-win64\` con `upx.exe` dentro; esa carpeta es la que
 se le pasa a PyInstaller con `--upx-dir`.
 
-### Opción A — Un solo ejecutable (`--onefile`)
+### Dónde queda todo: la carpeta `bin/`
 
-Todo queda empaquetado en un único `.exe`, más cómodo de distribuir.
+Por omisión PyInstaller crea `dist/` y `build/` en la raíz del proyecto. Los
+comandos de abajo lo redirigen todo a **`bin/`**, con una subcarpeta por tipo de
+compilación:
+
+```
+bin/
+├── CON_DEPENDENCIAS/          (un solo .exe: las dependencias van DENTRO)
+│   ├── ControlOficios.exe
+│   ├── datos/                 <- íconos (copiados a mano)
+│   ├── build/                 <- archivos temporales de compilación
+│   └── ControlOficios.spec
+└── SIN_DEPENDENCIAS/          (el .exe y sus dependencias, por separado)
+    ├── ControlOficios/
+    │   ├── ControlOficios.exe
+    │   ├── _internal/         <- dependencias (PyInstaller 6+)
+    │   └── datos/             <- íconos (copiados a mano)
+    ├── build/
+    └── ControlOficios.spec
+```
+
+`bin/` está en `.gitignore`: los ejecutables no se versionan.
+
+### Opción A — CON_DEPENDENCIAS (un solo ejecutable, `--onefile`)
+
+Todo queda empaquetado **dentro** de un único `.exe`, lo más cómodo de
+distribuir.
 
 ```powershell
 pyinstaller --onefile --windowed --clean --name ControlOficios `
             --icon datos\bdp_icon_alt.ico `
             --upx-dir upx-5.2.0-win64 `
             --upx-exclude vcruntime140.dll `
+            --distpath bin\CON_DEPENDENCIAS `
+            --workpath bin\CON_DEPENDENCIAS\build `
+            --specpath bin\CON_DEPENDENCIAS `
             aplicacion.py
 ```
 
-Resultado: `dist\ControlOficios.exe`. Después copie los íconos junto al `.exe`:
+Copie los íconos junto al ejecutable:
 
 ```powershell
-New-Item -ItemType Directory -Force -Path dist\datos | Out-Null
-Copy-Item datos\bdp_icon*.ico dist\datos\
+New-Item -ItemType Directory -Force -Path bin\CON_DEPENDENCIAS\datos | Out-Null
+Copy-Item datos\bdp_icon*.ico bin\CON_DEPENDENCIAS\datos\
 ```
 
-### Opción B — Ejecutable con las dependencias en una carpeta (`--onedir`)
+Resultado: **`bin\CON_DEPENDENCIAS\ControlOficios.exe`**
 
-Genera una carpeta con el `.exe` y sus dependencias al lado. **Arranca bastante
-más rápido** (el modo `--onefile` se descomprime en una carpeta temporal en cada
-ejecución) y suele ser la opción más liviana en total.
+### Opción B — SIN_DEPENDENCIAS (dependencias aparte, `--onedir`)
+
+Genera el `.exe` con sus dependencias **al lado**, no integradas. **Arranca
+bastante más rápido** (el modo `--onefile` se descomprime en una carpeta
+temporal en cada ejecución) y suele ser la opción más liviana en total.
 
 ```powershell
 pyinstaller --onedir --windowed --clean --name ControlOficios `
             --icon datos\bdp_icon_alt.ico `
             --upx-dir upx-5.2.0-win64 `
             --upx-exclude vcruntime140.dll `
+            --distpath bin\SIN_DEPENDENCIAS `
+            --workpath bin\SIN_DEPENDENCIAS\build `
+            --specpath bin\SIN_DEPENDENCIAS `
             aplicacion.py
 ```
 
-Resultado: la carpeta `dist\ControlOficios\` con `ControlOficios.exe` (y, en
-PyInstaller 6+, una subcarpeta `_internal\` con las dependencias). Copie los
-íconos junto al `.exe`:
+Copie los íconos junto al ejecutable:
 
 ```powershell
-New-Item -ItemType Directory -Force -Path dist\ControlOficios\datos | Out-Null
-Copy-Item datos\bdp_icon*.ico dist\ControlOficios\datos\
+New-Item -ItemType Directory -Force -Path bin\SIN_DEPENDENCIAS\ControlOficios\datos | Out-Null
+Copy-Item datos\bdp_icon*.ico bin\SIN_DEPENDENCIAS\ControlOficios\datos\
 ```
 
-Para distribuirlo, se comparte **la carpeta completa**, no solo el `.exe`.
+Resultado: **`bin\SIN_DEPENDENCIAS\ControlOficios\ControlOficios.exe`**.
+Para distribuirlo se comparte **la carpeta `ControlOficios` completa**, no solo
+el `.exe`.
+
+> Los nombres describen el **ejecutable**: en `CON_DEPENDENCIAS` el `.exe` las
+> lleva dentro; en `SIN_DEPENDENCIAS` el `.exe` no las incluye y viajan a su
+> lado en `_internal/`.
 
 > El acento grave `` ` `` es continuación de línea en **PowerShell**. En **CMD**
 > use `^`, y en una sola línea no hace falta ningún símbolo.
+
+> Si quiere borrar los temporales al terminar:
+> `Remove-Item -Recurse -Force bin\*\build`
 
 ### Qué hace cada opción
 
@@ -382,6 +422,9 @@ Para distribuirlo, se comparte **la carpeta completa**, no solo el `.exe`.
 | `--icon datos\bdp_icon_alt.ico` | **Incrusta el ícono del banco en el `.exe`** |
 | `--upx-dir upx-5.2.0-win64` | Carpeta donde está `upx.exe`; activa la compresión |
 | `--upx-exclude vcruntime140.dll` | Evita comprimir esa DLL: UPX suele dañarla y el `.exe` no abriría |
+| `--distpath bin\...` | Dónde se deja el ejecutable (en vez de `dist/`) |
+| `--workpath bin\...\build` | Dónde se dejan los temporales de compilación (en vez de `build/`) |
+| `--specpath bin\...` | Dónde se deja el archivo `.spec` (en vez de la raíz) |
 
 ### IMPORTANTE: la carpeta `datos/` va junto al ejecutable
 
