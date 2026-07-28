@@ -143,14 +143,27 @@ def registrar_oficio(codigo_oficio: str, fecha_recepcion: str, fecha_oficio: str
                      id_empleado: str, nombre_empleado: str, estado: str,
                      registrado_por: str, fecha_respuesta: str = "",
                      observacion: str = "", causal_oficio: str = "",
-                     referencia_sb: str = "") -> str:
+                     referencia_sb: str = "", actor_rol: str = None) -> str:
     """`codigo_oficio` es la **Referencia oficio** (obligatoria).
-    `causal_oficio` y `referencia_sb` son opcionales."""
+    `causal_oficio` y `referencia_sb` son opcionales.
+
+    Un **usuario regular** solo puede registrar oficios **auto-asignados**: el
+    responsable debe ser él mismo. Asignar a otra persona queda reservado a
+    superusuario y administradores.
+    """
     codigo_oficio = codigo_oficio.strip()
     if not codigo_oficio:
         raise ValueError("Debe ingresar la referencia del oficio o circular.")
     causal_oficio = (causal_oficio or "").strip()
     referencia_sb = (referencia_sb or "").strip()
+
+    # Auto-asignación obligatoria para los usuarios regulares.
+    if actor_rol is not None and actor_rol not in ROLES_GESTORES:
+        if (id_empleado or "").strip().lower() != (registrado_por or "").strip().lower():
+            raise ValueError(
+                "Solo puede registrar oficios asignados a usted mismo. "
+                "Asignarlos a otra persona corresponde a un administrador."
+            )
     _validar_fecha(fecha_recepcion, "Fecha de recepción")
     _validar_fecha(fecha_oficio, "Fecha de oficio")
     # La fecha de oficio no puede ser posterior a la de recepción: no se puede

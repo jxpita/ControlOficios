@@ -71,9 +71,11 @@ En el primer arranque no hay usuarios: la pantalla pedirá crear el
 - **Administrador:** puede crear, editar y eliminar otros usuarios (excepto
   eliminar al superusuario) y usar toda la aplicación.
 - **Usuario (regular):** usa la aplicación (registrar oficios, tablero) pero
-  **no ve la pestaña "Usuarios"** ni puede gestionar cuentas. **Solo ve los
-  oficios que él registró o que tiene asignados**, no los del resto. Sobre esos
-  oficios puede modificar la **fecha de respuesta**, la **observación** y
+  **no ve la pestaña "Usuarios"** ni puede gestionar cuentas. Los oficios que
+  registra quedan **auto-asignados a él mismo**: no puede asignarlos a otra
+  persona ni dejarlos sin responsable (eso corresponde a un gestor). **Solo ve
+  los oficios que él registró o que tiene asignados**, no los del resto. Sobre
+  esos oficios puede modificar la **fecha de respuesta**, la **observación** y
   **alternar el estado entre "En proceso" y "Finalizado"** (por si finalizó por
   error y quiere reabrirlo); no puede reasignar responsables ni dejarlo en
   "Por asignar".
@@ -103,9 +105,14 @@ contempla el caso en que el superusuario la olvide).
 ### Responsables de oficios
 
 El **responsable** de un oficio es cualquier **usuario del sistema** (sin
-importar su rol); se elige de la lista de usuarios. Solo **administrador y
-superusuario** pueden reasignar responsables o cambiar libremente el estado de
-cualquier oficio (respetando las reglas: un oficio con responsable no puede
+importar su rol); se elige de la lista de usuarios.
+
+**Al registrar**, solo superusuario y administrador pueden elegir el
+responsable (o dejarlo sin asignar). Un **usuario regular** ve su propio nombre
+fijo: el oficio que registra se le asigna automáticamente a él.
+
+Solo **administrador y superusuario** pueden reasignar responsables o cambiar
+libremente el estado de cualquier oficio (respetando las reglas: un oficio con responsable no puede
 quedar "Por asignar"; "En proceso"/"Finalizado" exigen responsable).
 
 **Fecha de respuesta y estado:** si un oficio tiene fecha de respuesta es

@@ -4,12 +4,12 @@
 - cluster-only mode — file stats not available
 
 ## Summary
-- 246 nodes · 510 edges · 15 communities (13 shown, 2 thin omitted)
+- 246 nodes · 512 edges · 16 communities (13 shown, 3 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `dd789849`
+- Built from commit: `b7ca4bcf`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -29,6 +29,7 @@
 - Community 12
 - Community 13
 - Community 14
+- Community 15
 
 ## God Nodes (most connected - your core abstractions)
 1. `AplicacionPrincipal` - 48 edges
@@ -57,7 +58,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (15 total, 2 thin omitted)
+## Communities (16 total, 3 thin omitted)
 
 ### Community 0 - "Community 0"
 Cohesion: 0.07
@@ -85,7 +86,7 @@ Nodes (15): listar_oficios(), _convertir_fecha(), dias_promedio_respuesta(), dis
 
 ### Community 6 - "Community 6"
 Cohesion: 0.17
-Nodes (6): True si el usuario en sesión puede crear/editar/eliminar usuarios         y reas, Panel de búsqueda: por texto (Referencia UDC / Referencia oficio /         Causa, Devuelve la clave interna a partir de la etiqueta mostrada., Guarda los cambios del panel según el rol: el gestor puede cambiar         respo, Carga un PDF con la respuesta del oficio seleccionado., Elimina el PDF adjunto (por si se cargó el archivo equivocado).
+Nodes (5): A partir del texto del desplegable devuelve (usuario, nombre).         Para "(Si, Panel de búsqueda: por texto (Referencia UDC / Referencia oficio /         Causa, Guarda los cambios del panel según el rol: el gestor puede cambiar         respo, Carga un PDF con la respuesta del oficio seleccionado., Elimina el PDF adjunto (por si se cargó el archivo equivocado).
 
 ### Community 7 - "Community 7"
 Cohesion: 0.23
@@ -100,26 +101,26 @@ Cohesion: 0.23
 Nodes (12): analizar_referencia(), definir_secuencial_inicial(), esta_configurado(), _guardar(), _leer(), obtener_referencia_inicial(), obtener_secuencial_inicial(), Parámetros del sistema (archivo cifrado `datos/parametros.dat`).  Hoy guarda un (+4 more)
 
 ### Community 10 - "Community 10"
-Cohesion: 0.22
-Nodes (4): Texto que se muestra en los desplegables para un responsable.         Incluye el, A partir del texto del desplegable devuelve (usuario, nombre).         Para "(Si, Busca solo entre los oficios visibles para el usuario en sesión., Precarga el panel de edición con los datos del oficio seleccionado.
+Cohesion: 0.24
+Nodes (3): Marco superior con logo y título., Repuebla los desplegables de responsable con los usuarios actuales., Restablece el formulario para crear un usuario nuevo.
 
 ### Community 11 - "Community 11"
+Cohesion: 0.27
+Nodes (4): Texto que se muestra en los desplegables para un responsable.         Incluye el, Busca solo entre los oficios visibles para el usuario en sesión., True si el usuario en sesión puede crear/editar/eliminar usuarios         y reas, Precarga el panel de edición con los datos del oficio seleccionado.
+
+### Community 12 - "Community 12"
 Cohesion: 0.20
 Nodes (4): Barras verticales: oficios recibidos por día., Barras verticales: oficios recibidos por mes., Gráfico de anillo con la distribución por estado., Barras horizontales: cantidad de oficios por responsable.
 
-### Community 12 - "Community 12"
-Cohesion: 0.22
-Nodes (3): Tablero con scroll vertical: tarjetas de indicadores y gráficos., Marco superior con logo y título., Convierte un contenedor en un área con scroll vertical.          Devuelve (lienz
-
 ## Knowledge Gaps
-- **2 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **3 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `AplicacionPrincipal` connect `Community 8` to `Community 2`, `Community 6`, `Community 10`, `Community 11`, `Community 12`, `Community 13`, `Community 14`?**
+- **Why does `AplicacionPrincipal` connect `Community 8` to `Community 2`, `Community 6`, `Community 10`, `Community 11`, `Community 12`, `Community 13`, `Community 14`, `Community 15`?**
   _High betweenness centrality (0.433) - this node is a cross-community bridge._
-- **Why does `SelectorFecha` connect `Community 7` to `Community 2`, `Community 12`, `Community 6`?**
+- **Why does `SelectorFecha` connect `Community 7` to `Community 2`, `Community 11`, `Community 6`?**
   _High betweenness centrality (0.109) - this node is a cross-community bridge._
 - **Should `Community 0` be split into smaller, more focused modules?**
   _Cohesion score 0.07428571428571429 - nodes in this community are weakly interconnected._

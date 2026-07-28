@@ -504,14 +504,30 @@ class AplicacionPrincipal(ttk.Frame):
         self.entrada_fecha_respuesta.grid(row=6, column=1, sticky="w", pady=4)
 
         ttk.Label(marco, text="Usuario responsable").grid(row=7, column=0, sticky="w", pady=4)
-        self.combo_empleado = ttk.Combobox(
-            marco, width=37, state="readonly",
-            values=[self.SIN_RESPONSABLE] + self._valores_responsables())
-        self.combo_empleado.current(0)  # por defecto: sin responsable
-        self.combo_empleado.grid(row=7, column=1, sticky="w", pady=4)
+        if self._puede_gestionar_usuarios():
+            # Gestores: pueden asignar el oficio a cualquier usuario.
+            self.combo_empleado = ttk.Combobox(
+                marco, width=37, state="readonly",
+                values=[self.SIN_RESPONSABLE] + self._valores_responsables())
+            self.combo_empleado.current(0)  # por defecto: sin responsable
+            self.combo_empleado.grid(row=7, column=1, sticky="w", pady=4)
+            estados_registro = ESTADOS
+        else:
+            # Usuario regular: los oficios que registra se le asignan a él.
+            self.combo_empleado = None
+            propio = ttk.Frame(marco)
+            propio.grid(row=7, column=1, sticky="w", pady=4)
+            ttk.Label(propio, text=self._display_responsable(
+                self.usuario["usuario"], self.usuario["nombre"]),
+                font=("Helvetica", 10, "bold")).pack(side="left")
+            ttk.Label(propio, text="  (se le asigna automáticamente)",
+                      foreground="#6B7280", font=("Helvetica", 8)).pack(side="left")
+            # Con responsable, "Por asignar" no aplica.
+            estados_registro = ["En proceso", "Finalizado"]
 
         ttk.Label(marco, text="Estado *").grid(row=8, column=0, sticky="w", pady=4)
-        self.combo_estado = ttk.Combobox(marco, width=25, state="readonly", values=ESTADOS)
+        self.combo_estado = ttk.Combobox(marco, width=25, state="readonly",
+                                         values=estados_registro)
         self.combo_estado.current(0)
         self.combo_estado.grid(row=8, column=1, sticky="w", pady=4)
 
@@ -535,7 +551,13 @@ class AplicacionPrincipal(ttk.Frame):
     def _guardar_oficio(self):
         # Solo la referencia del oficio y las fechas de oficio/recepción son
         # obligatorias; el resto de campos son opcionales.
-        id_empleado, nombre_empleado = self._responsable_por_display(self.combo_empleado.get())
+        if self.combo_empleado is not None:
+            id_empleado, nombre_empleado = self._responsable_por_display(
+                self.combo_empleado.get())
+        else:
+            # Usuario regular: el oficio se le asigna a sí mismo.
+            id_empleado = self.usuario["usuario"]
+            nombre_empleado = self.usuario["nombre"]
         try:
             referencia = oficios.registrar_oficio(
                 self.entrada_codigo.get(), self.entrada_fecha_recepcion.get(),
@@ -546,6 +568,7 @@ class AplicacionPrincipal(ttk.Frame):
                 observacion=self.texto_observacion.get("1.0", "end"),
                 causal_oficio=self.entrada_causal.get(),
                 referencia_sb=self.entrada_referencia_sb.get(),
+                actor_rol=self.usuario.get("rol"),
             )
         except ValueError as error:
             messagebox.showerror("Error", str(error))
@@ -557,7 +580,8 @@ class AplicacionPrincipal(ttk.Frame):
             entrada.delete(0, "end")
         self.entrada_fecha_respuesta.set("")
         self.texto_observacion.delete("1.0", "end")
-        self.combo_empleado.current(0)
+        if self.combo_empleado is not None:
+            self.combo_empleado.current(0)
         self.combo_estado.current(0)
         self._refrescar_listado()
 
