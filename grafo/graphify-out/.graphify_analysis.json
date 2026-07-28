@@ -82,9 +82,9 @@
       "aplicacion",
       "aplicacion_aplicacionprincipal_cerrar_sesion",
       "aplicacion_iniciar",
-      "aplicacion_rationale_1504",
-      "aplicacion_rationale_1536",
-      "aplicacion_rationale_353",
+      "aplicacion_rationale_1511",
+      "aplicacion_rationale_1543",
+      "aplicacion_rationale_358",
       "aplicacion_ventanaingreso",
       "aplicacion_ventanaingreso_boton_principal",
       "aplicacion_ventanaingreso_campo",
@@ -170,12 +170,12 @@
       "aplicacion_aplicacionprincipal_limpiar_filtros",
       "aplicacion_aplicacionprincipal_puede_gestionar_usuarios",
       "aplicacion_aplicacionprincipal_refrescar_listado",
-      "aplicacion_rationale_410",
-      "aplicacion_rationale_560",
-      "aplicacion_rationale_616",
-      "aplicacion_rationale_794",
-      "aplicacion_rationale_826",
-      "aplicacion_rationale_846",
+      "aplicacion_rationale_415",
+      "aplicacion_rationale_565",
+      "aplicacion_rationale_622",
+      "aplicacion_rationale_801",
+      "aplicacion_rationale_833",
+      "aplicacion_rationale_853",
       "aplicacion_selectorfecha_get"
     ],
     "7": [
@@ -205,9 +205,9 @@
       "aplicacion_aplicacionprincipal_guardar_secuencial",
       "aplicacion_aplicacionprincipal_refrescar_configuracion",
       "aplicacion_aplicacionprincipal_ver_respuesta",
-      "aplicacion_rationale_1136",
-      "aplicacion_rationale_444",
-      "aplicacion_rationale_866"
+      "aplicacion_rationale_1143",
+      "aplicacion_rationale_449",
+      "aplicacion_rationale_873"
     ],
     "9": [
       "parametros",
@@ -232,10 +232,10 @@
       "aplicacion_aplicacionprincipal_responsable_por_display",
       "aplicacion_aplicacionprincipal_usuarios_sistema",
       "aplicacion_aplicacionprincipal_valores_responsables",
-      "aplicacion_rationale_369",
-      "aplicacion_rationale_381",
-      "aplicacion_rationale_402",
-      "aplicacion_rationale_768"
+      "aplicacion_rationale_374",
+      "aplicacion_rationale_386",
+      "aplicacion_rationale_407",
+      "aplicacion_rationale_775"
     ],
     "11": [
       "aplicacion_aplicacionprincipal_dibujar_anillo_estados",
@@ -244,10 +244,10 @@
       "aplicacion_aplicacionprincipal_dibujar_barras_meses",
       "aplicacion_aplicacionprincipal_refrescar_tablero",
       "aplicacion_aplicacionprincipal_tarjeta",
-      "aplicacion_rationale_1314",
-      "aplicacion_rationale_1340",
-      "aplicacion_rationale_1364",
-      "aplicacion_rationale_1415"
+      "aplicacion_rationale_1321",
+      "aplicacion_rationale_1347",
+      "aplicacion_rationale_1371",
+      "aplicacion_rationale_1422"
     ],
     "12": [
       "aplicacion_aplicacionprincipal_construir_registro",
@@ -256,9 +256,9 @@
       "aplicacion_aplicacionprincipal_crear_cabecera",
       "aplicacion_aplicacionprincipal_crear_lienzo",
       "aplicacion_aplicacionprincipal_init",
-      "aplicacion_rationale_1226",
-      "aplicacion_rationale_308",
-      "aplicacion_rationale_416"
+      "aplicacion_rationale_1233",
+      "aplicacion_rationale_313",
+      "aplicacion_rationale_421"
     ],
     "13": [
       "aplicacion_aplicacionprincipal_construir_usuarios",
@@ -267,14 +267,14 @@
       "aplicacion_aplicacionprincipal_nuevo_usuario",
       "aplicacion_aplicacionprincipal_refrescar_responsables",
       "aplicacion_aplicacionprincipal_refrescar_usuarios",
-      "aplicacion_rationale_391",
-      "aplicacion_rationale_949"
+      "aplicacion_rationale_396",
+      "aplicacion_rationale_956"
     ],
     "14": [
       "aplicacion_aplicacionprincipal_pedir_nueva_clave",
       "aplicacion_aplicacionprincipal_restablecer_clave_seleccionado",
-      "aplicacion_rationale_1046",
-      "aplicacion_rationale_1065"
+      "aplicacion_rationale_1053",
+      "aplicacion_rationale_1072"
     ]
   },
   "cohesion": {

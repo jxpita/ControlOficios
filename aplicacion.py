@@ -300,6 +300,11 @@ class AplicacionPrincipal(ttk.Frame):
         estilo.configure("Treeview", background=COLOR_BLANCO, foreground=COLOR_TEXTO, rowheight=25)
         estilo.configure("Treeview.Heading", background=COLOR_AZUL, foreground=COLOR_BLANCO, font=("Helvetica", 10, "bold"))
         estilo.map("Treeview.Heading", background=[("active", "#1A2E5A")])
+        # Los marcos con título (LabelFrame) deben compartir el fondo blanco de
+        # las etiquetas; si no, se ven franjas grises alrededor de los textos.
+        estilo.configure("TLabelframe", background=COLOR_BLANCO)
+        estilo.configure("TLabelframe.Label", background=COLOR_BLANCO,
+                         foreground=COLOR_TEXTO, font=("Helvetica", 9, "bold"))
         estilo.configure("TNotebook", background=COLOR_BLANCO)
         estilo.configure("TNotebook.Tab", background=COLOR_GRIS_CLARO, foreground=COLOR_TEXTO, padding=[10, 4])
         estilo.map("TNotebook.Tab", background=[("selected", COLOR_AZUL)], foreground=[("selected", COLOR_BLANCO)])
@@ -559,8 +564,8 @@ class AplicacionPrincipal(ttk.Frame):
     def _construir_filtros(self, marco):
         """Panel de búsqueda: por texto (Referencia UDC / Referencia oficio /
         Causal / Referencia SB) y por fecha única o rango de un mismo tipo."""
-        panel = ttk.LabelFrame(marco, text=" Buscar oficios ", padding=8)
-        panel.pack(fill="x", pady=(0, 6))
+        panel = ttk.LabelFrame(marco, text=" Buscar oficios ", padding=(8, 4))
+        panel.pack(fill="x", pady=(0, 4))
 
         # Fila 1: búsqueda por texto.
         fila1 = ttk.Frame(panel)
@@ -577,7 +582,7 @@ class AplicacionPrincipal(ttk.Frame):
 
         # Fila 2: filtro por fecha (un solo tipo para ambos extremos).
         fila2 = ttk.Frame(panel)
-        fila2.pack(fill="x", pady=(6, 0))
+        fila2.pack(fill="x", pady=(4, 0))
         ttk.Label(fila2, text="Fecha").pack(side="left")
         self._etiquetas_fecha = list(oficios.CAMPOS_FECHA.values())
         self.combo_campo_fecha = ttk.Combobox(
@@ -596,13 +601,14 @@ class AplicacionPrincipal(ttk.Frame):
         ttk.Button(fila2, text="Limpiar filtros",
                    command=self._limpiar_filtros).pack(side="left")
 
-        ttk.Label(panel,
-                  text="Deje \"hasta\" vacío para buscar por fecha única",
-                  foreground="#6B7280", font=("Helvetica", 8)).pack(anchor="w", pady=(4, 0))
-
-        self.lbl_resultados = ttk.Label(panel, text="", foreground="#6B7280",
+        # Ayuda y contador de resultados comparten línea para no ocupar dos.
+        fila3 = ttk.Frame(panel)
+        fila3.pack(fill="x", pady=(3, 0))
+        ttk.Label(fila3, text="Deje \"hasta\" vacío para buscar por fecha única",
+                  foreground="#6B7280", font=("Helvetica", 8)).pack(side="left")
+        self.lbl_resultados = ttk.Label(fila3, text="", foreground="#6B7280",
                                         font=("Helvetica", 8))
-        self.lbl_resultados.pack(anchor="w")
+        self.lbl_resultados.pack(side="right")
 
     def _limpiar_filtros(self):
         self.entrada_busqueda.delete(0, "end")
@@ -657,8 +663,9 @@ class AplicacionPrincipal(ttk.Frame):
         # --- 3) Panel de edición del oficio seleccionado ---------------------
         # Disposición en una sola fila de campos + observación, para que la
         # pestaña no quede saturada y el calendario tenga espacio.
-        panel = ttk.LabelFrame(marco, text=" Modificar oficio seleccionado ", padding=8)
-        panel.pack(fill="x", pady=(6, 0))
+        panel = ttk.LabelFrame(marco, text=" Modificar oficio seleccionado ",
+                               padding=(8, 4))
+        panel.pack(fill="x", pady=(4, 0))
 
         fila = ttk.Frame(panel)
         fila.pack(fill="x")
@@ -697,10 +704,10 @@ class AplicacionPrincipal(ttk.Frame):
         ttk.Label(panel,
                   text="Al indicar una fecha de respuesta el oficio pasa a "
                        "\"Finalizado\"; para reabrirlo, borre esa fecha",
-                  foreground="#6B7280", font=("Helvetica", 8)).pack(anchor="w", pady=(6, 0))
+                  foreground="#6B7280", font=("Helvetica", 8)).pack(anchor="w", pady=(3, 0))
 
         barra = ttk.Frame(panel)
-        barra.pack(fill="x", pady=(8, 0))
+        barra.pack(fill="x", pady=(6, 0))
         btn_guardar = ttk.Button(barra, text="Guardar cambios", command=self._aplicar_cambios)
         btn_guardar.pack(side="left")
         btn_guardar.config(style="Accent.TButton")
