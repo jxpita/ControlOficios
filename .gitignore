@@ -226,3 +226,7 @@ grafo/graphify-out/cost.json
 
 # Respuestas en PDF adjuntas a los oficios (datos de ejecución)
 datos/respuestas/
+
+# UPX (compresor de ejecutables): herramienta local, no se versiona
+upx-*.zip
+upx-*/

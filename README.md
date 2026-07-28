@@ -301,76 +301,120 @@ completa en cualquier otro punto.
 
 ```bash
 pip install pyinstaller
-pyinstaller --onefile --windowed --name ControlOficios ^
-            --icon datos/bdp_icon_alt.ico aplicacion.py
 ```
 
-> El `^` es continuación de línea en Windows (CMD). En una sola línea, o en
-> PowerShell/Linux usa `\` en vez de `^`.
+### Paso previo: descomprimir UPX
 
-- `--windowed` (equivale a `--noconsole`): oculta la consola negra.
-- `--onefile`: un único `.exe` en `dist/ControlOficios.exe`.
-- `--name ControlOficios`: el ejecutable se llamará `ControlOficios.exe`.
-- `--icon datos/bdp_icon_alt.ico`: **incrusta el ícono del banco en el `.exe`**
-  (el que se ve en el Explorador, la barra de tareas y el acceso directo). Debe
-  ser un archivo `.ico` (ya lo tienes en `datos/`).
+**UPX** comprime los binarios y reduce bastante el tamaño final. Si tienes
+`upx-5.2.0-win64.zip` en la raíz del proyecto, descomprímelo una sola vez
+(PowerShell):
+
+```powershell
+Expand-Archive -Path .\upx-5.2.0-win64.zip -DestinationPath . -Force
+```
+
+Queda la carpeta `upx-5.2.0-win64\` con `upx.exe` dentro; esa carpeta es la que
+se le pasa a PyInstaller con `--upx-dir`.
+
+### Opción A — Un solo ejecutable (`--onefile`)
+
+Todo queda empaquetado en un único `.exe`, más cómodo de distribuir.
+
+```powershell
+pyinstaller --onefile --windowed --clean --name ControlOficios `
+            --icon datos\bdp_icon_alt.ico `
+            --upx-dir upx-5.2.0-win64 `
+            --upx-exclude vcruntime140.dll `
+            aplicacion.py
+```
+
+Resultado: `dist\ControlOficios.exe`. Después copie los íconos junto al `.exe`:
+
+```powershell
+New-Item -ItemType Directory -Force -Path dist\datos | Out-Null
+Copy-Item datos\bdp_icon*.ico dist\datos\
+```
+
+### Opción B — Ejecutable con las dependencias en una carpeta (`--onedir`)
+
+Genera una carpeta con el `.exe` y sus dependencias al lado. **Arranca bastante
+más rápido** (el modo `--onefile` se descomprime en una carpeta temporal en cada
+ejecución) y suele ser la opción más liviana en total.
+
+```powershell
+pyinstaller --onedir --windowed --clean --name ControlOficios `
+            --icon datos\bdp_icon_alt.ico `
+            --upx-dir upx-5.2.0-win64 `
+            --upx-exclude vcruntime140.dll `
+            aplicacion.py
+```
+
+Resultado: la carpeta `dist\ControlOficios\` con `ControlOficios.exe` (y, en
+PyInstaller 6+, una subcarpeta `_internal\` con las dependencias). Copie los
+íconos junto al `.exe`:
+
+```powershell
+New-Item -ItemType Directory -Force -Path dist\ControlOficios\datos | Out-Null
+Copy-Item datos\bdp_icon*.ico dist\ControlOficios\datos\
+```
+
+Para distribuirlo, se comparte **la carpeta completa**, no solo el `.exe`.
+
+> El acento grave `` ` `` es continuación de línea en **PowerShell**. En **CMD**
+> use `^`, y en una sola línea no hace falta ningún símbolo.
+
+### Qué hace cada opción
+
+| Opción | Para qué sirve |
+|---|---|
+| `--onefile` / `--onedir` | Un único `.exe` **o** una carpeta con el `.exe` y sus dependencias |
+| `--windowed` | Oculta la consola negra (equivale a `--noconsole`) |
+| `--clean` | Limpia la caché de compilaciones anteriores (evita arrastrar restos) |
+| `--name ControlOficios` | El ejecutable se llamará `ControlOficios.exe` |
+| `--icon datos\bdp_icon_alt.ico` | **Incrusta el ícono del banco en el `.exe`** |
+| `--upx-dir upx-5.2.0-win64` | Carpeta donde está `upx.exe`; activa la compresión |
+| `--upx-exclude vcruntime140.dll` | Evita comprimir esa DLL: UPX suele dañarla y el `.exe` no abriría |
+
+### IMPORTANTE: la carpeta `datos/` va junto al ejecutable
+
+El código detecta si corre como `.exe` y usa la carpeta `datos/` **que está al
+lado del ejecutable** (no una interna del paquete). Allí se crean solos la
+clave, las credenciales, los oficios, la bitácora y las respuestas en PDF.
+
+Por eso hay que **copiar los `.ico` a esa carpeta** (los comandos de arriba ya
+lo hacen): sin ellos la app funciona, pero las ventanas y la cabecera se ven sin
+el ícono ni el logo del banco.
 
 ### Ícono del ejecutable — detalles
 
-- El `--icon` afecta al ícono del **archivo `.exe`**. El ícono de las **ventanas**
-  en tiempo de ejecución lo pone la propia app con `iconbitmap` (lee
-  `datos/bdp_icon_alt.ico`), así que conviene que ese archivo siga junto al `.exe`.
-- Si cambias el ícono y Windows sigue mostrando el anterior, es la **caché de
-  íconos** de Windows: renombra el `.exe` o reinicia el Explorador.
+- `--icon` afecta al ícono del **archivo `.exe`** (Explorador, barra de tareas,
+  accesos directos). El ícono de las **ventanas** en ejecución lo pone la propia
+  app leyendo `datos/bdp_icon_alt.ico`.
+- Si cambia el ícono y Windows sigue mostrando el anterior, es la **caché de
+  íconos**: renombre el `.exe` o reinicie el Explorador.
 
-### Para reducir tamaño
+### Consejos para que pese lo menos posible
 
-1. Trabaja dentro de un **entorno virtual** con solo lo necesario instalado
-   (`cryptography`, `pyinstaller`, y opcionalmente `pymupdf` para el visor de
-   PDF y `Pillow` para el logo y la nitidez del visor). Así PyInstaller no
-   arrastra librerías de más.
-   Ten en cuenta que `pymupdf` añade ~25 MB al ejecutable: si no necesitas
-   ver los PDF dentro de la app, omítelo y se usará el lector del sistema.
-2. Añade **UPX** (ver abajo): `--upx-dir C:\ruta\upx`.
-3. `--onedir` (en lugar de `--onefile`) arranca más rápido y suele pesar menos
-   en total, aunque genera una carpeta en vez de un archivo único.
+1. Compile dentro de un **entorno virtual** con solo lo necesario
+   (`cryptography`, `pyinstaller`, y opcionalmente `pymupdf` y `Pillow`). Así
+   PyInstaller no arrastra librerías de más. `pymupdf` añade ~25 MB: si no
+   necesita ver los PDF dentro de la app, omítalo y se usará el lector del
+   sistema.
+2. Use **UPX** (`--upx-dir`), como en los comandos de arriba.
+3. Prefiera **`--onedir`** si el tamaño total y el arranque le importan más que
+   distribuir un archivo único.
 
-Nota: `cryptography` incluye binarios de OpenSSL, así que ~8–15 MB es lo
-esperable para el ejecutable. Es el precio de tener cifrado serio.
+`cryptography` incluye binarios de OpenSSL, así que ~8–15 MB es lo esperable.
+Es el precio de tener cifrado serio.
 
-### ¿Qué es UPX y cómo se usa?
+### Si algo falla con UPX
 
-**UPX** (*Ultimate Packer for eXecutables*) es un **compresor de ejecutables**:
-comprime el `.exe` y, al abrirlo, se descomprime solo en memoria. El archivo
-en disco pesa menos (a veces 30–50 %) y el programa funciona igual; el único
-costo es unos milisegundos extra al iniciar. Es gratuito y de código abierto.
-
-Cómo usarlo con PyInstaller (en Windows):
-
-1. Descarga UPX de <https://upx.github.io> (el `.zip` para Windows) y
-   descomprímelo, por ejemplo en `C:\upx`. Dentro está `upx.exe`.
-2. Pásale la carpeta a PyInstaller con `--upx-dir`:
-
-   ```bash
-   pyinstaller --onefile --windowed --name ControlOficios ^
-               --icon datos/bdp_icon_alt.ico ^
-               --upx-dir C:\upx aplicacion.py
-   ```
-
-   PyInstaller detecta `upx.exe` en esa carpeta y comprime automáticamente los
-   binarios al empaquetar.
-3. (Opcional) Si algún módulo diera problemas al comprimirse, puedes excluirlo:
-   `--upx-exclude vcruntime140.dll`. Y para no usar UPX en una compilación,
-   `--noupx`.
-
-Notas: no necesitas instalar UPX (basta con la carpeta descomprimida). Ten en
-cuenta que **algunos antivirus** miran con recelo los ejecutables comprimidos
-con UPX; si te da falsos positivos, compila sin UPX.
-
-**Importante sobre las rutas:** el código detecta si corre como `.exe` y guarda
-la carpeta `datos/` **junto al ejecutable** (no en la carpeta temporal). Ahí se
-crean solos la clave, las credenciales, los oficios y la bitácora; coloca junto
-al `.exe` el ícono (`datos/bdp_icon_alt.ico`) si quieres que se vea en las ventanas.
+- Si el `.exe` no abre o falla al iniciar, añada más exclusiones
+  (`--upx-exclude python311.dll`, `--upx-exclude libcrypto-*.dll`) o compile sin
+  compresión usando `--noupx`, para confirmar si UPX es la causa.
+- **Algunos antivirus** desconfían de los ejecutables comprimidos con UPX. Si
+  aparecen falsos positivos, compile sin UPX.
+- No hace falta instalar UPX: basta con la carpeta descomprimida.
 
 ## 5. Notas de seguridad (léelas)
 
