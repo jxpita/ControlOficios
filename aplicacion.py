@@ -523,11 +523,12 @@ class AplicacionPrincipal(ttk.Frame):
             self.combo_empleado = None
             propio = ttk.Frame(marco)
             propio.grid(row=7, column=1, sticky="w", pady=4)
-            ttk.Label(propio, text=self._display_responsable(
-                self.usuario["usuario"], self.usuario["nombre"]),
+            ttk.Label(propio, text=self.usuario["nombre"],
                 font=("Helvetica", 10, "bold")).pack(side="left")
-            ttk.Label(propio, text="  (se le asigna automáticamente)",
+            ttk.Label(propio, text="(" + self.usuario["usuario"] + ")",
                       foreground="#6B7280", font=("Helvetica", 8)).pack(side="left")
+            # ttk.Label(propio, text="  (se le asigna automáticamente)",
+            #           foreground="#6B7280", font=("Helvetica", 8)).pack(side="left")
             # Con responsable, "Por asignar" no aplica.
             estados_registro = ["En proceso", "Finalizado"]
 
