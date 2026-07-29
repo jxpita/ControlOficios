@@ -219,6 +219,7 @@ oficios_tracker/
 ├── metricas.py           # Cálculo de métricas del tablero
 ├── herramienta_admin.py  # Utilidad de consola para el administrador (ver 3.1)
 ├── requirements.txt      # Dependencias del proyecto
+├── respaldo_datos.ps1    # Copia de seguridad programable de datos/ (Windows)
 └── datos/                # Se crea sola; contiene:
     ├── clave_maestra.key   (clave de cifrado — PROTEGER / RESPALDAR)
     ├── credenciales.dat    (usuarios del sistema, cifrado)
@@ -517,6 +518,73 @@ redactar.
 **Recomendación adicional (no es código):** programe una **copia diaria
 automática de la carpeta `datos/`**. Cubre concurrencia, borrado accidental,
 disco dañado y errores humanos; es la medida más rentable de todas.
+
+## 4.2 Copia de seguridad automática de `datos/`
+
+En el proyecto se incluye **`respaldo_datos.ps1`**, que comprime la carpeta
+`datos/` con la fecha en el nombre y elimina los respaldos antiguos.
+
+### Prueba manual
+
+Copie el script junto al ejecutable y ejecútelo desde PowerShell:
+
+```powershell
+cd C:\ControlOficios
+.\respaldo_datos.ps1
+```
+
+Genera `C:\ControlOficios\Respaldos\datos_2026-07-28_2130.zip` y anota el
+resultado en `Respaldos\respaldos.log`. Si Windows bloquea la ejecución de
+scripts, permítalo solo para esa sesión:
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+```
+
+Rutas y retención propias:
+
+```powershell
+.\respaldo_datos.ps1 -Origen "C:\ControlOficios\datos" `
+                     -Destino "D:\Respaldos\ControlOficios" `
+                     -DiasConservar 60
+```
+
+### Programarlo a diario
+
+Una sola línea en PowerShell **como administrador** (se ejecuta todos los días
+a las 20:00, aunque nadie haya iniciado sesión):
+
+```powershell
+schtasks /Create /TN "ControlOficios - Respaldo" /SC DAILY /ST 20:00 /RL HIGHEST /RU SYSTEM ^
+  /TR "powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\ControlOficios\respaldo_datos.ps1"
+```
+
+Comprobar, ejecutar a demanda o eliminar la tarea:
+
+```powershell
+schtasks /Query  /TN "ControlOficios - Respaldo"
+schtasks /Run    /TN "ControlOficios - Respaldo"
+schtasks /Delete /TN "ControlOficios - Respaldo" /F
+```
+
+También puede hacerse desde la interfaz: **Programador de tareas → Crear tarea
+básica**, con desencadenador *Diariamente* y acción *Iniciar un programa*
+(`powershell.exe`, argumentos
+`-NoProfile -ExecutionPolicy Bypass -File C:\ControlOficios\respaldo_datos.ps1`).
+
+### Recomendaciones
+
+- **Guarde el respaldo en otro disco o equipo.** Si queda en la misma carpeta
+  compartida, un fallo de ese disco se lleva los datos y las copias.
+- **Restrinja el acceso a la carpeta de respaldos.** El comprimido incluye
+  `clave_maestra.key`: quien lo tenga puede descifrar los oficios y las
+  credenciales. Es el mismo cuidado que merece la carpeta `datos/`.
+- **Pruebe una restauración** al menos una vez: descomprima un respaldo en una
+  carpeta vacía, ponga ahí el ejecutable y verifique que abre con normalidad.
+  Un respaldo que nunca se restauró no está comprobado.
+- El script **excluye** los archivos temporales (`.tmp`) y de bloqueo
+  (`.lock`), y hace una copia intermedia antes de comprimir para no tropezar
+  con archivos que la aplicación esté escribiendo en ese momento.
 
 ## 5. Notas de seguridad (léelas)
 
