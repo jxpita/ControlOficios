@@ -66,10 +66,14 @@ En el primer arranque no hay usuarios: la pantalla pedirá crear el
 
 ## 2.1 Roles de usuario
 
-- **Superusuario:** es el primer usuario que se crea. Puede gestionar usuarios
-  y **no puede eliminarse ni cambiar de rol** bajo ninguna circunstancia.
-- **Administrador:** puede crear, editar y eliminar otros usuarios (excepto
-  eliminar al superusuario) y usar toda la aplicación.
+- **Superusuario:** es el primer usuario que se crea. Es el único que puede
+  **crear otros superusuarios**, gestionar a otros superusuarios (editarlos,
+  eliminarlos o restablecerles la contraseña) y acceder a las **copias de
+  seguridad** en Configuración. El **último superusuario que quede** no puede
+  eliminarse ni degradarse, para que el sistema nunca se quede sin uno.
+- **Administrador:** puede crear, editar y eliminar usuarios con rol
+  'administrador' o 'usuario'. **No puede crear superusuarios ni tocar a uno**
+  (ni editarlo, ni eliminarlo, ni restablecerle la contraseña).
 - **Usuario (regular):** usa la aplicación (registrar oficios, tablero) pero
   **no ve la pestaña "Usuarios"** ni puede gestionar cuentas. Los oficios que
   registra quedan **auto-asignados a él mismo**: no puede asignarlos a otra
@@ -219,6 +223,7 @@ oficios_tracker/
 ├── metricas.py           # Cálculo de métricas del tablero
 ├── herramienta_admin.py  # Utilidad de consola para el administrador (ver 3.1)
 ├── requirements.txt      # Dependencias del proyecto
+├── respaldo.py           # Copia de seguridad automática (una por día)
 ├── respaldo_datos.ps1    # Copia de seguridad programable de datos/ (Windows)
 └── datos/                # Se crea sola; contiene:
     ├── clave_maestra.key   (clave de cifrado — PROTEGER / RESPALDAR)
@@ -226,7 +231,8 @@ oficios_tracker/
     ├── oficios.dat         (registros, cifrado; con copia .bak)
     ├── parametros.dat      (secuencial inicial de la Referencia UDC, cifrado)
     ├── actividad.log       (bitácora de auditoría, texto plano)
-    └── respuestas/         (PDF de respuesta, uno por oficio)
+    ├── respuestas/         (PDF de respuesta, uno por oficio)
+    └── respaldos/          (copias de seguridad diarias, .zip)
 ```
 
 ### 3.1 `herramienta_admin.py` (utilidad de consola)
@@ -519,7 +525,35 @@ redactar.
 automática de la carpeta `datos/`**. Cubre concurrencia, borrado accidental,
 disco dañado y errores humanos; es la medida más rentable de todas.
 
-## 4.2 Copia de seguridad automática de `datos/`
+## 4.2 Copias de seguridad automáticas (dentro de la aplicación)
+
+**No requiere permisos ni tareas programadas**: la propia aplicación crea
+**una copia al día**, la primera vez que alguien la abre. Si otra persona ya la
+creó, no se repite.
+
+- Se guardan en **`datos/respaldos/datos_AAAA-MM-DD.zip`**.
+- Se conservan los últimos **30 días**; las más antiguas se eliminan solas.
+- Incluyen los archivos pequeños y críticos: `oficios.dat`,
+  `credenciales.dat`, `parametros.dat`, `clave_maestra.key` y `actividad.log`.
+- **No incluyen los PDF de respuesta** (pesan mucho y no cambian una vez
+  cargados) ni los archivos temporales, de bloqueo o `.bak`.
+- Se ejecuta **en segundo plano**: la ventana abre sin esperar. Si el respaldo
+  falla, queda anotado en la bitácora (`RESPALDO_FALLIDO`) pero **nunca impide
+  usar la aplicación**.
+- El **superusuario** ve en la pestaña *Configuración* la última copia, cuántas
+  hay, y puede crear una a demanda o abrir la carpeta. Ese panel **no lo ven
+  los administradores**.
+
+> Referencia de tamaño: 500 oficios ocupan ~442 KB, así que la copia diaria
+> pesa muy poco y no ralentiza el arranque.
+
+**Límites que conviene conocer:** como las copias quedan junto a los datos,
+protegen ante borrado accidental, archivo corrupto o error humano, pero **no
+ante un fallo del disco**. Y si nadie abre la aplicación un día, ese día no hay
+copia. Para cubrir esos casos, use además la tarea programada de la sección
+siguiente, que puede escribir en otro disco y se ejecuta aunque nadie entre.
+
+## 4.3 Copia de seguridad programada (opcional, en otro disco)
 
 En el proyecto se incluye **`respaldo_datos.ps1`**, que comprime la carpeta
 `datos/` con la fecha en el nombre y elimina los respaldos antiguos.

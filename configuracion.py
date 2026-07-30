@@ -30,6 +30,11 @@ ARCHIVO_LOG = DIR_DATOS / "actividad.log"   # bitácora de auditoría (texto pla
 DIR_RESPUESTAS = DIR_DATOS / "respuestas"
 DIR_RESPUESTAS.mkdir(exist_ok=True)
 
+# --- Copias de seguridad automáticas -----------------------------------------
+DIR_RESPALDOS = DIR_DATOS / "respaldos"
+DIR_RESPALDOS.mkdir(exist_ok=True)
+DIAS_RESPALDO_POR_DEFECTO = 30      # antigüedad máxima que se conserva
+
 # --- Imágenes (logo e ícono) ------------------------------------------------
 ARCHIVO_LOGO = DIR_DATOS / "bdp_icon.ico"      # logo que se muestra junto al título
 ARCHIVO_ICONO = DIR_DATOS / "bdp_icon_alt.ico"          # ícono de la ventana
@@ -44,8 +49,10 @@ PREFIJO_REFERENCIA = "REQ-INF"
 ROL_SUPERUSUARIO = "superusuario"
 ROL_ADMINISTRADOR = "administrador"
 ROL_USUARIO = "usuario"
-# Roles asignables desde la gestión de usuarios (el superusuario no es asignable).
+# Roles que puede asignar un ADMINISTRADOR.
 ROLES_ASIGNABLES = [ROL_ADMINISTRADOR, ROL_USUARIO]
+# Roles que puede asignar un SUPERUSUARIO: solo él puede crear más superusuarios.
+ROLES_ASIGNABLES_SUPER = [ROL_SUPERUSUARIO] + ROLES_ASIGNABLES
 # Roles con permiso para crear/editar/eliminar usuarios.
 ROLES_GESTORES = (ROL_SUPERUSUARIO, ROL_ADMINISTRADOR)
 

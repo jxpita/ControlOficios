@@ -6,7 +6,7 @@ from cryptography.fernet import InvalidToken
 from configuracion import (
     ARCHIVO_CREDENCIALES,
     ROL_SUPERUSUARIO, ROL_ADMINISTRADOR, ROL_USUARIO,
-    ROLES_ASIGNABLES, ROLES_GESTORES,
+    ROLES_ASIGNABLES, ROLES_ASIGNABLES_SUPER, ROLES_GESTORES,
 )
 from cifrado import cifrar, descifrar, generar_hash_clave, verificar_clave
 import registro_actividad
@@ -47,6 +47,38 @@ def _guardar_usuarios(usuarios: List[Dict]) -> None:
     )
 
 
+def roles_asignables(actor_rol: str) -> List[str]:
+    """Roles que puede otorgar quien gestiona usuarios.
+    Solo el superusuario puede crear otros superusuarios."""
+    return list(ROLES_ASIGNABLES_SUPER if actor_rol == ROL_SUPERUSUARIO
+                else ROLES_ASIGNABLES)
+
+
+def _contar_superusuarios(usuarios: List[Dict]) -> int:
+    return sum(1 for u in usuarios if u.get("rol") == ROL_SUPERUSUARIO)
+
+
+def _validar_gestion_de_superusuario(objetivo: Dict, usuarios: List[Dict],
+                                     actor_rol: str, accion: str) -> None:
+    """Reglas para tocar a un superusuario.
+
+    - Solo otro superusuario puede hacerlo (un administrador nunca).
+    - Nunca se puede dejar al sistema sin superusuarios: el último está
+      protegido frente a eliminación y cambio de rol.
+    """
+    if objetivo.get("rol") != ROL_SUPERUSUARIO:
+        return
+    if actor_rol != ROL_SUPERUSUARIO:
+        raise ValueError(
+            f"Solo un superusuario puede {accion} a otro superusuario."
+        )
+    if _contar_superusuarios(usuarios) <= 1:
+        raise ValueError(
+            f"No se puede {accion} al único superusuario del sistema. "
+            "Cree otro superusuario antes."
+        )
+
+
 def _buscar(usuarios: List[Dict], usuario: str) -> Optional[Dict]:
     usuario = usuario.strip().lower()
     for usu in usuarios:
@@ -61,10 +93,12 @@ def existe_algun_usuario() -> bool:
 
 @bloqueo.con_bloqueo("credenciales")
 def crear_usuario(usuario: str, nombre: str, clave: str,
-                  rol: str = ROL_USUARIO, actor: str = "sistema") -> str:
+                  rol: str = ROL_USUARIO, actor: str = "sistema",
+                  actor_rol: str = None) -> str:
     """Crea un usuario. El primer usuario del sistema se crea siempre como
-    superusuario; el resto solo pueden ser 'administrador' o 'usuario'.
-    Devuelve el rol finalmente asignado."""
+    superusuario. Después, un **superusuario** puede crear cualquier rol
+    (incluido otro superusuario) y un **administrador** solo 'administrador' o
+    'usuario'. Devuelve el rol finalmente asignado."""
     usuario = usuario.strip().lower()
     if not usuario or not clave:
         raise ValueError("Usuario y contraseña son obligatorios.")
@@ -75,8 +109,16 @@ def crear_usuario(usuario: str, nombre: str, clave: str,
     if not usuarios:
         # Primer usuario del sistema: superusuario.
         rol = ROL_SUPERUSUARIO
-    elif rol not in ROLES_ASIGNABLES:
-        raise ValueError("El rol debe ser 'administrador' o 'usuario'.")
+    else:
+        permitidos = roles_asignables(actor_rol)
+        if rol not in permitidos:
+            if rol == ROL_SUPERUSUARIO:
+                raise ValueError(
+                    "Solo un superusuario puede crear otros superusuarios."
+                )
+            raise ValueError(
+                "El rol debe ser " + " o ".join(f"'{r}'" for r in permitidos) + "."
+            )
 
     sal, hash_clave = generar_hash_clave(clave)
     usuarios.append({
@@ -108,23 +150,28 @@ def editar_usuario(usuario: str, actor: str, actor_rol: str,
     if objetivo is None:
         raise ValueError("No se encontró el usuario indicado.")
 
+    # Un administrador no puede tocar a un superusuario en absoluto.
+    if objetivo["rol"] == ROL_SUPERUSUARIO and actor_rol != ROL_SUPERUSUARIO:
+        raise ValueError("Solo un superusuario puede modificar a otro superusuario.")
+
     cambios = []
     if nombre is not None and nombre.strip() and nombre.strip() != objetivo["nombre"]:
         objetivo["nombre"] = nombre.strip()
         cambios.append(f"nombre={objetivo['nombre']}")
 
-    if rol is not None and objetivo["rol"] != ROL_SUPERUSUARIO:
-        if rol not in ROLES_ASIGNABLES:
-            raise ValueError("El rol debe ser 'administrador' o 'usuario'.")
-        if rol != objetivo["rol"]:
-            objetivo["rol"] = rol
-            cambios.append(f"rol={rol}")
+    if rol is not None and rol != objetivo["rol"]:
+        permitidos = roles_asignables(actor_rol)
+        if rol not in permitidos:
+            raise ValueError(
+                "El rol debe ser " + " o ".join(f"'{r}'" for r in permitidos) + "."
+            )
+        # Degradar a un superusuario solo es posible si queda otro.
+        _validar_gestion_de_superusuario(objetivo, usuarios, actor_rol,
+                                         "cambiar el rol")
+        objetivo["rol"] = rol
+        cambios.append(f"rol={rol}")
 
     if clave:
-        # Solo el propio superusuario puede cambiar la contraseña del superusuario.
-        if (objetivo["rol"] == ROL_SUPERUSUARIO
-                and objetivo["usuario"] != (actor or "").strip().lower()):
-            raise ValueError("Solo el superusuario puede cambiar su propia contraseña.")
         objetivo["sal"], objetivo["hash"] = generar_hash_clave(clave)
         cambios.append("contraseña=(actualizada)")
 
@@ -147,8 +194,9 @@ def eliminar_usuario(usuario: str, actor: str, actor_rol: str) -> None:
     objetivo = _buscar(usuarios, usuario)
     if objetivo is None:
         raise ValueError("No se encontró el usuario indicado.")
-    if objetivo["rol"] == ROL_SUPERUSUARIO:
-        raise ValueError("El superusuario no puede eliminarse.")
+    # Un superusuario solo puede eliminarlo otro superusuario, y nunca si es el
+    # último que queda (el sistema no puede quedarse sin superusuario).
+    _validar_gestion_de_superusuario(objetivo, usuarios, actor_rol, "eliminar")
     if usuario == (actor or "").strip().lower():
         raise ValueError("No puede eliminar su propio usuario mientras la sesión está activa.")
 
@@ -175,9 +223,9 @@ def restablecer_clave(usuario: str, actor: str, actor_rol: str,
     """Restablece (recupera) la contraseña de un usuario. Pensado para que un
     gestor le ceda el teclado al usuario y este escriba su nueva contraseña.
 
-    Solo superusuario y administrador pueden hacerlo. La contraseña del
-    superusuario solo puede cambiarla el propio superusuario (por ahora no se
-    contempla el escenario en que el superusuario la olvida)."""
+    Solo superusuario y administrador pueden hacerlo. La contraseña de un
+    superusuario solo puede restablecerla él mismo u **otro superusuario**; un
+    administrador no puede tocarla."""
     if actor_rol not in ROLES_GESTORES:
         raise ValueError("No tiene permisos para restablecer contraseñas.")
     if not nueva_clave:
@@ -188,8 +236,10 @@ def restablecer_clave(usuario: str, actor: str, actor_rol: str,
     if objetivo is None:
         raise ValueError("No se encontró el usuario indicado.")
     if (objetivo["rol"] == ROL_SUPERUSUARIO
-            and objetivo["usuario"] != (actor or "").strip().lower()):
-        raise ValueError("Solo el superusuario puede cambiar su propia contraseña.")
+            and actor_rol != ROL_SUPERUSUARIO):
+        raise ValueError(
+            "Solo un superusuario puede restablecer la contraseña de otro superusuario."
+        )
 
     objetivo["sal"], objetivo["hash"] = generar_hash_clave(nueva_clave)
     _guardar_usuarios(usuarios)

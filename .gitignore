@@ -233,3 +233,6 @@ upx-*/
 
 # Ejecutables generados con PyInstaller (bin/CON_DEPENDENCIAS y SIN_DEPENDENCIAS)
 bin/
+
+# Copias de seguridad generadas por la aplicación (datos de ejecución)
+datos/respaldos/

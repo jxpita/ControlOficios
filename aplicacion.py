@@ -1,4 +1,5 @@
 import calendar
+import threading
 import time
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
@@ -7,10 +8,12 @@ from datetime import date, datetime
 import autenticacion
 import almacen_oficios as oficios
 import parametros
+import respaldo
 import visor_pdf
 import metricas
 from configuracion import (
     ESTADOS, ARCHIVO_LOGO, ARCHIVO_ICONO, PREFIJO_REFERENCIA,
+    DIR_RESPALDOS, DIAS_RESPALDO_POR_DEFECTO,
     ROL_SUPERUSUARIO, ROL_ADMINISTRADOR, ROL_USUARIO,
     ROLES_ASIGNABLES, ROLES_GESTORES,
     COLOR_AZUL, COLOR_BLANCO, COLOR_GRIS_CLARO, COLOR_TEXTO, COLOR_TEXTO_INV
@@ -285,6 +288,9 @@ class AplicacionPrincipal(ttk.Frame):
         self._ultimo_refresco = 0.0
         maestro.bind("<FocusIn>", self._al_recuperar_foco)
 
+        # Copia de seguridad del día (la crea quien abra primero la aplicación).
+        self._lanzar_respaldo_diario()
+
         self.pack(fill="both", expand=True)
 
     def _configurar_estilos(self):
@@ -421,6 +427,29 @@ class AplicacionPrincipal(ttk.Frame):
         """True si el usuario en sesión puede crear/editar/eliminar usuarios
         y reasignar/cambiar libremente el estado de los oficios (gestor)."""
         return self.usuario.get("rol") in ROLES_GESTORES
+
+    def _es_superusuario(self):
+        return self.usuario.get("rol") == ROL_SUPERUSUARIO
+
+    def _lanzar_respaldo_diario(self):
+        """Crea la copia del día en segundo plano.
+
+        Va en un hilo aparte para que la ventana abra sin esperar, y usa la
+        versión silenciosa: si el respaldo falla, queda en la bitácora pero
+        nunca impide trabajar. Si otra persona ya creó la copia de hoy, no hace
+        nada. El hilo solo toca archivos, nunca widgets de Tkinter.
+        """
+        if respaldo.existe_del_dia():
+            return
+        hilo = threading.Thread(
+            target=respaldo.crear_respaldo_silencioso,
+            args=(self.usuario["usuario"],), daemon=True)
+        hilo.start()
+
+    def _roles_asignables(self):
+        """Roles que puede otorgar quien está en sesión (solo el superusuario
+        puede crear otros superusuarios)."""
+        return autenticacion.roles_asignables(self.usuario.get("rol"))
 
     # ---- Áreas con desplazamiento vertical ---------------------------------
     def _crear_area_desplazable(self, contenedor):
@@ -942,7 +971,8 @@ class AplicacionPrincipal(ttk.Frame):
         self.entrada_nombre = ttk.Entry(marco, width=30)
         self.entrada_nombre.grid(row=2, column=1, sticky="w")
         ttk.Label(marco, text="Rol").grid(row=3, column=0, sticky="w", pady=4)
-        self.combo_rol = ttk.Combobox(marco, width=27, state="readonly", values=ROLES_ASIGNABLES)
+        self.combo_rol = ttk.Combobox(marco, width=27, state="readonly",
+                                      values=self._roles_asignables())
         self.combo_rol.current(0)
         self.combo_rol.grid(row=3, column=1, sticky="w")
         ttk.Label(marco, text="Contraseña").grid(row=4, column=0, sticky="w", pady=4)
@@ -997,8 +1027,8 @@ class AplicacionPrincipal(ttk.Frame):
                         self.entrada_clave, self.entrada_clave2):
             entrada.delete(0, "end")
         self.entrada_usuario.config(state="normal")
-        self.combo_rol.config(state="readonly", values=ROLES_ASIGNABLES)
-        self.combo_rol.current(0)
+        self.combo_rol.config(state="readonly", values=self._roles_asignables())
+        self.combo_rol.set(ROL_USUARIO)
         if self.tabla_usuarios.selection():
             self.tabla_usuarios.selection_remove(self.tabla_usuarios.selection())
 
@@ -1025,14 +1055,16 @@ class AplicacionPrincipal(ttk.Frame):
         self.entrada_clave.delete(0, "end")
         self.entrada_clave2.delete(0, "end")
 
-        if rol == ROL_SUPERUSUARIO:
-            # El rol del superusuario no puede cambiarse.
-            self.combo_rol.config(state="readonly", values=[ROL_SUPERUSUARIO])
-            self.combo_rol.set(ROL_SUPERUSUARIO)
+        posibles = self._roles_asignables()
+        if rol not in posibles:
+            # Por ejemplo, un administrador editando a un superusuario: se
+            # muestra el rol actual pero no puede cambiarlo.
+            self.combo_rol.config(state="readonly", values=[rol])
+            self.combo_rol.set(rol)
             self.combo_rol.config(state="disabled")
         else:
-            self.combo_rol.config(state="readonly", values=ROLES_ASIGNABLES)
-            self.combo_rol.set(rol if rol in ROLES_ASIGNABLES else ROL_USUARIO)
+            self.combo_rol.config(state="readonly", values=posibles)
+            self.combo_rol.set(rol)
 
     def _guardar_usuario(self):
         if self.entrada_clave.get() != self.entrada_clave2.get():
@@ -1045,7 +1077,8 @@ class AplicacionPrincipal(ttk.Frame):
                 # Crear usuario nuevo.
                 rol = autenticacion.crear_usuario(
                     self.entrada_usuario.get(), self.entrada_nombre.get(),
-                    self.entrada_clave.get(), self.combo_rol.get(), actor)
+                    self.entrada_clave.get(), self.combo_rol.get(), actor,
+                    actor_rol)
                 mensaje = f"Usuario creado correctamente (rol: {rol})."
             else:
                 # Editar usuario existente. La contraseña vacía no se cambia.
@@ -1069,9 +1102,6 @@ class AplicacionPrincipal(ttk.Frame):
             messagebox.showwarning("Sin selección", "Seleccione un usuario de la lista.")
             return
         usuario, _, rol = self.tabla_usuarios.item(seleccion[0], "values")
-        if rol == ROL_SUPERUSUARIO:
-            messagebox.showerror("No permitido", "El superusuario no puede eliminarse.")
-            return
         if not messagebox.askyesno("Confirmar", f"¿Eliminar al usuario '{usuario}'?"):
             return
         try:
@@ -1215,9 +1245,76 @@ class AplicacionPrincipal(ttk.Frame):
                  "modificar este valor. Reconfigurarlo no genera referencias duplicadas."
         ).grid(row=4, column=0, columnspan=2, sticky="w", pady=(10, 0))
 
+        # --- Copias de seguridad: EXCLUSIVO del superusuario -----------------
+        if self._es_superusuario():
+            self._construir_panel_respaldos(marco)
+
         self._refrescar_configuracion()
 
+    def _construir_panel_respaldos(self, marco):
+        """Panel de copias de seguridad. Solo lo ve el superusuario."""
+        panel = ttk.LabelFrame(marco, text=" Copias de seguridad ", padding=12)
+        panel.pack(fill="x", pady=(14, 0))
+
+        ttk.Label(
+            panel, wraplength=760, justify="left",
+            text="La aplicación crea automáticamente una copia al día, la primera "
+                 "vez que alguien la abre. Se guardan en datos\\respaldos y se "
+                 "conservan los últimos "
+                 f"{DIAS_RESPALDO_POR_DEFECTO} días.\n"
+                 "No incluyen los PDF de respuesta (pesan mucho y no cambian una "
+                 "vez cargados)."
+        ).pack(anchor="w", pady=(0, 8))
+
+        self.lbl_respaldos = ttk.Label(panel, text="", font=("Helvetica", 9))
+        self.lbl_respaldos.pack(anchor="w")
+
+        barra = ttk.Frame(panel)
+        barra.pack(anchor="w", pady=(10, 0))
+        btn = ttk.Button(barra, text="Crear copia ahora",
+                         command=self._crear_respaldo_manual)
+        btn.pack(side="left")
+        btn.config(style="Accent.TButton")
+        ttk.Button(barra, text="Abrir carpeta de copias",
+                   command=self._abrir_carpeta_respaldos).pack(side="left", padx=6)
+
+        ttk.Label(
+            panel, foreground="#6B7280", font=("Helvetica", 8), wraplength=760,
+            justify="left",
+            text="La copia incluye la clave maestra: quien tenga el archivo puede "
+                 "descifrar los datos. Si copia los respaldos a otro lugar, "
+                 "protéjalo igual que la carpeta datos."
+        ).pack(anchor="w", pady=(10, 0))
+
+    def _refrescar_panel_respaldos(self):
+        if not hasattr(self, "lbl_respaldos"):
+            return
+        copias = respaldo.listar_respaldos()
+        if not copias:
+            self.lbl_respaldos.config(text="Todavía no hay copias.", foreground="#a00")
+            return
+        ultima = copias[0]
+        tamano = ultima.stat().st_size / 1024
+        self.lbl_respaldos.config(
+            text=f"Última copia: {ultima.name}  ({tamano:.0f} KB)    ·    "
+                 f"{len(copias)} copia(s) guardada(s)",
+            foreground=COLOR_TEXTO)
+
+    def _crear_respaldo_manual(self):
+        try:
+            archivo = respaldo.crear_respaldo(self.usuario["usuario"], forzar=True)
+        except ValueError as error:
+            messagebox.showerror("Error", str(error))
+            return
+        self._refrescar_panel_respaldos()
+        messagebox.showinfo("Listo", f"Copia creada:\n{archivo.name}")
+
+    def _abrir_carpeta_respaldos(self):
+        if not visor_pdf.abrir_con_sistema(DIR_RESPALDOS):
+            messagebox.showinfo("Carpeta de copias", f"Ruta: {DIR_RESPALDOS}")
+
     def _refrescar_configuracion(self):
+        self._refrescar_panel_respaldos()
         try:
             actual = parametros.obtener_referencia_inicial()
             proxima = oficios.proxima_referencia()
