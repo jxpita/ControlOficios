@@ -10,8 +10,9 @@ permanecen en inglés las palabras propias de Python y de las librerías
 
 Este README documenta la aplicación desde el punto de vista técnico. Para las
 personas que la usan a diario está el archivo
-**`Manual de usuario - Control de Oficios.docx`**, escrito por roles (usuario,
-administrador y superusuario) y pensado para repartirse dentro del área.
+**`Manual de usuario - Control de Oficios.docx`**, redactado sin detalle
+técnico y organizado por roles (usuario, administrador y superusuario), pensado
+para repartirse dentro del área.
 
 ## 1. Requisitos
 
