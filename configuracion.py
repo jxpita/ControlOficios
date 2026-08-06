@@ -141,10 +141,12 @@ PREFIJO_REFERENCIA = "REQ-INF"
 ROL_SUPERUSUARIO = "superusuario"
 ROL_ADMINISTRADOR = "administrador"
 ROL_USUARIO = "usuario"
-# Roles que puede asignar un ADMINISTRADOR.
-ROLES_ASIGNABLES = [ROL_ADMINISTRADOR, ROL_USUARIO]
-# Roles que puede asignar un SUPERUSUARIO: solo él puede crear más superusuarios.
-ROLES_ASIGNABLES_SUPER = [ROL_SUPERUSUARIO] + ROLES_ASIGNABLES
+# Roles que puede asignar un ADMINISTRADOR: solo gestiona usuarios regulares,
+# así que tampoco puede crear ni promover administradores.
+ROLES_ASIGNABLES_ADMIN = [ROL_USUARIO]
+# Roles que puede asignar un SUPERUSUARIO: cualquiera, incluidos otros
+# superusuarios y los administradores.
+ROLES_ASIGNABLES_SUPER = [ROL_SUPERUSUARIO, ROL_ADMINISTRADOR, ROL_USUARIO]
 # Roles con permiso para crear/editar/eliminar usuarios.
 ROLES_GESTORES = (ROL_SUPERUSUARIO, ROL_ADMINISTRADOR)
 

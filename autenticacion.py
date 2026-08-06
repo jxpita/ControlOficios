@@ -6,7 +6,7 @@ from cryptography.fernet import InvalidToken
 from configuracion import (
     ARCHIVO_CREDENCIALES,
     ROL_SUPERUSUARIO, ROL_ADMINISTRADOR, ROL_USUARIO,
-    ROLES_ASIGNABLES, ROLES_ASIGNABLES_SUPER, ROLES_GESTORES,
+    ROLES_ASIGNABLES_ADMIN, ROLES_ASIGNABLES_SUPER, ROLES_GESTORES,
 )
 from cifrado import cifrar, descifrar, generar_hash_clave, verificar_clave
 import registro_actividad
@@ -49,9 +49,28 @@ def _guardar_usuarios(usuarios: List[Dict]) -> None:
 
 def roles_asignables(actor_rol: str) -> List[str]:
     """Roles que puede otorgar quien gestiona usuarios.
-    Solo el superusuario puede crear otros superusuarios."""
+
+    El superusuario puede otorgar cualquiera; el administrador solo el rol
+    'usuario', porque su ámbito son los usuarios regulares (no puede crear ni
+    promover administradores)."""
     return list(ROLES_ASIGNABLES_SUPER if actor_rol == ROL_SUPERUSUARIO
-                else ROLES_ASIGNABLES)
+                else ROLES_ASIGNABLES_ADMIN)
+
+
+def _validar_rol_asignable(rol: str, actor_rol: str, accion: str) -> None:
+    """Comprueba que el actor pueda otorgar ese rol, con un mensaje que
+    explique el motivo cuando no puede."""
+    permitidos = roles_asignables(actor_rol)
+    if rol in permitidos:
+        return
+    if rol in (ROL_SUPERUSUARIO, ROL_ADMINISTRADOR):
+        raise ValueError(
+            f"Solo un superusuario puede {accion} un '{rol}'. "
+            f"Un administrador solo gestiona usuarios con rol '{ROL_USUARIO}'."
+        )
+    raise ValueError(
+        "El rol debe ser " + " o ".join(f"'{r}'" for r in permitidos) + "."
+    )
 
 
 def _contar_superusuarios(usuarios: List[Dict]) -> int:
@@ -127,8 +146,8 @@ def crear_usuario(usuario: str, nombre: str, clave: str,
                   actor_rol: str = None) -> str:
     """Crea un usuario. El primer usuario del sistema se crea siempre como
     superusuario. Después, un **superusuario** puede crear cualquier rol
-    (incluido otro superusuario) y un **administrador** solo 'administrador' o
-    'usuario'. Devuelve el rol finalmente asignado."""
+    (incluidos otros superusuarios y administradores) y un **administrador**
+    solo usuarios con rol 'usuario'. Devuelve el rol finalmente asignado."""
     usuario = usuario.strip().lower()
     if not usuario or not clave:
         raise ValueError("Usuario y contraseña son obligatorios.")
@@ -140,15 +159,7 @@ def crear_usuario(usuario: str, nombre: str, clave: str,
         # Primer usuario del sistema: superusuario.
         rol = ROL_SUPERUSUARIO
     else:
-        permitidos = roles_asignables(actor_rol)
-        if rol not in permitidos:
-            if rol == ROL_SUPERUSUARIO:
-                raise ValueError(
-                    "Solo un superusuario puede crear otros superusuarios."
-                )
-            raise ValueError(
-                "El rol debe ser " + " o ".join(f"'{r}'" for r in permitidos) + "."
-            )
+        _validar_rol_asignable(rol, actor_rol, "crear")
 
     sal, hash_clave = generar_hash_clave(clave)
     usuarios.append({
@@ -189,11 +200,7 @@ def editar_usuario(usuario: str, actor: str, actor_rol: str,
         cambios.append(f"nombre={objetivo['nombre']}")
 
     if rol is not None and rol != objetivo["rol"]:
-        permitidos = roles_asignables(actor_rol)
-        if rol not in permitidos:
-            raise ValueError(
-                "El rol debe ser " + " o ".join(f"'{r}'" for r in permitidos) + "."
-            )
+        _validar_rol_asignable(rol, actor_rol, "asignar el rol de")
         # Degradar a un superusuario solo es posible si queda otro.
         _validar_gestion_de_superusuario(objetivo, usuarios, actor_rol,
                                          "cambiar el rol")

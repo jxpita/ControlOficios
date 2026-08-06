@@ -71,10 +71,10 @@ En el primer arranque no hay usuarios: la pantalla pedirá crear el
   eliminarlos o restablecerles la contraseña) y acceder a las **copias de
   seguridad** en Configuración. El **último superusuario que quede** no puede
   eliminarse ni degradarse, para que el sistema nunca se quede sin uno.
-- **Administrador:** solo alcanza a los usuarios con rol **'usuario'** (y a su
-  propia cuenta): a ellos puede editarlos, eliminarlos y restablecerles la
-  contraseña. **No puede modificar a otro administrador ni a un superusuario**,
-  ni crear superusuarios.
+- **Administrador:** su ámbito son los usuarios con rol **'usuario'** (y su
+  propia cuenta): puede crearlos, editarlos, eliminarlos y restablecerles la
+  contraseña. **No puede crear administradores ni superusuarios, ni promover a
+  nadie a esos roles, ni modificar a otro administrador o a un superusuario.**
 - **Usuario (regular):** usa la aplicación (registrar oficios, tablero) pero
   **no ve la pestaña "Usuarios"** ni puede gestionar cuentas. Los oficios que
   registra quedan **auto-asignados a él mismo**: no puede asignarlos a otra
@@ -107,9 +107,16 @@ puede eliminarse a sí mismo mientras su sesión está activa.
 | **Superusuario** | ✅ | ✅ | ✅ | ✅ |
 | **Administrador** | ❌ | ❌ | ✅ | ✅ |
 
-La regla se aplica a editar, eliminar y restablecer contraseñas, y se valida en
-el almacenamiento (no solo en la interfaz). El **último superusuario** nunca
-puede eliminarse ni degradarse.
+**Qué rol puede otorgar cada uno** (al crear un usuario o al editarlo):
+
+| Actor | Roles que puede asignar |
+|---|---|
+| **Superusuario** | superusuario, administrador, usuario |
+| **Administrador** | usuario |
+
+Ambas reglas se aplican a crear, editar, eliminar y restablecer contraseñas, y
+se validan en el almacenamiento (no solo en la interfaz). El **último
+superusuario** nunca puede eliminarse ni degradarse.
 
 **Restablecer contraseñas:** un gestor selecciona al usuario y pulsa
 "Restablecer contraseña"; se abre un diálogo para escribir la nueva clave (la

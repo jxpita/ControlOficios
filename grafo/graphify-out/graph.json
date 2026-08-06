@@ -395,8 +395,8 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "aplicacion_selectorfecha",
-      "community": 11,
-      "community_name": "Community 11",
+      "community": 9,
+      "community_name": "Community 9",
       "norm_label": "selectorfecha"
     },
     {
@@ -406,8 +406,8 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "aplicacion_selectorfecha_init",
-      "community": 11,
-      "community_name": "Community 11",
+      "community": 9,
+      "community_name": "Community 9",
       "norm_label": ".__init__()"
     },
     {
@@ -417,8 +417,8 @@
       "source_location": "L67",
       "_origin": "ast",
       "id": "aplicacion_selectorfecha_get",
-      "community": 5,
-      "community_name": "Community 5",
+      "community": 10,
+      "community_name": "Community 10",
       "norm_label": ".get()"
     },
     {
@@ -428,8 +428,8 @@
       "source_location": "L70",
       "_origin": "ast",
       "id": "aplicacion_selectorfecha_set",
-      "community": 11,
-      "community_name": "Community 11",
+      "community": 9,
+      "community_name": "Community 9",
       "norm_label": ".set()"
     },
     {
@@ -439,8 +439,8 @@
       "source_location": "L77",
       "_origin": "ast",
       "id": "aplicacion_selectorfecha_fecha_base",
-      "community": 11,
-      "community_name": "Community 11",
+      "community": 9,
+      "community_name": "Community 9",
       "norm_label": "._fecha_base()"
     },
     {
@@ -450,8 +450,8 @@
       "source_location": "L84",
       "_origin": "ast",
       "id": "aplicacion_selectorfecha_alternar_calendario",
-      "community": 11,
-      "community_name": "Community 11",
+      "community": 9,
+      "community_name": "Community 9",
       "norm_label": "._alternar_calendario()"
     },
     {
@@ -461,8 +461,8 @@
       "source_location": "L110",
       "_origin": "ast",
       "id": "aplicacion_selectorfecha_ubicar_popup",
-      "community": 11,
-      "community_name": "Community 11",
+      "community": 9,
+      "community_name": "Community 9",
       "norm_label": "._ubicar_popup()"
     },
     {
@@ -472,8 +472,8 @@
       "source_location": "L133",
       "_origin": "ast",
       "id": "aplicacion_selectorfecha_cerrar",
-      "community": 11,
-      "community_name": "Community 11",
+      "community": 9,
+      "community_name": "Community 9",
       "norm_label": "._cerrar()"
     },
     {
@@ -483,8 +483,8 @@
       "source_location": "L138",
       "_origin": "ast",
       "id": "aplicacion_selectorfecha_cambiar_mes",
-      "community": 11,
-      "community_name": "Community 11",
+      "community": 9,
+      "community_name": "Community 9",
       "norm_label": "._cambiar_mes()"
     },
     {
@@ -494,8 +494,8 @@
       "source_location": "L144",
       "_origin": "ast",
       "id": "aplicacion_selectorfecha_dibujar_calendario",
-      "community": 11,
-      "community_name": "Community 11",
+      "community": 9,
+      "community_name": "Community 9",
       "norm_label": "._dibujar_calendario()"
     },
     {
@@ -505,8 +505,8 @@
       "source_location": "L216",
       "_origin": "ast",
       "id": "aplicacion_selectorfecha_elegir",
-      "community": 11,
-      "community_name": "Community 11",
+      "community": 9,
+      "community_name": "Community 9",
       "norm_label": "._elegir()"
     },
     {
@@ -527,8 +527,8 @@
       "source_location": "L225",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_init",
-      "community": 12,
-      "community_name": "Community 12",
+      "community": 5,
+      "community_name": "Community 5",
       "norm_label": ".__init__()"
     },
     {
@@ -549,8 +549,8 @@
       "source_location": "L325",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_crear_cabecera",
-      "community": 12,
-      "community_name": "Community 12",
+      "community": 5,
+      "community_name": "Community 5",
       "norm_label": "._crear_cabecera()"
     },
     {
@@ -560,8 +560,8 @@
       "source_location": "L370",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_cerrar_sesion",
-      "community": 7,
-      "community_name": "Community 7",
+      "community": 4,
+      "community_name": "Community 4",
       "norm_label": "._cerrar_sesion()"
     },
     {
@@ -571,8 +571,8 @@
       "source_location": "L380",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_usuarios_sistema",
-      "community": 5,
-      "community_name": "Community 5",
+      "community": 13,
+      "community_name": "Community 13",
       "norm_label": "._usuarios_sistema()"
     },
     {
@@ -582,8 +582,8 @@
       "source_location": "L386",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_display_responsable",
-      "community": 5,
-      "community_name": "Community 5",
+      "community": 13,
+      "community_name": "Community 13",
       "norm_label": "._display_responsable()"
     },
     {
@@ -593,8 +593,8 @@
       "source_location": "L394",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_valores_responsables",
-      "community": 5,
-      "community_name": "Community 5",
+      "community": 13,
+      "community_name": "Community 13",
       "norm_label": "._valores_responsables()"
     },
     {
@@ -604,8 +604,8 @@
       "source_location": "L398",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_responsable_por_display",
-      "community": 5,
-      "community_name": "Community 5",
+      "community": 13,
+      "community_name": "Community 13",
       "norm_label": "._responsable_por_display()"
     },
     {
@@ -615,8 +615,8 @@
       "source_location": "L408",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_refrescar_responsables",
-      "community": 10,
-      "community_name": "Community 10",
+      "community": 12,
+      "community_name": "Community 12",
       "norm_label": "._refrescar_responsables()"
     },
     {
@@ -626,8 +626,8 @@
       "source_location": "L419",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_oficio_por_referencia",
-      "community": 5,
-      "community_name": "Community 5",
+      "community": 10,
+      "community_name": "Community 10",
       "norm_label": "._oficio_por_referencia()"
     },
     {
@@ -637,8 +637,8 @@
       "source_location": "L427",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_puede_gestionar_usuarios",
-      "community": 5,
-      "community_name": "Community 5",
+      "community": 11,
+      "community_name": "Community 11",
       "norm_label": "._puede_gestionar_usuarios()"
     },
     {
@@ -648,8 +648,8 @@
       "source_location": "L432",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_es_superusuario",
-      "community": 12,
-      "community_name": "Community 12",
+      "community": 4,
+      "community_name": "Community 4",
       "norm_label": "._es_superusuario()"
     },
     {
@@ -659,8 +659,8 @@
       "source_location": "L435",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_lanzar_respaldo_diario",
-      "community": 12,
-      "community_name": "Community 12",
+      "community": 5,
+      "community_name": "Community 5",
       "norm_label": "._lanzar_respaldo_diario()"
     },
     {
@@ -670,8 +670,8 @@
       "source_location": "L450",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_alcanza_a",
-      "community": 5,
-      "community_name": "Community 5",
+      "community": 10,
+      "community_name": "Community 10",
       "norm_label": "._alcanza_a()"
     },
     {
@@ -681,8 +681,8 @@
       "source_location": "L457",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_aviso_sin_alcance",
-      "community": 10,
-      "community_name": "Community 10",
+      "community": 12,
+      "community_name": "Community 12",
       "norm_label": "._aviso_sin_alcance()"
     },
     {
@@ -692,8 +692,8 @@
       "source_location": "L469",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_roles_asignables",
-      "community": 10,
-      "community_name": "Community 10",
+      "community": 12,
+      "community_name": "Community 12",
       "norm_label": "._roles_asignables()"
     },
     {
@@ -703,8 +703,8 @@
       "source_location": "L475",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_crear_area_desplazable",
-      "community": 4,
-      "community_name": "Community 4",
+      "community": 14,
+      "community_name": "Community 14",
       "norm_label": "._crear_area_desplazable()"
     },
     {
@@ -725,8 +725,8 @@
       "source_location": "L526",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_construir_registro",
-      "community": 5,
-      "community_name": "Community 5",
+      "community": 13,
+      "community_name": "Community 13",
       "norm_label": "._construir_registro()"
     },
     {
@@ -736,8 +736,8 @@
       "source_location": "L607",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_guardar_oficio",
-      "community": 5,
-      "community_name": "Community 5",
+      "community": 13,
+      "community_name": "Community 13",
       "norm_label": "._guardar_oficio()"
     },
     {
@@ -747,8 +747,8 @@
       "source_location": "L644",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_construir_filtros",
-      "community": 13,
-      "community_name": "Community 13",
+      "community": 11,
+      "community_name": "Community 11",
       "norm_label": "._construir_filtros()"
     },
     {
@@ -758,8 +758,8 @@
       "source_location": "L693",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_limpiar_filtros",
-      "community": 13,
-      "community_name": "Community 13",
+      "community": 11,
+      "community_name": "Community 11",
       "norm_label": "._limpiar_filtros()"
     },
     {
@@ -769,8 +769,8 @@
       "source_location": "L701",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_clave_por_etiqueta",
-      "community": 13,
-      "community_name": "Community 13",
+      "community": 11,
+      "community_name": "Community 11",
       "norm_label": "._clave_por_etiqueta()"
     },
     {
@@ -780,8 +780,8 @@
       "source_location": "L708",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_construir_listado",
-      "community": 13,
-      "community_name": "Community 13",
+      "community": 11,
+      "community_name": "Community 11",
       "norm_label": "._construir_listado()"
     },
     {
@@ -791,8 +791,8 @@
       "source_location": "L800",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_refrescar_listado",
-      "community": 13,
-      "community_name": "Community 13",
+      "community": 11,
+      "community_name": "Community 11",
       "norm_label": "._refrescar_listado()"
     },
     {
@@ -802,8 +802,8 @@
       "source_location": "L856",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_al_seleccionar_oficio",
-      "community": 5,
-      "community_name": "Community 5",
+      "community": 13,
+      "community_name": "Community 13",
       "norm_label": "._al_seleccionar_oficio()"
     },
     {
@@ -813,8 +813,8 @@
       "source_location": "L884",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_aplicar_cambios",
-      "community": 5,
-      "community_name": "Community 5",
+      "community": 11,
+      "community_name": "Community 11",
       "norm_label": "._aplicar_cambios()"
     },
     {
@@ -824,8 +824,8 @@
       "source_location": "L916",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_adjuntar_respuesta",
-      "community": 5,
-      "community_name": "Community 5",
+      "community": 10,
+      "community_name": "Community 10",
       "norm_label": "._adjuntar_respuesta()"
     },
     {
@@ -835,8 +835,8 @@
       "source_location": "L936",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_eliminar_respuesta",
-      "community": 13,
-      "community_name": "Community 13",
+      "community": 10,
+      "community_name": "Community 10",
       "norm_label": "._eliminar_respuesta()"
     },
     {
@@ -846,8 +846,8 @@
       "source_location": "L956",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_ver_respuesta",
-      "community": 4,
-      "community_name": "Community 4",
+      "community": 16,
+      "community_name": "Community 16",
       "norm_label": "._ver_respuesta()"
     },
     {
@@ -857,8 +857,8 @@
       "source_location": "L978",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_construir_usuarios",
-      "community": 10,
-      "community_name": "Community 10",
+      "community": 12,
+      "community_name": "Community 12",
       "norm_label": "._construir_usuarios()"
     },
     {
@@ -868,8 +868,8 @@
       "source_location": "L1040",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_nuevo_usuario",
-      "community": 10,
-      "community_name": "Community 10",
+      "community": 12,
+      "community_name": "Community 12",
       "norm_label": "._nuevo_usuario()"
     },
     {
@@ -890,8 +890,8 @@
       "source_location": "L1058",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_editar_usuario_seleccionado",
-      "community": 10,
-      "community_name": "Community 10",
+      "community": 12,
+      "community_name": "Community 12",
       "norm_label": "._editar_usuario_seleccionado()"
     },
     {
@@ -901,8 +901,8 @@
       "source_location": "L1091",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_guardar_usuario",
-      "community": 10,
-      "community_name": "Community 10",
+      "community": 12,
+      "community_name": "Community 12",
       "norm_label": "._guardar_usuario()"
     },
     {
@@ -912,8 +912,8 @@
       "source_location": "L1121",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_eliminar_usuario_seleccionado",
-      "community": 10,
-      "community_name": "Community 10",
+      "community": 12,
+      "community_name": "Community 12",
       "norm_label": "._eliminar_usuario_seleccionado()"
     },
     {
@@ -923,8 +923,8 @@
       "source_location": "L1141",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_restablecer_clave_seleccionado",
-      "community": 14,
-      "community_name": "Community 14",
+      "community": 10,
+      "community_name": "Community 10",
       "norm_label": "._restablecer_clave_seleccionado()"
     },
     {
@@ -934,8 +934,8 @@
       "source_location": "L1162",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_pedir_nueva_clave",
-      "community": 14,
-      "community_name": "Community 14",
+      "community": 10,
+      "community_name": "Community 10",
       "norm_label": "._pedir_nueva_clave()"
     },
     {
@@ -945,8 +945,8 @@
       "source_location": "L1226",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_refrescar_usuarios",
-      "community": 10,
-      "community_name": "Community 10",
+      "community": 12,
+      "community_name": "Community 12",
       "norm_label": "._refrescar_usuarios()"
     },
     {
@@ -956,8 +956,8 @@
       "source_location": "L1233",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_construir_configuracion",
-      "community": 12,
-      "community_name": "Community 12",
+      "community": 4,
+      "community_name": "Community 4",
       "norm_label": "._construir_configuracion()"
     },
     {
@@ -967,8 +967,8 @@
       "source_location": "L1301",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_construir_panel_respaldos",
-      "community": 12,
-      "community_name": "Community 12",
+      "community": 4,
+      "community_name": "Community 4",
       "norm_label": "._construir_panel_respaldos()"
     },
     {
@@ -1033,8 +1033,8 @@
       "source_location": "L1408",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_construir_tablero",
-      "community": 4,
-      "community_name": "Community 4",
+      "community": 14,
+      "community_name": "Community 14",
       "norm_label": "._construir_tablero()"
     },
     {
@@ -1044,8 +1044,8 @@
       "source_location": "L1435",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_crear_lienzo",
-      "community": 4,
-      "community_name": "Community 4",
+      "community": 14,
+      "community_name": "Community 14",
       "norm_label": "._crear_lienzo()"
     },
     {
@@ -1132,8 +1132,8 @@
       "source_location": "L1645",
       "_origin": "ast",
       "id": "aplicacion_aplicacionprincipal_al_recuperar_foco",
-      "community": 10,
-      "community_name": "Community 10",
+      "community": 11,
+      "community_name": "Community 11",
       "norm_label": "._al_recuperar_foco()"
     },
     {
@@ -1143,8 +1143,8 @@
       "source_location": "L1676",
       "_origin": "ast",
       "id": "aplicacion_ventanaingreso",
-      "community": 7,
-      "community_name": "Community 7",
+      "community": 5,
+      "community_name": "Community 5",
       "norm_label": "ventanaingreso"
     },
     {
@@ -1154,8 +1154,8 @@
       "source_location": "L1686",
       "_origin": "ast",
       "id": "aplicacion_ventanaingreso_init",
-      "community": 7,
-      "community_name": "Community 7",
+      "community": 5,
+      "community_name": "Community 5",
       "norm_label": ".__init__()"
     },
     {
@@ -1165,8 +1165,8 @@
       "source_location": "L1713",
       "_origin": "ast",
       "id": "aplicacion_ventanaingreso_centrar",
-      "community": 7,
-      "community_name": "Community 7",
+      "community": 5,
+      "community_name": "Community 5",
       "norm_label": "._centrar()"
     },
     {
@@ -1176,8 +1176,8 @@
       "source_location": "L1720",
       "_origin": "ast",
       "id": "aplicacion_ventanaingreso_configurar_estilos",
-      "community": 7,
-      "community_name": "Community 7",
+      "community": 5,
+      "community_name": "Community 5",
       "norm_label": "._configurar_estilos()"
     },
     {
@@ -1187,8 +1187,8 @@
       "source_location": "L1740",
       "_origin": "ast",
       "id": "aplicacion_ventanaingreso_limpiar",
-      "community": 7,
-      "community_name": "Community 7",
+      "community": 5,
+      "community_name": "Community 5",
       "norm_label": "._limpiar()"
     },
     {
@@ -1198,8 +1198,8 @@
       "source_location": "L1745",
       "_origin": "ast",
       "id": "aplicacion_ventanaingreso_construir_marco",
-      "community": 7,
-      "community_name": "Community 7",
+      "community": 5,
+      "community_name": "Community 5",
       "norm_label": "._construir_marco()"
     },
     {
@@ -1209,8 +1209,8 @@
       "source_location": "L1785",
       "_origin": "ast",
       "id": "aplicacion_ventanaingreso_cargar_logo",
-      "community": 7,
-      "community_name": "Community 7",
+      "community": 5,
+      "community_name": "Community 5",
       "norm_label": "._cargar_logo()"
     },
     {
@@ -1220,8 +1220,8 @@
       "source_location": "L1796",
       "_origin": "ast",
       "id": "aplicacion_ventanaingreso_etiqueta_campo",
-      "community": 7,
-      "community_name": "Community 7",
+      "community": 5,
+      "community_name": "Community 5",
       "norm_label": "._etiqueta_campo()"
     },
     {
@@ -1231,8 +1231,8 @@
       "source_location": "L1800",
       "_origin": "ast",
       "id": "aplicacion_ventanaingreso_campo",
-      "community": 7,
-      "community_name": "Community 7",
+      "community": 5,
+      "community_name": "Community 5",
       "norm_label": "._campo()"
     },
     {
@@ -1242,8 +1242,8 @@
       "source_location": "L1806",
       "_origin": "ast",
       "id": "aplicacion_ventanaingreso_boton_principal",
-      "community": 7,
-      "community_name": "Community 7",
+      "community": 5,
+      "community_name": "Community 5",
       "norm_label": "._boton_principal()"
     },
     {
@@ -1253,8 +1253,8 @@
       "source_location": "L1818",
       "_origin": "ast",
       "id": "aplicacion_ventanaingreso_casilla_mostrar_clave",
-      "community": 7,
-      "community_name": "Community 7",
+      "community": 5,
+      "community_name": "Community 5",
       "norm_label": "._casilla_mostrar_clave()"
     },
     {
@@ -1264,8 +1264,8 @@
       "source_location": "L1833",
       "_origin": "ast",
       "id": "aplicacion_ventanaingreso_formulario_ingreso",
-      "community": 7,
-      "community_name": "Community 7",
+      "community": 5,
+      "community_name": "Community 5",
       "norm_label": "._formulario_ingreso()"
     },
     {
@@ -1275,8 +1275,8 @@
       "source_location": "L1853",
       "_origin": "ast",
       "id": "aplicacion_ventanaingreso_ingresar",
-      "community": 7,
-      "community_name": "Community 7",
+      "community": 5,
+      "community_name": "Community 5",
       "norm_label": "._ingresar()"
     },
     {
@@ -1286,8 +1286,8 @@
       "source_location": "L1865",
       "_origin": "ast",
       "id": "aplicacion_ventanaingreso_formulario_primer_uso",
-      "community": 7,
-      "community_name": "Community 7",
+      "community": 5,
+      "community_name": "Community 5",
       "norm_label": "._formulario_primer_uso()"
     },
     {
@@ -1297,8 +1297,8 @@
       "source_location": "L1886",
       "_origin": "ast",
       "id": "aplicacion_ventanaingreso_crear_administrador",
-      "community": 7,
-      "community_name": "Community 7",
+      "community": 5,
+      "community_name": "Community 5",
       "norm_label": "._crear_administrador()"
     },
     {
@@ -1319,8 +1319,8 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "aplicacion_rationale_31",
-      "community": 11,
-      "community_name": "Community 11",
+      "community": 9,
+      "community_name": "Community 9",
       "norm_label": "campo de fecha con calendario emergente. no requiere librerias externas.      mu"
     },
     {
@@ -1330,8 +1330,8 @@
       "source_location": "L43",
       "_origin": "ast",
       "id": "aplicacion_rationale_43",
-      "community": 11,
-      "community_name": "Community 11",
+      "community": 9,
+      "community_name": "Community 9",
       "norm_label": "`permitir_vacio=true` deja el campo en blanco y ofrece un boton         \"limpiar"
     },
     {
@@ -1341,8 +1341,8 @@
       "source_location": "L78",
       "_origin": "ast",
       "id": "aplicacion_rationale_78",
-      "community": 11,
-      "community_name": "Community 11",
+      "community": 9,
+      "community_name": "Community 9",
       "norm_label": "fecha desde la que se abre el calendario (la escrita, o hoy)."
     },
     {
@@ -1352,8 +1352,8 @@
       "source_location": "L111",
       "_origin": "ast",
       "id": "aplicacion_rationale_111",
-      "community": 11,
-      "community_name": "Community 11",
+      "community": 9,
+      "community_name": "Community 9",
       "norm_label": "coloca el calendario junto al campo, abriendose hacia arriba si no         cabe"
     },
     {
@@ -1363,8 +1363,8 @@
       "source_location": "L326",
       "_origin": "ast",
       "id": "aplicacion_rationale_326",
-      "community": 12,
-      "community_name": "Community 12",
+      "community": 5,
+      "community_name": "Community 5",
       "norm_label": "marco superior con logo y titulo."
     },
     {
@@ -1374,8 +1374,8 @@
       "source_location": "L371",
       "_origin": "ast",
       "id": "aplicacion_rationale_371",
-      "community": 7,
-      "community_name": "Community 7",
+      "community": 4,
+      "community_name": "Community 4",
       "norm_label": "cierra la sesion actual y vuelve a la pantalla de ingreso."
     },
     {
@@ -1385,8 +1385,8 @@
       "source_location": "L387",
       "_origin": "ast",
       "id": "aplicacion_rationale_387",
-      "community": 5,
-      "community_name": "Community 5",
+      "community": 13,
+      "community_name": "Community 13",
       "norm_label": "texto que se muestra en los desplegables para un responsable.         incluye el"
     },
     {
@@ -1396,8 +1396,8 @@
       "source_location": "L399",
       "_origin": "ast",
       "id": "aplicacion_rationale_399",
-      "community": 5,
-      "community_name": "Community 5",
+      "community": 13,
+      "community_name": "Community 13",
       "norm_label": "a partir del texto del desplegable devuelve (usuario, nombre).         para \"(si"
     },
     {
@@ -1407,8 +1407,8 @@
       "source_location": "L409",
       "_origin": "ast",
       "id": "aplicacion_rationale_409",
-      "community": 10,
-      "community_name": "Community 10",
+      "community": 12,
+      "community_name": "Community 12",
       "norm_label": "repuebla los desplegables de responsable con los usuarios actuales."
     },
     {
@@ -1418,8 +1418,8 @@
       "source_location": "L420",
       "_origin": "ast",
       "id": "aplicacion_rationale_420",
-      "community": 5,
-      "community_name": "Community 5",
+      "community": 10,
+      "community_name": "Community 10",
       "norm_label": "busca solo entre los oficios visibles para el usuario en sesion."
     },
     {
@@ -1429,8 +1429,8 @@
       "source_location": "L428",
       "_origin": "ast",
       "id": "aplicacion_rationale_428",
-      "community": 5,
-      "community_name": "Community 5",
+      "community": 11,
+      "community_name": "Community 11",
       "norm_label": "true si el usuario en sesion puede crear/editar/eliminar usuarios         y reas"
     },
     {
@@ -1440,8 +1440,8 @@
       "source_location": "L436",
       "_origin": "ast",
       "id": "aplicacion_rationale_436",
-      "community": 12,
-      "community_name": "Community 12",
+      "community": 5,
+      "community_name": "Community 5",
       "norm_label": "crea la copia del dia en segundo plano.          va en un hilo aparte para que l"
     },
     {
@@ -1451,8 +1451,8 @@
       "source_location": "L451",
       "_origin": "ast",
       "id": "aplicacion_rationale_451",
-      "community": 5,
-      "community_name": "Community 5",
+      "community": 10,
+      "community_name": "Community 10",
       "norm_label": "\u00bfel usuario en sesion puede gestionar a ese usuario? se consulta         antes d"
     },
     {
@@ -1462,8 +1462,8 @@
       "source_location": "L458",
       "_origin": "ast",
       "id": "aplicacion_rationale_458",
-      "community": 10,
-      "community_name": "Community 10",
+      "community": 12,
+      "community_name": "Community 12",
       "norm_label": "muestra el motivo si no se puede gestionar. true = sin permisos."
     },
     {
@@ -1473,8 +1473,8 @@
       "source_location": "L470",
       "_origin": "ast",
       "id": "aplicacion_rationale_470",
-      "community": 10,
-      "community_name": "Community 10",
+      "community": 12,
+      "community_name": "Community 12",
       "norm_label": "roles que puede otorgar quien esta en sesion (solo el superusuario         puede"
     },
     {
@@ -1484,8 +1484,8 @@
       "source_location": "L476",
       "_origin": "ast",
       "id": "aplicacion_rationale_476",
-      "community": 4,
-      "community_name": "Community 4",
+      "community": 14,
+      "community_name": "Community 14",
       "norm_label": "convierte un contenedor en un area con scroll vertical.          devuelve (lienz"
     },
     {
@@ -1506,8 +1506,8 @@
       "source_location": "L645",
       "_origin": "ast",
       "id": "aplicacion_rationale_645",
-      "community": 13,
-      "community_name": "Community 13",
+      "community": 11,
+      "community_name": "Community 11",
       "norm_label": "panel de busqueda: por texto (referencia udc / referencia oficio /         causa"
     },
     {
@@ -1517,8 +1517,8 @@
       "source_location": "L702",
       "_origin": "ast",
       "id": "aplicacion_rationale_702",
-      "community": 13,
-      "community_name": "Community 13",
+      "community": 11,
+      "community_name": "Community 11",
       "norm_label": "devuelve la clave interna a partir de la etiqueta mostrada."
     },
     {
@@ -1528,8 +1528,8 @@
       "source_location": "L857",
       "_origin": "ast",
       "id": "aplicacion_rationale_857",
-      "community": 5,
-      "community_name": "Community 5",
+      "community": 13,
+      "community_name": "Community 13",
       "norm_label": "precarga el panel de edicion con los datos del oficio seleccionado."
     },
     {
@@ -1539,8 +1539,8 @@
       "source_location": "L885",
       "_origin": "ast",
       "id": "aplicacion_rationale_885",
-      "community": 5,
-      "community_name": "Community 5",
+      "community": 11,
+      "community_name": "Community 11",
       "norm_label": "guarda los cambios del panel segun el rol: el gestor puede cambiar         respo"
     },
     {
@@ -1550,8 +1550,8 @@
       "source_location": "L917",
       "_origin": "ast",
       "id": "aplicacion_rationale_917",
-      "community": 5,
-      "community_name": "Community 5",
+      "community": 10,
+      "community_name": "Community 10",
       "norm_label": "carga un pdf con la respuesta del oficio seleccionado."
     },
     {
@@ -1561,8 +1561,8 @@
       "source_location": "L937",
       "_origin": "ast",
       "id": "aplicacion_rationale_937",
-      "community": 13,
-      "community_name": "Community 13",
+      "community": 10,
+      "community_name": "Community 10",
       "norm_label": "elimina el pdf adjunto (por si se cargo el archivo equivocado)."
     },
     {
@@ -1572,8 +1572,8 @@
       "source_location": "L957",
       "_origin": "ast",
       "id": "aplicacion_rationale_957",
-      "community": 4,
-      "community_name": "Community 4",
+      "community": 16,
+      "community_name": "Community 16",
       "norm_label": "muestra el pdf de respuesta dentro de la aplicacion."
     },
     {
@@ -1583,8 +1583,8 @@
       "source_location": "L1041",
       "_origin": "ast",
       "id": "aplicacion_rationale_1041",
-      "community": 10,
-      "community_name": "Community 10",
+      "community": 12,
+      "community_name": "Community 12",
       "norm_label": "restablece el formulario para crear un usuario nuevo."
     },
     {
@@ -1594,8 +1594,8 @@
       "source_location": "L1142",
       "_origin": "ast",
       "id": "aplicacion_rationale_1142",
-      "community": 14,
-      "community_name": "Community 14",
+      "community": 10,
+      "community_name": "Community 10",
       "norm_label": "el gestor selecciona un usuario y le cede el teclado para que escriba         su"
     },
     {
@@ -1605,8 +1605,8 @@
       "source_location": "L1163",
       "_origin": "ast",
       "id": "aplicacion_rationale_1163",
-      "community": 14,
-      "community_name": "Community 14",
+      "community": 10,
+      "community_name": "Community 10",
       "norm_label": "dialogo modal para escribir y confirmar una nueva contrasena.         devuelve l"
     },
     {
@@ -1616,8 +1616,8 @@
       "source_location": "L1234",
       "_origin": "ast",
       "id": "aplicacion_rationale_1234",
-      "community": 12,
-      "community_name": "Community 12",
+      "community": 4,
+      "community_name": "Community 4",
       "norm_label": "permite al superusuario o a un administrador indicar la ultima         referenci"
     },
     {
@@ -1627,8 +1627,8 @@
       "source_location": "L1302",
       "_origin": "ast",
       "id": "aplicacion_rationale_1302",
-      "community": 12,
-      "community_name": "Community 12",
+      "community": 4,
+      "community_name": "Community 4",
       "norm_label": "panel de copias de seguridad. solo lo ve el superusuario."
     },
     {
@@ -1638,8 +1638,8 @@
       "source_location": "L1409",
       "_origin": "ast",
       "id": "aplicacion_rationale_1409",
-      "community": 4,
-      "community_name": "Community 4",
+      "community": 14,
+      "community_name": "Community 14",
       "norm_label": "tablero con scroll vertical: tarjetas de indicadores y graficos."
     },
     {
@@ -1693,8 +1693,8 @@
       "source_location": "L1646",
       "_origin": "ast",
       "id": "aplicacion_rationale_1646",
-      "community": 10,
-      "community_name": "Community 10",
+      "community": 11,
+      "community_name": "Community 11",
       "norm_label": "refresca la vista al volver a la ventana.          con varias personas usando la"
     },
     {
@@ -1704,8 +1704,8 @@
       "source_location": "L1714",
       "_origin": "ast",
       "id": "aplicacion_rationale_1714",
-      "community": 7,
-      "community_name": "Community 7",
+      "community": 5,
+      "community_name": "Community 5",
       "norm_label": "centra la ventana en la pantalla."
     },
     {
@@ -1715,8 +1715,8 @@
       "source_location": "L1746",
       "_origin": "ast",
       "id": "aplicacion_rationale_1746",
-      "community": 7,
-      "community_name": "Community 7",
+      "community": 5,
+      "community_name": "Community 5",
       "norm_label": "crea el banner corporativo y la tarjeta central. devuelve el         contenedor"
     },
     {
@@ -1726,8 +1726,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "autenticacion",
-      "community": 0,
-      "community_name": "Community 0",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": "autenticacion.py"
     },
     {
@@ -1737,8 +1737,8 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "autenticacion_normalizar_roles",
-      "community": 0,
-      "community_name": "Community 0",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": "_normalizar_roles()"
     },
     {
@@ -1748,8 +1748,8 @@
       "source_location": "L32",
       "_origin": "ast",
       "id": "autenticacion_leer_usuarios",
-      "community": 0,
-      "community_name": "Community 0",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": "_leer_usuarios()"
     },
     {
@@ -1759,8 +1759,8 @@
       "source_location": "L43",
       "_origin": "ast",
       "id": "autenticacion_guardar_usuarios",
-      "community": 0,
-      "community_name": "Community 0",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": "_guardar_usuarios()"
     },
     {
@@ -1770,151 +1770,162 @@
       "source_location": "L50",
       "_origin": "ast",
       "id": "autenticacion_roles_asignables",
-      "community": 0,
-      "community_name": "Community 0",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": "roles_asignables()"
+    },
+    {
+      "label": "_validar_rol_asignable()",
+      "file_type": "code",
+      "source_file": "autenticacion.py",
+      "source_location": "L60",
+      "_origin": "ast",
+      "id": "autenticacion_validar_rol_asignable",
+      "community": 2,
+      "community_name": "Community 2",
+      "norm_label": "_validar_rol_asignable()"
     },
     {
       "label": "_contar_superusuarios()",
       "file_type": "code",
       "source_file": "autenticacion.py",
-      "source_location": "L57",
+      "source_location": "L76",
       "_origin": "ast",
       "id": "autenticacion_contar_superusuarios",
-      "community": 0,
-      "community_name": "Community 0",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": "_contar_superusuarios()"
     },
     {
       "label": "puede_gestionar_a()",
       "file_type": "code",
       "source_file": "autenticacion.py",
-      "source_location": "L61",
+      "source_location": "L80",
       "_origin": "ast",
       "id": "autenticacion_puede_gestionar_a",
-      "community": 0,
-      "community_name": "Community 0",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": "puede_gestionar_a()"
     },
     {
       "label": "_validar_alcance()",
       "file_type": "code",
       "source_file": "autenticacion.py",
-      "source_location": "L78",
+      "source_location": "L97",
       "_origin": "ast",
       "id": "autenticacion_validar_alcance",
-      "community": 0,
-      "community_name": "Community 0",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": "_validar_alcance()"
     },
     {
       "label": "_validar_gestion_de_superusuario()",
       "file_type": "code",
       "source_file": "autenticacion.py",
-      "source_location": "L91",
+      "source_location": "L110",
       "_origin": "ast",
       "id": "autenticacion_validar_gestion_de_superusuario",
-      "community": 0,
-      "community_name": "Community 0",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": "_validar_gestion_de_superusuario()"
     },
     {
       "label": "_buscar()",
       "file_type": "code",
       "source_file": "autenticacion.py",
-      "source_location": "L112",
+      "source_location": "L131",
       "_origin": "ast",
       "id": "autenticacion_buscar",
-      "community": 0,
-      "community_name": "Community 0",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": "_buscar()"
     },
     {
       "label": "existe_algun_usuario()",
       "file_type": "code",
       "source_file": "autenticacion.py",
-      "source_location": "L120",
+      "source_location": "L139",
       "_origin": "ast",
       "id": "autenticacion_existe_algun_usuario",
-      "community": 0,
-      "community_name": "Community 0",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": "existe_algun_usuario()"
     },
     {
       "label": "crear_usuario()",
       "file_type": "code",
       "source_file": "autenticacion.py",
-      "source_location": "L125",
+      "source_location": "L144",
       "_origin": "ast",
       "id": "autenticacion_crear_usuario",
-      "community": 0,
-      "community_name": "Community 0",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": "crear_usuario()"
     },
     {
       "label": "editar_usuario()",
       "file_type": "code",
       "source_file": "autenticacion.py",
-      "source_location": "L169",
+      "source_location": "L180",
       "_origin": "ast",
       "id": "autenticacion_editar_usuario",
-      "community": 0,
-      "community_name": "Community 0",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": "editar_usuario()"
     },
     {
       "label": "eliminar_usuario()",
       "file_type": "code",
       "source_file": "autenticacion.py",
-      "source_location": "L215",
+      "source_location": "L222",
       "_origin": "ast",
       "id": "autenticacion_eliminar_usuario",
-      "community": 0,
-      "community_name": "Community 0",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": "eliminar_usuario()"
     },
     {
       "label": "validar_acceso()",
       "file_type": "code",
       "source_file": "autenticacion.py",
-      "source_location": "L238",
+      "source_location": "L245",
       "_origin": "ast",
       "id": "autenticacion_validar_acceso",
-      "community": 0,
-      "community_name": "Community 0",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": "validar_acceso()"
     },
     {
       "label": "restablecer_clave()",
       "file_type": "code",
       "source_file": "autenticacion.py",
-      "source_location": "L251",
+      "source_location": "L258",
       "_origin": "ast",
       "id": "autenticacion_restablecer_clave",
-      "community": 0,
-      "community_name": "Community 0",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": "restablecer_clave()"
     },
     {
       "label": "cerrar_sesion()",
       "file_type": "code",
       "source_file": "autenticacion.py",
-      "source_location": "L276",
+      "source_location": "L283",
       "_origin": "ast",
       "id": "autenticacion_cerrar_sesion",
-      "community": 0,
-      "community_name": "Community 0",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": "cerrar_sesion()"
     },
     {
       "label": "listar_usuarios()",
       "file_type": "code",
       "source_file": "autenticacion.py",
-      "source_location": "L281",
+      "source_location": "L288",
       "_origin": "ast",
       "id": "autenticacion_listar_usuarios",
-      "community": 0,
-      "community_name": "Community 0",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": "listar_usuarios()"
     },
     {
@@ -1924,107 +1935,118 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "autenticacion_rationale_18",
-      "community": 0,
-      "community_name": "Community 0",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": "garantiza que cada usuario tenga un rol. para archivos antiguos (sin     campo '"
     },
     {
-      "label": "Roles que puede otorgar quien gestiona usuarios.     Solo el superusuario puede",
+      "label": "Roles que puede otorgar quien gestiona usuarios.      El superusuario puede otor",
       "file_type": "rationale",
       "source_file": "autenticacion.py",
       "source_location": "L51",
       "_origin": "ast",
       "id": "autenticacion_rationale_51",
-      "community": 0,
-      "community_name": "Community 0",
-      "norm_label": "roles que puede otorgar quien gestiona usuarios.     solo el superusuario puede"
+      "community": 2,
+      "community_name": "Community 2",
+      "norm_label": "roles que puede otorgar quien gestiona usuarios.      el superusuario puede otor"
+    },
+    {
+      "label": "Comprueba que el actor pueda otorgar ese rol, con un mensaje que     explique el",
+      "file_type": "rationale",
+      "source_file": "autenticacion.py",
+      "source_location": "L61",
+      "_origin": "ast",
+      "id": "autenticacion_rationale_61",
+      "community": 2,
+      "community_name": "Community 2",
+      "norm_label": "comprueba que el actor pueda otorgar ese rol, con un mensaje que     explique el"
     },
     {
       "label": "\u00bfEl actor puede modificar a ese usuario?      - Superusuario: a cualquiera.",
       "file_type": "rationale",
       "source_file": "autenticacion.py",
-      "source_location": "L63",
+      "source_location": "L82",
       "_origin": "ast",
-      "id": "autenticacion_rationale_63",
-      "community": 0,
-      "community_name": "Community 0",
+      "id": "autenticacion_rationale_82",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": "\u00bfel actor puede modificar a ese usuario?      - superusuario: a cualquiera."
     },
     {
       "label": "Comprueba el alcance del actor sobre el usuario objetivo.",
       "file_type": "rationale",
       "source_file": "autenticacion.py",
-      "source_location": "L80",
+      "source_location": "L99",
       "_origin": "ast",
-      "id": "autenticacion_rationale_80",
-      "community": 0,
-      "community_name": "Community 0",
+      "id": "autenticacion_rationale_99",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": "comprueba el alcance del actor sobre el usuario objetivo."
     },
     {
       "label": "Reglas para tocar a un superusuario.      - Solo otro superusuario puede hacerlo",
       "file_type": "rationale",
       "source_file": "autenticacion.py",
-      "source_location": "L93",
+      "source_location": "L112",
       "_origin": "ast",
-      "id": "autenticacion_rationale_93",
-      "community": 0,
-      "community_name": "Community 0",
+      "id": "autenticacion_rationale_112",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": "reglas para tocar a un superusuario.      - solo otro superusuario puede hacerlo"
     },
     {
       "label": "Crea un usuario. El primer usuario del sistema se crea siempre como     superusu",
       "file_type": "rationale",
       "source_file": "autenticacion.py",
-      "source_location": "L128",
+      "source_location": "L147",
       "_origin": "ast",
-      "id": "autenticacion_rationale_128",
-      "community": 0,
-      "community_name": "Community 0",
+      "id": "autenticacion_rationale_147",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": "crea un usuario. el primer usuario del sistema se crea siempre como     superusu"
     },
     {
       "label": "Edita nombre, contrase\u00f1a y/o rol de un usuario existente.     Solo superusuario",
       "file_type": "rationale",
       "source_file": "autenticacion.py",
-      "source_location": "L172",
+      "source_location": "L183",
       "_origin": "ast",
-      "id": "autenticacion_rationale_172",
-      "community": 0,
-      "community_name": "Community 0",
+      "id": "autenticacion_rationale_183",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": "edita nombre, contrasena y/o rol de un usuario existente.     solo superusuario"
     },
     {
       "label": "Elimina un usuario. El superusuario NO puede eliminarse bajo ninguna     circuns",
       "file_type": "rationale",
       "source_file": "autenticacion.py",
-      "source_location": "L216",
+      "source_location": "L223",
       "_origin": "ast",
-      "id": "autenticacion_rationale_216",
-      "community": 0,
-      "community_name": "Community 0",
+      "id": "autenticacion_rationale_223",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": "elimina un usuario. el superusuario no puede eliminarse bajo ninguna     circuns"
     },
     {
       "label": "Restablece (recupera) la contrase\u00f1a de un usuario. Pensado para que un     gesto",
       "file_type": "rationale",
       "source_file": "autenticacion.py",
-      "source_location": "L253",
+      "source_location": "L260",
       "_origin": "ast",
-      "id": "autenticacion_rationale_253",
-      "community": 0,
-      "community_name": "Community 0",
+      "id": "autenticacion_rationale_260",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": "restablece (recupera) la contrasena de un usuario. pensado para que un     gesto"
     },
     {
       "label": "Registra en la bit\u00e1cora el cierre de sesi\u00f3n del usuario.",
       "file_type": "rationale",
       "source_file": "autenticacion.py",
-      "source_location": "L277",
+      "source_location": "L284",
       "_origin": "ast",
-      "id": "autenticacion_rationale_277",
-      "community": 0,
-      "community_name": "Community 0",
+      "id": "autenticacion_rationale_284",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": "registra en la bitacora el cierre de sesion del usuario."
     },
     {
@@ -2034,8 +2056,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "bloqueo",
-      "community": 6,
-      "community_name": "Community 6",
+      "community": 7,
+      "community_name": "Community 7",
       "norm_label": "bloqueo.py"
     },
     {
@@ -2045,8 +2067,8 @@
       "source_location": "L43",
       "_origin": "ast",
       "id": "bloqueo_ruta_bloqueo",
-      "community": 6,
-      "community_name": "Community 6",
+      "community": 7,
+      "community_name": "Community 7",
       "norm_label": "_ruta_bloqueo()"
     },
     {
@@ -2056,8 +2078,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "bloqueo_py_path",
-      "community": 6,
-      "community_name": "Community 6",
+      "community": 7,
+      "community_name": "Community 7",
       "norm_label": "path"
     },
     {
@@ -2067,8 +2089,8 @@
       "source_location": "L47",
       "_origin": "ast",
       "id": "bloqueo_esta_abandonado",
-      "community": 6,
-      "community_name": "Community 6",
+      "community": 7,
+      "community_name": "Community 7",
       "norm_label": "_esta_abandonado()"
     },
     {
@@ -2078,8 +2100,8 @@
       "source_location": "L57",
       "_origin": "ast",
       "id": "bloqueo_bloquear",
-      "community": 6,
-      "community_name": "Community 6",
+      "community": 7,
+      "community_name": "Community 7",
       "norm_label": "bloquear()"
     },
     {
@@ -2100,8 +2122,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "bloqueo_rationale_1",
-      "community": 6,
-      "community_name": "Community 6",
+      "community": 7,
+      "community_name": "Community 7",
       "norm_label": "bloqueo entre procesos para la carpeta de datos compartida.  problema que resuel"
     },
     {
@@ -2111,8 +2133,8 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "bloqueo_rationale_48",
-      "community": 6,
-      "community_name": "Community 6",
+      "community": 7,
+      "community_name": "Community 7",
       "norm_label": "true si el bloqueo es tan antiguo que solo puede ser basura."
     },
     {
@@ -2122,8 +2144,8 @@
       "source_location": "L58",
       "_origin": "ast",
       "id": "bloqueo_rationale_58",
-      "community": 6,
-      "community_name": "Community 6",
+      "community": 7,
+      "community_name": "Community 7",
       "norm_label": "toma el bloqueo `nombre` mientras dure el bloque `with`.      lanza valueerror s"
     },
     {
@@ -2144,8 +2166,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "cifrado",
-      "community": 2,
-      "community_name": "Community 2",
+      "community": 0,
+      "community_name": "Community 0",
       "norm_label": "cifrado.py"
     },
     {
@@ -2155,8 +2177,8 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "cifrado_obtener_clave",
-      "community": 2,
-      "community_name": "Community 2",
+      "community": 0,
+      "community_name": "Community 0",
       "norm_label": "obtener_clave()"
     },
     {
@@ -2166,8 +2188,8 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "cifrado_cifrador",
-      "community": 2,
-      "community_name": "Community 2",
+      "community": 0,
+      "community_name": "Community 0",
       "norm_label": "_cifrador()"
     },
     {
@@ -2177,8 +2199,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "fernet",
-      "community": 2,
-      "community_name": "Community 2",
+      "community": 0,
+      "community_name": "Community 0",
       "norm_label": "fernet"
     },
     {
@@ -2188,8 +2210,8 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "cifrado_cifrar",
-      "community": 2,
-      "community_name": "Community 2",
+      "community": 0,
+      "community_name": "Community 0",
       "norm_label": "cifrar()"
     },
     {
@@ -2199,8 +2221,8 @@
       "source_location": "L32",
       "_origin": "ast",
       "id": "cifrado_descifrar",
-      "community": 6,
-      "community_name": "Community 6",
+      "community": 0,
+      "community_name": "Community 0",
       "norm_label": "descifrar()"
     },
     {
@@ -2210,8 +2232,8 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "cifrado_generar_hash_clave",
-      "community": 0,
-      "community_name": "Community 0",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": "generar_hash_clave()"
     },
     {
@@ -2221,8 +2243,8 @@
       "source_location": "L49",
       "_origin": "ast",
       "id": "cifrado_verificar_clave",
-      "community": 0,
-      "community_name": "Community 0",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": "verificar_clave()"
     },
     {
@@ -2232,8 +2254,8 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "cifrado_rationale_15",
-      "community": 2,
-      "community_name": "Community 2",
+      "community": 0,
+      "community_name": "Community 0",
       "norm_label": "devuelve la clave fernet; la genera la primera vez que se ejecuta."
     },
     {
@@ -2243,8 +2265,8 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "cifrado_rationale_33",
-      "community": 6,
-      "community_name": "Community 6",
+      "community": 0,
+      "community_name": "Community 0",
       "norm_label": "descifra. lanza cryptography.fernet.invalidtoken si el archivo     fue alterado"
     },
     {
@@ -2254,8 +2276,8 @@
       "source_location": "L40",
       "_origin": "ast",
       "id": "cifrado_rationale_40",
-      "community": 0,
-      "community_name": "Community 0",
+      "community": 2,
+      "community_name": "Community 2",
       "norm_label": "devuelve (sal_b64, hash_b64)."
     },
     {
@@ -2353,8 +2375,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "herramienta_admin",
-      "community": 6,
-      "community_name": "Community 6",
+      "community": 7,
+      "community_name": "Community 7",
       "norm_label": "herramienta_admin.py"
     },
     {
@@ -2364,8 +2386,8 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "herramienta_admin_cargar",
-      "community": 6,
-      "community_name": "Community 6",
+      "community": 7,
+      "community_name": "Community 7",
       "norm_label": "_cargar()"
     },
     {
@@ -2375,8 +2397,8 @@
       "source_location": "L49",
       "_origin": "ast",
       "id": "herramienta_admin_mostrar_json",
-      "community": 6,
-      "community_name": "Community 6",
+      "community": 7,
+      "community_name": "Community 7",
       "norm_label": "mostrar_json()"
     },
     {
@@ -2386,8 +2408,8 @@
       "source_location": "L53",
       "_origin": "ast",
       "id": "herramienta_admin_exportar_csv_oficios",
-      "community": 6,
-      "community_name": "Community 6",
+      "community": 7,
+      "community_name": "Community 7",
       "norm_label": "exportar_csv_oficios()"
     },
     {
@@ -2397,8 +2419,8 @@
       "source_location": "L69",
       "_origin": "ast",
       "id": "herramienta_admin_es_formato_actual",
-      "community": 6,
-      "community_name": "Community 6",
+      "community": 7,
+      "community_name": "Community 7",
       "norm_label": "_es_formato_actual()"
     },
     {
@@ -2408,8 +2430,8 @@
       "source_location": "L74",
       "_origin": "ast",
       "id": "herramienta_admin_purgar_formato_anterior",
-      "community": 6,
-      "community_name": "Community 6",
+      "community": 7,
+      "community_name": "Community 7",
       "norm_label": "purgar_formato_anterior()"
     },
     {
@@ -2419,8 +2441,8 @@
       "source_location": "L109",
       "_origin": "ast",
       "id": "herramienta_admin_main",
-      "community": 6,
-      "community_name": "Community 6",
+      "community": 7,
+      "community_name": "Community 7",
       "norm_label": "main()"
     },
     {
@@ -2430,8 +2452,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "herramienta_admin_rationale_1",
-      "community": 6,
-      "community_name": "Community 6",
+      "community": 7,
+      "community_name": "Community 7",
       "norm_label": "herramienta_admin.py \u2014 utilidad solo para el administrador. descifra y muestra e"
     },
     {
@@ -2441,8 +2463,8 @@
       "source_location": "L70",
       "_origin": "ast",
       "id": "herramienta_admin_rationale_70",
-      "community": 6,
-      "community_name": "Community 6",
+      "community": 7,
+      "community_name": "Community 7",
       "norm_label": "true si la referencia usa el formato vigente req-inf-aaaa-nnnn."
     },
     {
@@ -2452,8 +2474,8 @@
       "source_location": "L75",
       "_origin": "ast",
       "id": "herramienta_admin_rationale_75",
-      "community": 6,
-      "community_name": "Community 6",
+      "community": 7,
+      "community_name": "Community 7",
       "norm_label": "elimina los oficios cuya referencia udc usa el formato antiguo     (udc-oficio-a"
     },
     {
@@ -2628,8 +2650,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "parametros",
-      "community": 2,
-      "community_name": "Community 2",
+      "community": 0,
+      "community_name": "Community 0",
       "norm_label": "parametros.py"
     },
     {
@@ -2639,8 +2661,8 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "parametros_leer",
-      "community": 2,
-      "community_name": "Community 2",
+      "community": 0,
+      "community_name": "Community 0",
       "norm_label": "_leer()"
     },
     {
@@ -2650,8 +2672,8 @@
       "source_location": "L46",
       "_origin": "ast",
       "id": "parametros_guardar",
-      "community": 2,
-      "community_name": "Community 2",
+      "community": 0,
+      "community_name": "Community 0",
       "norm_label": "_guardar()"
     },
     {
@@ -2661,8 +2683,8 @@
       "source_location": "L53",
       "_origin": "ast",
       "id": "parametros_analizar_referencia",
-      "community": 2,
-      "community_name": "Community 2",
+      "community": 0,
+      "community_name": "Community 0",
       "norm_label": "analizar_referencia()"
     },
     {
@@ -2672,8 +2694,8 @@
       "source_location": "L74",
       "_origin": "ast",
       "id": "parametros_obtener_secuencial_inicial",
-      "community": 2,
-      "community_name": "Community 2",
+      "community": 0,
+      "community_name": "Community 0",
       "norm_label": "obtener_secuencial_inicial()"
     },
     {
@@ -2683,8 +2705,8 @@
       "source_location": "L84",
       "_origin": "ast",
       "id": "parametros_obtener_referencia_inicial",
-      "community": 2,
-      "community_name": "Community 2",
+      "community": 0,
+      "community_name": "Community 0",
       "norm_label": "obtener_referencia_inicial()"
     },
     {
@@ -2694,8 +2716,8 @@
       "source_location": "L92",
       "_origin": "ast",
       "id": "parametros_esta_configurado",
-      "community": 2,
-      "community_name": "Community 2",
+      "community": 0,
+      "community_name": "Community 0",
       "norm_label": "esta_configurado()"
     },
     {
@@ -2705,8 +2727,8 @@
       "source_location": "L97",
       "_origin": "ast",
       "id": "parametros_definir_secuencial_inicial",
-      "community": 2,
-      "community_name": "Community 2",
+      "community": 0,
+      "community_name": "Community 0",
       "norm_label": "definir_secuencial_inicial()"
     },
     {
@@ -2716,8 +2738,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "parametros_rationale_1",
-      "community": 2,
-      "community_name": "Community 2",
+      "community": 0,
+      "community_name": "Community 0",
       "norm_label": "parametros del sistema (archivo cifrado `datos/parametros.dat`).  hoy guarda un"
     },
     {
@@ -2727,8 +2749,8 @@
       "source_location": "L54",
       "_origin": "ast",
       "id": "parametros_rationale_54",
-      "community": 2,
-      "community_name": "Community 2",
+      "community": 0,
+      "community_name": "Community 0",
       "norm_label": "descompone una referencia udc en (ano, secuencial).      acepta la referencia co"
     },
     {
@@ -2738,8 +2760,8 @@
       "source_location": "L75",
       "_origin": "ast",
       "id": "parametros_rationale_75",
-      "community": 2,
-      "community_name": "Community 2",
+      "community": 0,
+      "community_name": "Community 0",
       "norm_label": "ultimo secuencial ya usado (fuera del sistema) para ese ano.     devuelve 0 si n"
     },
     {
@@ -2749,8 +2771,8 @@
       "source_location": "L85",
       "_origin": "ast",
       "id": "parametros_rationale_85",
-      "community": 2,
-      "community_name": "Community 2",
+      "community": 0,
+      "community_name": "Community 0",
       "norm_label": "referencia configurada tal como se mostraria, o '' si no hay ninguna."
     },
     {
@@ -2760,8 +2782,8 @@
       "source_location": "L98",
       "_origin": "ast",
       "id": "parametros_rationale_98",
-      "community": 2,
-      "community_name": "Community 2",
+      "community": 0,
+      "community_name": "Community 0",
       "norm_label": "fija la ultima referencia registrada antes de usar el sistema.      pueden defin"
     },
     {
@@ -2771,8 +2793,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "permisos",
-      "community": 2,
-      "community_name": "Community 2",
+      "community": 0,
+      "community_name": "Community 0",
       "norm_label": "permisos.py"
     },
     {
@@ -2782,8 +2804,8 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "permisos_chmod",
-      "community": 2,
-      "community_name": "Community 2",
+      "community": 0,
+      "community_name": "Community 0",
       "norm_label": "_chmod()"
     },
     {
@@ -2793,8 +2815,8 @@
       "source_location": "L43",
       "_origin": "ast",
       "id": "permisos_hacer_escribible",
-      "community": 2,
-      "community_name": "Community 2",
+      "community": 0,
+      "community_name": "Community 0",
       "norm_label": "hacer_escribible()"
     },
     {
@@ -2804,8 +2826,8 @@
       "source_location": "L49",
       "_origin": "ast",
       "id": "permisos_proteger",
-      "community": 2,
-      "community_name": "Community 2",
+      "community": 0,
+      "community_name": "Community 0",
       "norm_label": "proteger()"
     },
     {
@@ -2815,8 +2837,8 @@
       "source_location": "L54",
       "_origin": "ast",
       "id": "permisos_proteger_directorio",
-      "community": 2,
-      "community_name": "Community 2",
+      "community": 0,
+      "community_name": "Community 0",
       "norm_label": "proteger_directorio()"
     },
     {
@@ -2826,8 +2848,8 @@
       "source_location": "L59",
       "_origin": "ast",
       "id": "permisos_escribir_bytes_protegido",
-      "community": 2,
-      "community_name": "Community 2",
+      "community": 0,
+      "community_name": "Community 0",
       "norm_label": "escribir_bytes_protegido()"
     },
     {
@@ -2837,8 +2859,8 @@
       "source_location": "L96",
       "_origin": "ast",
       "id": "permisos_anexar_texto",
-      "community": 2,
-      "community_name": "Community 2",
+      "community": 0,
+      "community_name": "Community 0",
       "norm_label": "anexar_texto()"
     },
     {
@@ -2848,8 +2870,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "permisos_rationale_1",
-      "community": 2,
-      "community_name": "Community 2",
+      "community": 0,
+      "community_name": "Community 0",
       "norm_label": "endurecimiento de permisos de los archivos que crea la aplicacion.  objetivo: qu"
     },
     {
@@ -2859,8 +2881,8 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "permisos_rationale_44",
-      "community": 2,
-      "community_name": "Community 2",
+      "community": 0,
+      "community_name": "Community 0",
       "norm_label": "devuelve el permiso de escritura al propietario si el archivo existe."
     },
     {
@@ -2870,8 +2892,8 @@
       "source_location": "L50",
       "_origin": "ast",
       "id": "permisos_rationale_50",
-      "community": 2,
-      "community_name": "Community 2",
+      "community": 0,
+      "community_name": "Community 0",
       "norm_label": "deja el archivo en solo lectura para el propietario (0o400)."
     },
     {
@@ -2881,8 +2903,8 @@
       "source_location": "L55",
       "_origin": "ast",
       "id": "permisos_rationale_55",
-      "community": 2,
-      "community_name": "Community 2",
+      "community": 0,
+      "community_name": "Community 0",
       "norm_label": "restringe una carpeta al propietario (0o700)."
     },
     {
@@ -2892,8 +2914,8 @@
       "source_location": "L60",
       "_origin": "ast",
       "id": "permisos_rationale_60",
-      "community": 2,
-      "community_name": "Community 2",
+      "community": 0,
+      "community_name": "Community 0",
       "norm_label": "escribe el contenido de forma **atomica** y deja el archivo en solo     lectura,"
     },
     {
@@ -2903,8 +2925,8 @@
       "source_location": "L97",
       "_origin": "ast",
       "id": "permisos_rationale_97",
-      "community": 2,
-      "community_name": "Community 2",
+      "community": 0,
+      "community_name": "Community 0",
       "norm_label": "anade una linea al final del archivo, dejandolo escribible.      a diferencia de"
     },
     {
@@ -2936,8 +2958,8 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "registro_actividad_registrar",
-      "community": 0,
-      "community_name": "Community 0",
+      "community": 1,
+      "community_name": "Community 1",
       "norm_label": "registrar()"
     },
     {
@@ -2969,8 +2991,8 @@
       "source_location": "L43",
       "_origin": "ast",
       "id": "registro_actividad_rationale_43",
-      "community": 0,
-      "community_name": "Community 0",
+      "community": 1,
+      "community_name": "Community 1",
       "norm_label": "anade una linea a la bitacora de auditoria.      si la escritura falla, la linea"
     },
     {
@@ -2980,8 +3002,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "respaldo",
-      "community": 9,
-      "community_name": "Community 9",
+      "community": 8,
+      "community_name": "Community 8",
       "norm_label": "respaldo.py"
     },
     {
@@ -2991,8 +3013,8 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "respaldo_ruta_del_dia",
-      "community": 9,
-      "community_name": "Community 9",
+      "community": 8,
+      "community_name": "Community 8",
       "norm_label": "ruta_del_dia()"
     },
     {
@@ -3002,8 +3024,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "date",
-      "community": 9,
-      "community_name": "Community 9",
+      "community": 8,
+      "community_name": "Community 8",
       "norm_label": "date"
     },
     {
@@ -3013,8 +3035,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "respaldo_py_path",
-      "community": 9,
-      "community_name": "Community 9",
+      "community": 8,
+      "community_name": "Community 8",
       "norm_label": "path"
     },
     {
@@ -3024,8 +3046,8 @@
       "source_location": "L43",
       "_origin": "ast",
       "id": "respaldo_existe_del_dia",
-      "community": 9,
-      "community_name": "Community 9",
+      "community": 8,
+      "community_name": "Community 8",
       "norm_label": "existe_del_dia()"
     },
     {
@@ -3035,8 +3057,8 @@
       "source_location": "L47",
       "_origin": "ast",
       "id": "respaldo_archivos_a_respaldar",
-      "community": 9,
-      "community_name": "Community 9",
+      "community": 8,
+      "community_name": "Community 8",
       "norm_label": "_archivos_a_respaldar()"
     },
     {
@@ -3046,8 +3068,8 @@
       "source_location": "L59",
       "_origin": "ast",
       "id": "respaldo_listar_respaldos",
-      "community": 9,
-      "community_name": "Community 9",
+      "community": 8,
+      "community_name": "Community 8",
       "norm_label": "listar_respaldos()"
     },
     {
@@ -3057,8 +3079,8 @@
       "source_location": "L66",
       "_origin": "ast",
       "id": "respaldo_purgar_antiguos",
-      "community": 9,
-      "community_name": "Community 9",
+      "community": 8,
+      "community_name": "Community 8",
       "norm_label": "purgar_antiguos()"
     },
     {
@@ -3068,8 +3090,8 @@
       "source_location": "L88",
       "_origin": "ast",
       "id": "respaldo_crear_respaldo",
-      "community": 9,
-      "community_name": "Community 9",
+      "community": 8,
+      "community_name": "Community 8",
       "norm_label": "crear_respaldo()"
     },
     {
@@ -3079,8 +3101,8 @@
       "source_location": "L130",
       "_origin": "ast",
       "id": "respaldo_crear_respaldo_silencioso",
-      "community": 9,
-      "community_name": "Community 9",
+      "community": 8,
+      "community_name": "Community 8",
       "norm_label": "crear_respaldo_silencioso()"
     },
     {
@@ -3090,8 +3112,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "respaldo_rationale_1",
-      "community": 9,
-      "community_name": "Community 9",
+      "community": 8,
+      "community_name": "Community 8",
       "norm_label": "copia de seguridad automatica de los datos, integrada en la aplicacion.  por que"
     },
     {
@@ -3101,8 +3123,8 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "respaldo_rationale_48",
-      "community": 9,
-      "community_name": "Community 9",
+      "community": 8,
+      "community_name": "Community 8",
       "norm_label": "archivos de `datos/` que entran en el respaldo (sin pdf ni temporales)."
     },
     {
@@ -3112,8 +3134,8 @@
       "source_location": "L60",
       "_origin": "ast",
       "id": "respaldo_rationale_60",
-      "community": 9,
-      "community_name": "Community 9",
+      "community": 8,
+      "community_name": "Community 8",
       "norm_label": "respaldos existentes, del mas reciente al mas antiguo."
     },
     {
@@ -3123,8 +3145,8 @@
       "source_location": "L67",
       "_origin": "ast",
       "id": "respaldo_rationale_67",
-      "community": 9,
-      "community_name": "Community 9",
+      "community": 8,
+      "community_name": "Community 8",
       "norm_label": "elimina los respaldos con mas de `dias` de antiguedad.     devuelve cuantos se e"
     },
     {
@@ -3134,8 +3156,8 @@
       "source_location": "L90",
       "_origin": "ast",
       "id": "respaldo_rationale_90",
-      "community": 9,
-      "community_name": "Community 9",
+      "community": 8,
+      "community_name": "Community 8",
       "norm_label": "crea el respaldo del dia si aun no existe.      devuelve la ruta del archivo cre"
     },
     {
@@ -3145,8 +3167,8 @@
       "source_location": "L132",
       "_origin": "ast",
       "id": "respaldo_rationale_132",
-      "community": 9,
-      "community_name": "Community 9",
+      "community": 8,
+      "community_name": "Community 8",
       "norm_label": "version para ejecutar al abrir la aplicacion: nunca lanza errores.      un fallo"
     },
     {
@@ -3156,8 +3178,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "respaldo_datos",
-      "community": 16,
-      "community_name": "Community 16",
+      "community": 17,
+      "community_name": "Community 17",
       "norm_label": "respaldo_datos.ps1"
     },
     {
@@ -3167,8 +3189,8 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "respaldo_datos_escribir_registro",
-      "community": 16,
-      "community_name": "Community 16",
+      "community": 17,
+      "community_name": "Community 17",
       "norm_label": "escribir-registro()"
     },
     {
@@ -3178,8 +3200,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "visor_pdf",
-      "community": 8,
-      "community_name": "Community 8",
+      "community": 6,
+      "community_name": "Community 6",
       "norm_label": "visor_pdf.py"
     },
     {
@@ -3189,8 +3211,8 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "visor_pdf_abrir_con_sistema",
-      "community": 8,
-      "community_name": "Community 8",
+      "community": 6,
+      "community_name": "Community 6",
       "norm_label": "abrir_con_sistema()"
     },
     {
@@ -3200,8 +3222,8 @@
       "source_location": "L56",
       "_origin": "ast",
       "id": "visor_pdf_visorpdf",
-      "community": 8,
-      "community_name": "Community 8",
+      "community": 6,
+      "community_name": "Community 6",
       "norm_label": "visorpdf"
     },
     {
@@ -3211,8 +3233,8 @@
       "source_location": "L61",
       "_origin": "ast",
       "id": "visor_pdf_visorpdf_init",
-      "community": 8,
-      "community_name": "Community 8",
+      "community": 6,
+      "community_name": "Community 6",
       "norm_label": ".__init__()"
     },
     {
@@ -3222,8 +3244,8 @@
       "source_location": "L83",
       "_origin": "ast",
       "id": "visor_pdf_visorpdf_construir_barra",
-      "community": 8,
-      "community_name": "Community 8",
+      "community": 6,
+      "community_name": "Community 6",
       "norm_label": "._construir_barra()"
     },
     {
@@ -3233,8 +3255,8 @@
       "source_location": "L106",
       "_origin": "ast",
       "id": "visor_pdf_visorpdf_construir_lienzo",
-      "community": 8,
-      "community_name": "Community 8",
+      "community": 6,
+      "community_name": "Community 6",
       "norm_label": "._construir_lienzo()"
     },
     {
@@ -3244,8 +3266,8 @@
       "source_location": "L131",
       "_origin": "ast",
       "id": "visor_pdf_visorpdf_pagina_anterior",
-      "community": 8,
-      "community_name": "Community 8",
+      "community": 6,
+      "community_name": "Community 6",
       "norm_label": ".pagina_anterior()"
     },
     {
@@ -3255,8 +3277,8 @@
       "source_location": "L136",
       "_origin": "ast",
       "id": "visor_pdf_visorpdf_pagina_siguiente",
-      "community": 8,
-      "community_name": "Community 8",
+      "community": 6,
+      "community_name": "Community 6",
       "norm_label": ".pagina_siguiente()"
     },
     {
@@ -3266,8 +3288,8 @@
       "source_location": "L141",
       "_origin": "ast",
       "id": "visor_pdf_visorpdf_acercar",
-      "community": 8,
-      "community_name": "Community 8",
+      "community": 6,
+      "community_name": "Community 6",
       "norm_label": ".acercar()"
     },
     {
@@ -3277,8 +3299,8 @@
       "source_location": "L145",
       "_origin": "ast",
       "id": "visor_pdf_visorpdf_alejar",
-      "community": 8,
-      "community_name": "Community 8",
+      "community": 6,
+      "community_name": "Community 6",
       "norm_label": ".alejar()"
     },
     {
@@ -3288,8 +3310,8 @@
       "source_location": "L150",
       "_origin": "ast",
       "id": "visor_pdf_visorpdf_dibujar_pagina",
-      "community": 8,
-      "community_name": "Community 8",
+      "community": 6,
+      "community_name": "Community 6",
       "norm_label": "._dibujar_pagina()"
     },
     {
@@ -3299,8 +3321,8 @@
       "source_location": "L171",
       "_origin": "ast",
       "id": "visor_pdf_visorpdf_centrar_pagina",
-      "community": 8,
-      "community_name": "Community 8",
+      "community": 6,
+      "community_name": "Community 6",
       "norm_label": "._centrar_pagina()"
     },
     {
@@ -3310,8 +3332,8 @@
       "source_location": "L189",
       "_origin": "ast",
       "id": "visor_pdf_visorpdf_destroy",
-      "community": 8,
-      "community_name": "Community 8",
+      "community": 6,
+      "community_name": "Community 6",
       "norm_label": ".destroy()"
     },
     {
@@ -3321,8 +3343,8 @@
       "source_location": "L203",
       "_origin": "ast",
       "id": "visor_pdf_abrir_visor",
-      "community": 8,
-      "community_name": "Community 8",
+      "community": 6,
+      "community_name": "Community 6",
       "norm_label": "abrir_visor()"
     },
     {
@@ -3332,8 +3354,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "visor_pdf_rationale_1",
-      "community": 8,
-      "community_name": "Community 8",
+      "community": 6,
+      "community_name": "Community 6",
       "norm_label": "visor de pdf integrado en la aplicacion (para ver la respuesta de un oficio sin"
     },
     {
@@ -3343,8 +3365,8 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "visor_pdf_rationale_42",
-      "community": 8,
-      "community_name": "Community 8",
+      "community": 6,
+      "community_name": "Community 6",
       "norm_label": "abre el pdf con el lector predeterminado del sistema operativo.     alternativa"
     },
     {
@@ -3354,8 +3376,8 @@
       "source_location": "L57",
       "_origin": "ast",
       "id": "visor_pdf_rationale_57",
-      "community": 8,
-      "community_name": "Community 8",
+      "community": 6,
+      "community_name": "Community 6",
       "norm_label": "ventana con el pdf renderizado pagina a pagina."
     },
     {
@@ -3365,8 +3387,8 @@
       "source_location": "L172",
       "_origin": "ast",
       "id": "visor_pdf_rationale_172",
-      "community": 8,
-      "community_name": "Community 8",
+      "community": 6,
+      "community_name": "Community 6",
       "norm_label": "centra horizontalmente la pagina dentro del lienzo (y verticalmente         si s"
     },
     {
@@ -3376,8 +3398,8 @@
       "source_location": "L204",
       "_origin": "ast",
       "id": "visor_pdf_rationale_204",
-      "community": 8,
-      "community_name": "Community 8",
+      "community": 6,
+      "community_name": "Community 6",
       "norm_label": "abre el pdf dentro de la aplicacion.      devuelve true si se mostro en la app;"
     }
   ],
@@ -7457,7 +7479,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L112",
+      "source_location": "L131",
       "weight": 1.0,
       "_origin": "ast",
       "source": "autenticacion",
@@ -7468,7 +7490,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L276",
+      "source_location": "L283",
       "weight": 1.0,
       "_origin": "ast",
       "source": "autenticacion",
@@ -7479,7 +7501,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L57",
+      "source_location": "L76",
       "weight": 1.0,
       "_origin": "ast",
       "source": "autenticacion",
@@ -7490,7 +7512,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L125",
+      "source_location": "L144",
       "weight": 1.0,
       "_origin": "ast",
       "source": "autenticacion",
@@ -7501,7 +7523,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L169",
+      "source_location": "L180",
       "weight": 1.0,
       "_origin": "ast",
       "source": "autenticacion",
@@ -7512,7 +7534,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L215",
+      "source_location": "L222",
       "weight": 1.0,
       "_origin": "ast",
       "source": "autenticacion",
@@ -7523,7 +7545,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L120",
+      "source_location": "L139",
       "weight": 1.0,
       "_origin": "ast",
       "source": "autenticacion",
@@ -7556,7 +7578,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L281",
+      "source_location": "L288",
       "weight": 1.0,
       "_origin": "ast",
       "source": "autenticacion",
@@ -7578,7 +7600,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L61",
+      "source_location": "L80",
       "weight": 1.0,
       "_origin": "ast",
       "source": "autenticacion",
@@ -7589,7 +7611,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L251",
+      "source_location": "L258",
       "weight": 1.0,
       "_origin": "ast",
       "source": "autenticacion",
@@ -7611,7 +7633,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L238",
+      "source_location": "L245",
       "weight": 1.0,
       "_origin": "ast",
       "source": "autenticacion",
@@ -7622,7 +7644,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L78",
+      "source_location": "L97",
       "weight": 1.0,
       "_origin": "ast",
       "source": "autenticacion",
@@ -7633,11 +7655,22 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L91",
+      "source_location": "L110",
       "weight": 1.0,
       "_origin": "ast",
       "source": "autenticacion",
       "target": "autenticacion_validar_gestion_de_superusuario",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "autenticacion.py",
+      "source_location": "L60",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "autenticacion",
+      "target": "autenticacion_validar_rol_asignable",
       "confidence_score": 1.0
     },
     {
@@ -7776,7 +7809,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L135",
+      "source_location": "L154",
       "weight": 1.0,
       "_origin": "ast",
       "source": "autenticacion_crear_usuario",
@@ -7788,7 +7821,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L178",
+      "source_location": "L189",
       "weight": 1.0,
       "_origin": "ast",
       "source": "autenticacion_editar_usuario",
@@ -7800,7 +7833,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L222",
+      "source_location": "L229",
       "weight": 1.0,
       "_origin": "ast",
       "source": "autenticacion_eliminar_usuario",
@@ -7812,7 +7845,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L121",
+      "source_location": "L140",
       "weight": 1.0,
       "_origin": "ast",
       "source": "autenticacion_existe_algun_usuario",
@@ -7836,7 +7869,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L283",
+      "source_location": "L290",
       "weight": 1.0,
       "_origin": "ast",
       "source": "autenticacion_listar_usuarios",
@@ -7848,7 +7881,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L263",
+      "source_location": "L270",
       "weight": 1.0,
       "_origin": "ast",
       "source": "autenticacion_restablecer_clave",
@@ -7860,7 +7893,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L240",
+      "source_location": "L247",
       "weight": 1.0,
       "_origin": "ast",
       "source": "autenticacion_validar_acceso",
@@ -7872,7 +7905,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L161",
+      "source_location": "L172",
       "weight": 1.0,
       "_origin": "ast",
       "source": "autenticacion_crear_usuario",
@@ -7884,7 +7917,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L209",
+      "source_location": "L216",
       "weight": 1.0,
       "_origin": "ast",
       "source": "autenticacion_editar_usuario",
@@ -7896,7 +7929,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L234",
+      "source_location": "L241",
       "weight": 1.0,
       "_origin": "ast",
       "source": "autenticacion_eliminar_usuario",
@@ -7932,35 +7965,11 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L271",
+      "source_location": "L278",
       "weight": 1.0,
       "_origin": "ast",
       "source": "autenticacion_restablecer_clave",
       "target": "autenticacion_guardar_usuarios",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "autenticacion.py",
-      "source_location": "L143",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "autenticacion_crear_usuario",
-      "target": "autenticacion_roles_asignables",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "autenticacion.py",
-      "source_location": "L192",
-      "weight": 1.0,
-      "_origin": "ast",
-      "source": "autenticacion_editar_usuario",
-      "target": "autenticacion_roles_asignables",
       "confidence_score": 1.0
     },
     {
@@ -7979,7 +7988,54 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L105",
+      "source_location": "L63",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "autenticacion_validar_rol_asignable",
+      "target": "autenticacion_roles_asignables",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "autenticacion.py",
+      "source_location": "L162",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "autenticacion_crear_usuario",
+      "target": "autenticacion_validar_rol_asignable",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "autenticacion.py",
+      "source_location": "L203",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "autenticacion_editar_usuario",
+      "target": "autenticacion_validar_rol_asignable",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "autenticacion.py",
+      "source_location": "L61",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "autenticacion_rationale_61",
+      "target": "autenticacion_validar_rol_asignable",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "autenticacion.py",
+      "source_location": "L124",
       "weight": 1.0,
       "_origin": "ast",
       "source": "autenticacion_validar_gestion_de_superusuario",
@@ -7990,10 +8046,10 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L63",
+      "source_location": "L82",
       "weight": 1.0,
       "_origin": "ast",
-      "source": "autenticacion_rationale_63",
+      "source": "autenticacion_rationale_82",
       "target": "autenticacion_puede_gestionar_a",
       "confidence_score": 1.0
     },
@@ -8002,7 +8058,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L81",
+      "source_location": "L100",
       "weight": 1.0,
       "_origin": "ast",
       "source": "autenticacion_validar_alcance",
@@ -8014,7 +8070,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L184",
+      "source_location": "L195",
       "weight": 1.0,
       "_origin": "ast",
       "source": "autenticacion_editar_usuario",
@@ -8026,7 +8082,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L227",
+      "source_location": "L234",
       "weight": 1.0,
       "_origin": "ast",
       "source": "autenticacion_eliminar_usuario",
@@ -8037,10 +8093,10 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L80",
+      "source_location": "L99",
       "weight": 1.0,
       "_origin": "ast",
-      "source": "autenticacion_rationale_80",
+      "source": "autenticacion_rationale_99",
       "target": "autenticacion_validar_alcance",
       "confidence_score": 1.0
     },
@@ -8049,7 +8105,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L268",
+      "source_location": "L275",
       "weight": 1.0,
       "_origin": "ast",
       "source": "autenticacion_restablecer_clave",
@@ -8061,7 +8117,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L198",
+      "source_location": "L205",
       "weight": 1.0,
       "_origin": "ast",
       "source": "autenticacion_editar_usuario",
@@ -8073,7 +8129,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L229",
+      "source_location": "L236",
       "weight": 1.0,
       "_origin": "ast",
       "source": "autenticacion_eliminar_usuario",
@@ -8084,10 +8140,10 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L93",
+      "source_location": "L112",
       "weight": 1.0,
       "_origin": "ast",
-      "source": "autenticacion_rationale_93",
+      "source": "autenticacion_rationale_112",
       "target": "autenticacion_validar_gestion_de_superusuario",
       "confidence_score": 1.0
     },
@@ -8096,7 +8152,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L136",
+      "source_location": "L155",
       "weight": 1.0,
       "_origin": "ast",
       "source": "autenticacion_crear_usuario",
@@ -8108,7 +8164,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L179",
+      "source_location": "L190",
       "weight": 1.0,
       "_origin": "ast",
       "source": "autenticacion_editar_usuario",
@@ -8120,7 +8176,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L223",
+      "source_location": "L230",
       "weight": 1.0,
       "_origin": "ast",
       "source": "autenticacion_eliminar_usuario",
@@ -8132,7 +8188,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L264",
+      "source_location": "L271",
       "weight": 1.0,
       "_origin": "ast",
       "source": "autenticacion_restablecer_clave",
@@ -8143,7 +8199,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L124",
+      "source_location": "L143",
       "weight": 1.0,
       "context": "decorator",
       "_origin": "ast",
@@ -8157,7 +8213,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "autenticacion.py",
-      "source_location": "L153",
+      "source_location": "L164",
       "weight": 1.0,
       "_origin": "ast",
       "source": "autenticacion_crear_usuario",
@@ -8169,7 +8225,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "autenticacion.py",
-      "source_location": "L162",
+      "source_location": "L173",
       "weight": 1.0,
       "_origin": "ast",
       "source": "autenticacion_crear_usuario",
@@ -8179,10 +8235,10 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L128",
+      "source_location": "L147",
       "weight": 1.0,
       "_origin": "ast",
-      "source": "autenticacion_rationale_128",
+      "source": "autenticacion_rationale_147",
       "target": "autenticacion_crear_usuario",
       "confidence_score": 1.0
     },
@@ -8190,7 +8246,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L168",
+      "source_location": "L179",
       "weight": 1.0,
       "context": "decorator",
       "_origin": "ast",
@@ -8204,7 +8260,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "autenticacion.py",
-      "source_location": "L204",
+      "source_location": "L211",
       "weight": 1.0,
       "_origin": "ast",
       "source": "autenticacion_editar_usuario",
@@ -8216,7 +8272,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "autenticacion.py",
-      "source_location": "L210",
+      "source_location": "L217",
       "weight": 1.0,
       "_origin": "ast",
       "source": "autenticacion_editar_usuario",
@@ -8226,10 +8282,10 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L172",
+      "source_location": "L183",
       "weight": 1.0,
       "_origin": "ast",
-      "source": "autenticacion_rationale_172",
+      "source": "autenticacion_rationale_183",
       "target": "autenticacion_editar_usuario",
       "confidence_score": 1.0
     },
@@ -8237,7 +8293,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L214",
+      "source_location": "L221",
       "weight": 1.0,
       "context": "decorator",
       "_origin": "ast",
@@ -8251,7 +8307,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "autenticacion.py",
-      "source_location": "L235",
+      "source_location": "L242",
       "weight": 1.0,
       "_origin": "ast",
       "source": "autenticacion_eliminar_usuario",
@@ -8261,10 +8317,10 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L216",
+      "source_location": "L223",
       "weight": 1.0,
       "_origin": "ast",
-      "source": "autenticacion_rationale_216",
+      "source": "autenticacion_rationale_223",
       "target": "autenticacion_eliminar_usuario",
       "confidence_score": 1.0
     },
@@ -8273,7 +8329,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L241",
+      "source_location": "L248",
       "weight": 1.0,
       "_origin": "ast",
       "source": "autenticacion_validar_acceso",
@@ -8286,7 +8342,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "autenticacion.py",
-      "source_location": "L242",
+      "source_location": "L249",
       "weight": 1.0,
       "_origin": "ast",
       "source": "autenticacion_validar_acceso",
@@ -8296,10 +8352,10 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L253",
+      "source_location": "L260",
       "weight": 1.0,
       "_origin": "ast",
-      "source": "autenticacion_rationale_253",
+      "source": "autenticacion_rationale_260",
       "target": "autenticacion_restablecer_clave",
       "confidence_score": 1.0
     },
@@ -8307,7 +8363,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L250",
+      "source_location": "L257",
       "weight": 1.0,
       "context": "decorator",
       "_origin": "ast",
@@ -8321,7 +8377,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "autenticacion.py",
-      "source_location": "L270",
+      "source_location": "L277",
       "weight": 1.0,
       "_origin": "ast",
       "source": "autenticacion_restablecer_clave",
@@ -8333,7 +8389,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "autenticacion.py",
-      "source_location": "L272",
+      "source_location": "L279",
       "weight": 1.0,
       "_origin": "ast",
       "source": "autenticacion_restablecer_clave",
@@ -8345,7 +8401,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "autenticacion.py",
-      "source_location": "L278",
+      "source_location": "L285",
       "weight": 1.0,
       "_origin": "ast",
       "source": "autenticacion_cerrar_sesion",
@@ -8355,10 +8411,10 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "autenticacion.py",
-      "source_location": "L277",
+      "source_location": "L284",
       "weight": 1.0,
       "_origin": "ast",
-      "source": "autenticacion_rationale_277",
+      "source": "autenticacion_rationale_284",
       "target": "autenticacion_cerrar_sesion",
       "confidence_score": 1.0
     },
@@ -10765,5 +10821,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "344b71a1b2ac07d3c0c49c59114dafa842891b72"
+  "built_at_commit": "c97da08268b9d04ea001d8990f52e5678c8f7b62"
 }
