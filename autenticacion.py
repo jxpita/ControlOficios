@@ -280,6 +280,33 @@ def restablecer_clave(usuario: str, actor: str, actor_rol: str,
         "RESTABLECER_CLAVE", f"usuario={objetivo['usuario']}", actor)
 
 
+@bloqueo.con_bloqueo("credenciales")
+def cambiar_clave_propia(usuario: str, clave_actual: str,
+                         nueva_clave: str) -> None:
+    """Cada usuario cambia SU PROPIA contraseña, sea cual sea su rol.
+
+    Se exige la contraseña actual: así, si alguien encuentra una sesión abierta
+    y sin vigilancia, no puede cambiarla y dejar fuera a su dueño. Solo se
+    modifica la contraseña; el nombre y el rol los gestiona un administrador o
+    el superusuario.
+    """
+    if not nueva_clave:
+        raise ValueError("La nueva contraseña no puede estar vacía.")
+
+    usuarios = _leer_usuarios()
+    objetivo = _buscar(usuarios, usuario)
+    if objetivo is None:
+        raise ValueError("No se encontró el usuario indicado.")
+    if not verificar_clave(clave_actual, objetivo["sal"], objetivo["hash"]):
+        raise ValueError("La contraseña actual no es correcta.")
+
+    objetivo["sal"], objetivo["hash"] = generar_hash_clave(nueva_clave)
+    _guardar_usuarios(usuarios)
+    registro_actividad.registrar(
+        "CAMBIAR_CLAVE_PROPIA", f"usuario={objetivo['usuario']}",
+        objetivo["usuario"])
+
+
 def cerrar_sesion(usuario: str) -> None:
     """Registra en la bitácora el cierre de sesión del usuario."""
     registro_actividad.registrar("CIERRE_SESION", f"usuario={usuario}", usuario)

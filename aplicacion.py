@@ -358,14 +358,101 @@ class AplicacionPrincipal(ttk.Frame):
                               activebackground="#DDE3EC", activeforeground=COLOR_AZUL,
                               font=("Helvetica", 10, "bold"), padx=14, pady=6,
                               bd=0, highlightthickness=0, takefocus=0)
-        btn_salir.pack(side="right", padx=15, pady=10)
+        btn_salir.pack(side="right", padx=(6, 15), pady=10)
         btn_salir.bind("<Enter>", lambda e: btn_salir.config(bg="#DDE3EC"))
         btn_salir.bind("<Leave>", lambda e: btn_salir.config(bg=COLOR_BLANCO))
+
+        # Cambiar la propia contraseña: disponible para cualquier rol.
+        btn_clave = tk.Button(cabecera, text="Cambiar contraseña",
+                              command=self._cambiar_clave_propia,
+                              bg=COLOR_BLANCO, fg=COLOR_AZUL, relief="flat",
+                              cursor="hand2", activebackground="#DDE3EC",
+                              activeforeground=COLOR_AZUL,
+                              font=("Helvetica", 10, "bold"), padx=14, pady=6,
+                              bd=0, highlightthickness=0, takefocus=0)
+        btn_clave.pack(side="right", pady=10)
+        btn_clave.bind("<Enter>", lambda e: btn_clave.config(bg="#DDE3EC"))
+        btn_clave.bind("<Leave>", lambda e: btn_clave.config(bg=COLOR_BLANCO))
 
         # Título de la aplicación
         lbl_app = tk.Label(cabecera, text="Control de Oficios — Unidad de Cumplimiento",
                            font=("Arial", 14), fg=COLOR_BLANCO, bg=COLOR_AZUL)
         lbl_app.pack(side="right", padx=20, pady=10)
+
+    def _cambiar_clave_propia(self):
+        """Diálogo para que el usuario en sesión cambie su propia contraseña.
+        Disponible para cualquier rol; pide la contraseña actual."""
+        dlg = tk.Toplevel(self)
+        dlg.title("Cambiar contraseña")
+        dlg.configure(bg=COLOR_BLANCO)
+        dlg.resizable(False, False)
+        dlg.transient(self.winfo_toplevel())
+        if ARCHIVO_ICONO.exists():
+            try:
+                dlg.iconbitmap(str(ARCHIVO_ICONO))
+            except tk.TclError:
+                pass
+
+        cont = tk.Frame(dlg, bg=COLOR_BLANCO, padx=20, pady=16)
+        cont.pack(fill="both", expand=True)
+        tk.Label(cont, text="Cambiar mi contraseña", bg=COLOR_BLANCO,
+                 fg=COLOR_TEXTO, font=("Helvetica", 11, "bold")).pack(anchor="w")
+        tk.Label(cont, text=f"{self.usuario['nombre']} ({self.usuario['usuario']})",
+                 bg=COLOR_BLANCO, fg="#6B7280",
+                 font=("Helvetica", 9)).pack(anchor="w", pady=(0, 12))
+
+        campos = {}
+        for clave, etiqueta in (("actual", "Contraseña actual"),
+                                ("nueva", "Nueva contraseña"),
+                                ("confirmar", "Confirmar nueva contraseña")):
+            tk.Label(cont, text=etiqueta, bg=COLOR_BLANCO,
+                     fg=COLOR_TEXTO).pack(anchor="w")
+            entrada = ttk.Entry(cont, width=32, show="•")
+            entrada.pack(fill="x", pady=(0, 8))
+            campos[clave] = entrada
+
+        var = tk.BooleanVar(value=False)
+
+        def alternar():
+            for entrada in campos.values():
+                entrada.config(show="" if var.get() else "•")
+
+        tk.Checkbutton(cont, text="Mostrar contraseñas", variable=var,
+                       command=alternar, bg=COLOR_BLANCO, fg="#6B7280",
+                       activebackground=COLOR_BLANCO, selectcolor=COLOR_BLANCO,
+                       font=("Helvetica", 9), cursor="hand2", bd=0,
+                       highlightthickness=0).pack(anchor="w", pady=(0, 12))
+
+        def aceptar():
+            if campos["nueva"].get() != campos["confirmar"].get():
+                messagebox.showerror("Error", "Las contraseñas no coinciden.", parent=dlg)
+                return
+            try:
+                autenticacion.cambiar_clave_propia(
+                    self.usuario["usuario"], campos["actual"].get(),
+                    campos["nueva"].get())
+            except ValueError as error:
+                messagebox.showerror("Error", str(error), parent=dlg)
+                return
+            dlg.destroy()
+            messagebox.showinfo("Listo", "Su contraseña se cambió correctamente.")
+
+        barra = tk.Frame(cont, bg=COLOR_BLANCO)
+        barra.pack(fill="x")
+        tk.Button(barra, text="Cambiar", command=aceptar, bg=COLOR_AZUL,
+                  fg=COLOR_BLANCO, activebackground="#1A2E5A",
+                  activeforeground=COLOR_BLANCO, relief="flat", cursor="hand2",
+                  font=("Helvetica", 10, "bold"), padx=12, pady=5).pack(side="right")
+        tk.Button(barra, text="Cancelar", command=dlg.destroy, relief="flat",
+                  cursor="hand2", font=("Helvetica", 10),
+                  padx=12, pady=5).pack(side="right", padx=6)
+
+        campos["actual"].bind("<Return>", lambda e: campos["nueva"].focus_set())
+        campos["nueva"].bind("<Return>", lambda e: campos["confirmar"].focus_set())
+        campos["confirmar"].bind("<Return>", lambda e: aceptar())
+        dlg.update_idletasks()
+        dlg.grab_set()
+        campos["actual"].focus_set()
 
     def _cerrar_sesion(self):
         """Cierra la sesión actual y vuelve a la pantalla de ingreso."""

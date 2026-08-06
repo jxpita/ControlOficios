@@ -118,7 +118,14 @@ Ambas reglas se aplican a crear, editar, eliminar y restablecer contraseñas, y
 se validan en el almacenamiento (no solo en la interfaz). El **último
 superusuario** nunca puede eliminarse ni degradarse.
 
-**Restablecer contraseñas:** un gestor selecciona al usuario y pulsa
+**Cambiar la contraseña propia:** cualquier usuario, sea cual sea su rol,
+puede cambiar **su propia contraseña** desde el botón *"Cambiar contraseña"* de
+la cabecera. Se le pide la contraseña actual, para que nadie que encuentre una
+sesión abierta pueda cambiarla y dejar fuera a su dueño. Solo se modifica la
+contraseña: el nombre y el rol los sigue gestionando un administrador o el
+superusuario.
+
+**Restablecer contraseñas (de otro usuario):** un gestor selecciona al usuario y pulsa
 "Restablecer contraseña"; se abre un diálogo para escribir la nueva clave (la
 idea es cederle el teclado al usuario). Así un administrador que olvidó su
 contraseña puede ser ayudado por el superusuario u otro administrador. La
