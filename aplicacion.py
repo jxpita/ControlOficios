@@ -1212,7 +1212,28 @@ class AplicacionPrincipal(ttk.Frame):
         marco = self.pestana_configuracion
 
         ttk.Label(marco, text="Configuración del sistema",
-                  font=("Helvetica", 13, "bold")).pack(anchor="w", pady=(0, 12))
+                  font=("Helvetica", 13, "bold")).pack(anchor="w", pady=(0, 8))
+
+        # Diagnóstico: qué carpeta de datos se está usando realmente. Evita la
+        # confusión de creer que se comparten los datos cuando en realidad cada
+        # carpeta de versión está usando la suya.
+        marco_ruta = ttk.LabelFrame(marco, text=" Carpeta de datos en uso ", padding=(12, 6))
+        marco_ruta.pack(fill="x", pady=(0, 12))
+        ttk.Label(marco_ruta, text=str(configuracion.DIR_DATOS),
+                  font=("Helvetica", 9, "bold"), wraplength=760,
+                  justify="left").pack(anchor="w")
+        if configuracion.DIR_DATOS.parent == configuracion.DIR_BASE:
+            detalle = ("Se está usando la carpeta contigua al ejecutable. Para "
+                       "compartir los datos entre versiones, cree junto al "
+                       f"ejecutable un archivo '{configuracion.ARCHIVO_RUTA_DATOS}' "
+                       "con la ruta de la carpeta compartida.")
+            color = "#b45309"
+        else:
+            detalle = "Carpeta configurada fuera del ejecutable (uso compartido)."
+            color = "#15803d"
+        ttk.Label(marco_ruta, text=detalle, foreground=color,
+                  font=("Helvetica", 8), wraplength=760,
+                  justify="left").pack(anchor="w", pady=(2, 0))
 
         panel = ttk.LabelFrame(marco, text=" Secuencial inicial de la Referencia UDC ",
                                padding=12)
