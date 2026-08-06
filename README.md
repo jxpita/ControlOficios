@@ -8,6 +8,11 @@ Todos los nombres de archivos, funciones y variables están en español. Solo
 permanecen en inglés las palabras propias de Python y de las librerías
 (`def`, `class`, `import`, `ttk`, `.pack()`, etc.), que no se pueden traducir.
 
+Este README documenta la aplicación desde el punto de vista técnico. Para las
+personas que la usan a diario está el archivo
+**`Manual de usuario - Control de Oficios.docx`**, escrito por roles (usuario,
+administrador y superusuario) y pensado para repartirse dentro del área.
+
 ## 1. Requisitos
 
 - Python 3.9 o superior (recomendado 3.11+).
