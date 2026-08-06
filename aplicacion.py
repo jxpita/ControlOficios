@@ -1226,8 +1226,6 @@ class AplicacionPrincipal(ttk.Frame):
         self._refrescar_responsables()
 
     def _restablecer_clave_seleccionado(self):
-        """El gestor selecciona un usuario y le cede el teclado para que escriba
-        su nueva contraseña (recuperación de contraseña)."""
         seleccion = self.tabla_usuarios.selection()
         if not seleccion:
             messagebox.showwarning("Sin selección", "Seleccione un usuario de la lista.")
@@ -1265,9 +1263,7 @@ class AplicacionPrincipal(ttk.Frame):
         cont.pack(fill="both", expand=True)
         tk.Label(cont, text=f"Nueva contraseña para:\n{usuario_texto}", bg=COLOR_BLANCO,
                  fg=COLOR_TEXTO, justify="left", font=("Helvetica", 10, "bold")).pack(anchor="w")
-        tk.Label(cont, text="Cédale el teclado al usuario para que la escriba.",
-                 bg=COLOR_BLANCO, fg="#6B7280", font=("Helvetica", 8)).pack(anchor="w", pady=(0, 10))
-
+        
         tk.Label(cont, text="Contraseña", bg=COLOR_BLANCO, fg=COLOR_TEXTO).pack(anchor="w")
         e1 = ttk.Entry(cont, width=30, show="•")
         e1.pack(fill="x", pady=(0, 8))
@@ -1396,8 +1392,7 @@ class AplicacionPrincipal(ttk.Frame):
                  "vez que alguien la abre. Se guardan en datos\\respaldos y se "
                  "conservan los últimos "
                  f"{DIAS_RESPALDO_POR_DEFECTO} días.\n"
-                 "No incluyen los PDF de respuesta (pesan mucho y no cambian una "
-                 "vez cargados)."
+                 "No se incluyen los PDF de respuesta."
         ).pack(anchor="w", pady=(0, 8))
 
         self.lbl_respaldos = ttk.Label(panel, text="", font=("Helvetica", 9))
