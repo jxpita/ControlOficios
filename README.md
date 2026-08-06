@@ -636,8 +636,8 @@ creó, no se repite.
 - Se conservan los últimos **30 días**; las más antiguas se eliminan solas.
 - Incluyen los archivos pequeños y críticos: `oficios.dat`,
   `credenciales.dat`, `parametros.dat`, `clave_maestra.key` y `actividad.log`.
-- **No incluyen los PDF de respuesta** (pesan mucho y no cambian una vez
-  cargados) ni los archivos temporales, de bloqueo o `.bak`.
+- **No incluyen los PDF de respuesta** ni los archivos temporales, de bloqueo
+  o `.bak`.
 - Se ejecuta **en segundo plano**: la ventana abre sin esperar. Si el respaldo
   falla, queda anotado en la bitácora (`RESPALDO_FALLIDO`) pero **nunca impide
   usar la aplicación**.
