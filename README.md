@@ -525,6 +525,81 @@ redactar.
 automática de la carpeta `datos/`**. Cubre concurrencia, borrado accidental,
 disco dañado y errores humanos; es la medida más rentable de todas.
 
+## 4.2 Despliegue en una carpeta compartida (varias personas)
+
+### Dónde viven los datos
+
+Por omisión la aplicación usa la carpeta `datos/` **junto al ejecutable**. Para
+un uso compartido conviene **separarlos**, de modo que varias versiones de la
+aplicación compartan una única carpeta de datos. Hay dos formas, y la primera
+tiene prioridad:
+
+1. La variable de entorno **`CONTROLOFICIOS_DATOS`**.
+2. Un archivo de texto **`datos.ruta`** junto al ejecutable, con la ruta en una
+   línea. Se ignoran las líneas vacías y las que empiezan por `#`; las rutas
+   relativas se resuelven desde la carpeta del ejecutable.
+
+En el repositorio hay un `datos.ruta.ejemplo` con las variantes comentadas
+(ruta relativa, UNC `\\servidor\...` o unidad asignada).
+
+### Estructura recomendada en el recurso compartido
+
+```
+\\servidor\ControlOficios\
+├── datos\                      <- ÚNICA carpeta de datos, fuera de las versiones
+│   ├── oficios.dat
+│   ├── credenciales.dat
+│   ├── clave_maestra.key
+│   ├── respuestas\             (PDF de respuesta)
+│   └── respaldos\              (copias diarias, también en el compartido)
+├── app\
+│   ├── ControlOficios_v1.1\    <- versión anterior (para volver atrás)
+│   └── ControlOficios_v1.2\    <- versión vigente
+│       ├── ControlOficios.exe
+│       ├── _internal\
+│       └── datos.ruta          <- contiene:  ..\..\datos
+└── ControlOficios.lnk          <- acceso directo a la versión vigente
+```
+
+### Cómo publicar una versión nueva
+
+No se puede sobrescribir un `.exe` que alguien tiene abierto, así que **no se
+reemplaza: se agrega**.
+
+1. Compile y copie `bin\ControlOficios` al compartido como
+   `app\ControlOficios_v1.3`. Nadie tiene esa carpeta abierta, así que no hay
+   archivos bloqueados.
+2. Ponga dentro el archivo `datos.ruta` con `..\..\datos`.
+3. Apunte el acceso directo `ControlOficios.lnk` a la carpeta nueva.
+4. Quien tenga la aplicación abierta sigue con la versión anterior hasta que la
+   cierre; la próxima vez que abra, entra en la nueva.
+5. Cuando ya nadie use la versión antigua, bórrela.
+
+**Para volver atrás**, apunte el acceso directo a la versión anterior.
+
+> Si cada persona **copia** el `.lnk` a su escritorio, esa copia queda fijada a
+> la versión de ese momento. Haga que su acceso directo del escritorio apunte
+> al `.lnk` del compartido (Windows resuelve la cadena), o que abran siempre
+> desde la carpeta compartida.
+
+### Los íconos
+
+Se buscan primero **junto al ejecutable** y, si no están, en la carpeta de
+datos. Así cada carpeta de versión puede llevar los suyos, o se dejan una sola
+vez en `datos\`.
+
+### Si la carpeta de datos no responde
+
+Si la unidad de red está caída o la ruta de `datos.ruta` es incorrecta, la
+aplicación **no falla con un error técnico**: muestra un mensaje indicando la
+ruta que intentó usar y qué revisar.
+
+### Arranque desde el compartido
+
+Cargar `_internal` por red es más lento que desde disco local, sobre todo la
+primera vez del día (después la caché de Windows lo acelera). Es el precio de
+tener una sola instalación centralizada.
+
 ## 4.2 Copias de seguridad automáticas (dentro de la aplicación)
 
 **No requiere permisos ni tareas programadas**: la propia aplicación crea

@@ -5,12 +5,12 @@
     "semantic_hash": "da522ed30ef12e0a1dde54cd0afb6294"
   },
   "aplicacion.py": {
-    "mtime": 1785446461.6946795,
-    "ast_hash": "d6abc9ff1aedaaf446fd5e65492f0148",
-    "semantic_hash": "d6abc9ff1aedaaf446fd5e65492f0148"
+    "mtime": 1786033213.8477073,
+    "ast_hash": "f388e123fab32539515f15576e20befb",
+    "semantic_hash": "f388e123fab32539515f15576e20befb"
   },
   "autenticacion.py": {
-    "mtime": 1785446307.0136082,
+    "mtime": 1785446571.7816238,
     "ast_hash": "ce9d043736582f293e8442aca059b093",
     "semantic_hash": "ce9d043736582f293e8442aca059b093"
   },
@@ -25,9 +25,9 @@
     "semantic_hash": "7103051022eb6bb5483a4986a15ffba8"
   },
   "configuracion.py": {
-    "mtime": 1785446246.8616047,
-    "ast_hash": "d07803c1d790f325ecc6363b04c18fe3",
-    "semantic_hash": "d07803c1d790f325ecc6363b04c18fe3"
+    "mtime": 1786033311.3732846,
+    "ast_hash": "48eea50121af5590f57003d99aa4ff66",
+    "semantic_hash": "48eea50121af5590f57003d99aa4ff66"
   },
   "herramienta_admin.py": {
     "mtime": 1785274412.920879,
@@ -55,7 +55,7 @@
     "semantic_hash": "7f2c1805d64090690fa2c5d1ef2d18f3"
   },
   "respaldo.py": {
-    "mtime": 1785446499.9376197,
+    "mtime": 1785446571.7816238,
     "ast_hash": "ff60910800316b1ed4c3eeaf5ad1ba73",
     "semantic_hash": "ff60910800316b1ed4c3eeaf5ad1ba73"
   },

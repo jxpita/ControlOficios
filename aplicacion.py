@@ -6,6 +6,7 @@ from tkinter import ttk, messagebox, filedialog
 from datetime import date, datetime
 
 import autenticacion
+import configuracion
 import almacen_oficios as oficios
 import parametros
 import respaldo
@@ -1851,6 +1852,15 @@ class VentanaIngreso(tk.Frame):
 
 def iniciar():
     raiz = tk.Tk()
+    # Si la carpeta de datos no está accesible (unidad de red caída o ruta mal
+    # indicada en datos.ruta), se avisa con un mensaje claro en vez de dejar
+    # que la aplicación falle con un error técnico.
+    if configuracion.ERROR_DATOS:
+        raiz.withdraw()
+        messagebox.showerror("No se puede acceder a los datos",
+                             configuracion.ERROR_DATOS)
+        raiz.destroy()
+        return
     VentanaIngreso(raiz)
     raiz.mainloop()
 

@@ -1,0 +1,29 @@
+# Ubicación de la carpeta de datos de ControlOficios
+#
+# Copie este archivo junto al ejecutable con el nombre exacto  datos.ruta
+# (sin ".ejemplo") y deje una sola línea con la ruta de la carpeta de datos.
+#
+# Para qué sirve: permite que los datos vivan FUERA de la carpeta del
+# ejecutable, de modo que varias versiones de la aplicación
+# (ControlOficios_v1.1, ControlOficios_v1.2, ...) compartan una única carpeta
+# de datos en el recurso compartido. Sin este archivo, la aplicación usa la
+# carpeta "datos" que esté junto al ejecutable.
+#
+# Las líneas vacías y las que empiezan por '#' se ignoran.
+# Las rutas relativas se resuelven desde la carpeta del ejecutable.
+#
+# Ejemplos (descomente y adapte UNA sola línea):
+#
+#   Ruta relativa, subiendo dos niveles desde la carpeta de la versión:
+# ..\..\datos
+#
+#   Ruta de red completa (UNC):
+# \\servidor\ControlOficios\datos
+#
+#   Unidad asignada:
+# D:\ControlOficios\datos
+#
+# También puede usarse la variable de entorno CONTROLOFICIOS_DATOS, que tiene
+# prioridad sobre este archivo.
+
+..\..\datos
