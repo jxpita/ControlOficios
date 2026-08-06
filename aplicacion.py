@@ -447,6 +447,25 @@ class AplicacionPrincipal(ttk.Frame):
             args=(self.usuario["usuario"],), daemon=True)
         hilo.start()
 
+    def _alcanza_a(self, usuario_objetivo, rol_objetivo):
+        """¿El usuario en sesión puede gestionar a ese usuario? Se consulta
+        antes de abrir el formulario para avisar cuanto antes."""
+        return autenticacion.puede_gestionar_a(
+            self.usuario["usuario"], self.usuario.get("rol"),
+            usuario_objetivo, rol_objetivo)
+
+    def _aviso_sin_alcance(self, usuario_objetivo, rol_objetivo, accion):
+        """Muestra el motivo si no se puede gestionar. True = sin permisos."""
+        if self._alcanza_a(usuario_objetivo, rol_objetivo):
+            return False
+        messagebox.showerror(
+            "No permitido",
+            f"Como administrador solo puede {accion} usuarios con rol "
+            f"'{ROL_USUARIO}' (y su propia cuenta).\n\n"
+            f"'{usuario_objetivo}' tiene rol '{rol_objetivo}': para eso se "
+            "necesita un superusuario.")
+        return True
+
     def _roles_asignables(self):
         """Roles que puede otorgar quien está en sesión (solo el superusuario
         puede crear otros superusuarios)."""
@@ -1042,6 +1061,8 @@ class AplicacionPrincipal(ttk.Frame):
             messagebox.showwarning("Sin selección", "Seleccione un usuario de la lista.")
             return
         usuario, nombre, rol = self.tabla_usuarios.item(seleccion[0], "values")
+        if self._aviso_sin_alcance(usuario, rol, "editar"):
+            return
         self._usuario_en_edicion = usuario
         self.lbl_form_usuario.config(text=f"Editar usuario: {usuario}")
         self.btn_guardar_usuario.config(text="Guardar cambios")
@@ -1103,6 +1124,8 @@ class AplicacionPrincipal(ttk.Frame):
             messagebox.showwarning("Sin selección", "Seleccione un usuario de la lista.")
             return
         usuario, _, rol = self.tabla_usuarios.item(seleccion[0], "values")
+        if self._aviso_sin_alcance(usuario, rol, "eliminar"):
+            return
         if not messagebox.askyesno("Confirmar", f"¿Eliminar al usuario '{usuario}'?"):
             return
         try:
@@ -1122,7 +1145,9 @@ class AplicacionPrincipal(ttk.Frame):
         if not seleccion:
             messagebox.showwarning("Sin selección", "Seleccione un usuario de la lista.")
             return
-        usuario, nombre, _ = self.tabla_usuarios.item(seleccion[0], "values")
+        usuario, nombre, rol = self.tabla_usuarios.item(seleccion[0], "values")
+        if self._aviso_sin_alcance(usuario, rol, "restablecer la contraseña de"):
+            return
         nueva = self._pedir_nueva_clave(f"{nombre} ({usuario})")
         if nueva is None:  # cancelado
             return

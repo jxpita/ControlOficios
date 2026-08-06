@@ -5,14 +5,14 @@
     "semantic_hash": "da522ed30ef12e0a1dde54cd0afb6294"
   },
   "aplicacion.py": {
-    "mtime": 1786036293.497787,
-    "ast_hash": "2d4c39f41dd428fdbd3b6f12831e4d2f",
-    "semantic_hash": "2d4c39f41dd428fdbd3b6f12831e4d2f"
+    "mtime": 1786039242.3036485,
+    "ast_hash": "4d0bc868be2ea973f5ab58b5a3868c62",
+    "semantic_hash": "4d0bc868be2ea973f5ab58b5a3868c62"
   },
   "autenticacion.py": {
-    "mtime": 1785446571.7816238,
-    "ast_hash": "ce9d043736582f293e8442aca059b093",
-    "semantic_hash": "ce9d043736582f293e8442aca059b093"
+    "mtime": 1786039204.8312678,
+    "ast_hash": "46fbde9fa5ce3e0fe7e58abece2f8f2d",
+    "semantic_hash": "46fbde9fa5ce3e0fe7e58abece2f8f2d"
   },
   "bloqueo.py": {
     "mtime": 1785274390.3968794,

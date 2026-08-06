@@ -58,6 +58,36 @@ def _contar_superusuarios(usuarios: List[Dict]) -> int:
     return sum(1 for u in usuarios if u.get("rol") == ROL_SUPERUSUARIO)
 
 
+def puede_gestionar_a(actor: str, actor_rol: str, objetivo_usuario: str,
+                      objetivo_rol: str) -> bool:
+    """¿El actor puede modificar a ese usuario?
+
+    - Superusuario: a cualquiera.
+    - Administrador: solo a usuarios con rol 'usuario', y a su propia cuenta.
+      No alcanza a otros administradores ni a los superusuarios.
+    """
+    if actor_rol == ROL_SUPERUSUARIO:
+        return True
+    if actor_rol != ROL_ADMINISTRADOR:
+        return False
+    if (objetivo_usuario or "").strip().lower() == (actor or "").strip().lower():
+        return True          # su propia cuenta
+    return objetivo_rol == ROL_USUARIO
+
+
+def _validar_alcance(objetivo: Dict, actor: str, actor_rol: str,
+                     accion: str) -> None:
+    """Comprueba el alcance del actor sobre el usuario objetivo."""
+    if puede_gestionar_a(actor, actor_rol, objetivo.get("usuario", ""),
+                         objetivo.get("rol", "")):
+        return
+    raise ValueError(
+        f"Un administrador solo puede {accion} usuarios con rol "
+        f"'{ROL_USUARIO}' (y su propia cuenta). Para {accion} a otro "
+        "administrador o a un superusuario se necesita un superusuario."
+    )
+
+
 def _validar_gestion_de_superusuario(objetivo: Dict, usuarios: List[Dict],
                                      actor_rol: str, accion: str) -> None:
     """Reglas para tocar a un superusuario.
@@ -150,9 +180,8 @@ def editar_usuario(usuario: str, actor: str, actor_rol: str,
     if objetivo is None:
         raise ValueError("No se encontró el usuario indicado.")
 
-    # Un administrador no puede tocar a un superusuario en absoluto.
-    if objetivo["rol"] == ROL_SUPERUSUARIO and actor_rol != ROL_SUPERUSUARIO:
-        raise ValueError("Solo un superusuario puede modificar a otro superusuario.")
+    # Alcance: un administrador solo llega a usuarios regulares y a sí mismo.
+    _validar_alcance(objetivo, actor, actor_rol, "editar")
 
     cambios = []
     if nombre is not None and nombre.strip() and nombre.strip() != objetivo["nombre"]:
@@ -194,8 +223,9 @@ def eliminar_usuario(usuario: str, actor: str, actor_rol: str) -> None:
     objetivo = _buscar(usuarios, usuario)
     if objetivo is None:
         raise ValueError("No se encontró el usuario indicado.")
-    # Un superusuario solo puede eliminarlo otro superusuario, y nunca si es el
-    # último que queda (el sistema no puede quedarse sin superusuario).
+    # Alcance: un administrador solo llega a usuarios regulares.
+    _validar_alcance(objetivo, actor, actor_rol, "eliminar")
+    # Un superusuario nunca se elimina si es el último que queda.
     _validar_gestion_de_superusuario(objetivo, usuarios, actor_rol, "eliminar")
     if usuario == (actor or "").strip().lower():
         raise ValueError("No puede eliminar su propio usuario mientras la sesión está activa.")
@@ -223,9 +253,8 @@ def restablecer_clave(usuario: str, actor: str, actor_rol: str,
     """Restablece (recupera) la contraseña de un usuario. Pensado para que un
     gestor le ceda el teclado al usuario y este escriba su nueva contraseña.
 
-    Solo superusuario y administrador pueden hacerlo. La contraseña de un
-    superusuario solo puede restablecerla él mismo u **otro superusuario**; un
-    administrador no puede tocarla."""
+    Un **superusuario** puede restablecer la de cualquiera. Un
+    **administrador** solo la de usuarios con rol 'usuario' y la suya propia."""
     if actor_rol not in ROLES_GESTORES:
         raise ValueError("No tiene permisos para restablecer contraseñas.")
     if not nueva_clave:
@@ -235,11 +264,8 @@ def restablecer_clave(usuario: str, actor: str, actor_rol: str,
     objetivo = _buscar(usuarios, usuario)
     if objetivo is None:
         raise ValueError("No se encontró el usuario indicado.")
-    if (objetivo["rol"] == ROL_SUPERUSUARIO
-            and actor_rol != ROL_SUPERUSUARIO):
-        raise ValueError(
-            "Solo un superusuario puede restablecer la contraseña de otro superusuario."
-        )
+    # Alcance: un administrador solo llega a usuarios regulares y a sí mismo.
+    _validar_alcance(objetivo, actor, actor_rol, "restablecer la contraseña de")
 
     objetivo["sal"], objetivo["hash"] = generar_hash_clave(nueva_clave)
     _guardar_usuarios(usuarios)

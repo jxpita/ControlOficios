@@ -71,9 +71,10 @@ En el primer arranque no hay usuarios: la pantalla pedirá crear el
   eliminarlos o restablecerles la contraseña) y acceder a las **copias de
   seguridad** en Configuración. El **último superusuario que quede** no puede
   eliminarse ni degradarse, para que el sistema nunca se quede sin uno.
-- **Administrador:** puede crear, editar y eliminar usuarios con rol
-  'administrador' o 'usuario'. **No puede crear superusuarios ni tocar a uno**
-  (ni editarlo, ni eliminarlo, ni restablecerle la contraseña).
+- **Administrador:** solo alcanza a los usuarios con rol **'usuario'** (y a su
+  propia cuenta): a ellos puede editarlos, eliminarlos y restablecerles la
+  contraseña. **No puede modificar a otro administrador ni a un superusuario**,
+  ni crear superusuarios.
 - **Usuario (regular):** usa la aplicación (registrar oficios, tablero) pero
   **no ve la pestaña "Usuarios"** ni puede gestionar cuentas. Los oficios que
   registra quedan **auto-asignados a él mismo**: no puede asignarlos a otra
@@ -98,6 +99,17 @@ pestaña *Oficios* como a las métricas del *Tablero*.
 La gestión de usuarios (crear, editar, eliminar, asignar rol y **restablecer
 contraseñas**) está disponible solo para superusuario y administrador. Nadie
 puede eliminarse a sí mismo mientras su sesión está activa.
+
+**Quién puede modificar a quién:**
+
+| Actor | Superusuario | Administrador | Usuario | Su propia cuenta |
+|---|---|---|---|---|
+| **Superusuario** | ✅ | ✅ | ✅ | ✅ |
+| **Administrador** | ❌ | ❌ | ✅ | ✅ |
+
+La regla se aplica a editar, eliminar y restablecer contraseñas, y se valida en
+el almacenamiento (no solo en la interfaz). El **último superusuario** nunca
+puede eliminarse ni degradarse.
 
 **Restablecer contraseñas:** un gestor selecciona al usuario y pulsa
 "Restablecer contraseña"; se abre un diálogo para escribir la nueva clave (la
