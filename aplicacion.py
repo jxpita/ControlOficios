@@ -1311,66 +1311,93 @@ class AplicacionPrincipal(ttk.Frame):
         # Usuario que se está editando (None = se está creando uno nuevo).
         self._usuario_en_edicion = None
 
-        self.lbl_form_usuario = ttk.Label(
-            marco, text="Crear usuario del sistema", font=("Helvetica", 13, "bold"))
-        self.lbl_form_usuario.grid(row=0, column=0, columnspan=2, sticky="w", pady=(0, 15))
+        # El formulario ocupa su ancho natural a la izquierda y la lista se
+        # queda con todo el espacio restante, a lo ancho y a lo alto.
+        marco.columnconfigure(0, weight=0)
+        marco.columnconfigure(1, weight=1)
+        marco.rowconfigure(0, weight=1)
 
-        ttk.Label(marco, text="Usuario").grid(row=1, column=0, sticky="w", pady=4)
-        self.entrada_usuario = ttk.Entry(marco, width=30)
-        self.entrada_usuario.grid(row=1, column=1, sticky="w")
-        ttk.Label(marco, text="Nombre").grid(row=2, column=0, sticky="w", pady=4)
-        self.entrada_nombre = ttk.Entry(marco, width=30)
-        self.entrada_nombre.grid(row=2, column=1, sticky="w")
-        ttk.Label(marco, text="Rol").grid(row=3, column=0, sticky="w", pady=4)
-        self.combo_rol = ttk.Combobox(marco, width=27, state="readonly",
+        # --- Formulario de la cuenta ----------------------------------------
+        # El título del recuadro es el que cambia entre crear y editar, así que
+        # `lbl_form_usuario` apunta al propio recuadro.
+        formulario = ttk.LabelFrame(marco, text="Crear usuario del sistema",
+                                    padding=(12, 8))
+        # "new" (sin sur): el recuadro se ajusta a su contenido en vez de
+        # estirarse a lo alto dejando un hueco vacío debajo del botón.
+        formulario.grid(row=0, column=0, sticky="new", padx=(0, 12))
+        formulario.columnconfigure(1, weight=1)
+        self.lbl_form_usuario = formulario
+
+        self.entrada_usuario = self._campo(formulario, 0, "Usuario",
+                                           ttk.Entry(formulario, width=28))
+        self.entrada_nombre = self._campo(formulario, 1, "Nombre",
+                                          ttk.Entry(formulario, width=28))
+        self.combo_rol = ttk.Combobox(formulario, width=25, state="readonly",
                                       values=self._roles_asignables())
         self.combo_rol.current(0)
-        self.combo_rol.grid(row=3, column=1, sticky="w")
-        ttk.Label(marco, text="Contraseña").grid(row=4, column=0, sticky="w", pady=4)
-        self.entrada_clave = ttk.Entry(marco, width=30, show="•")
-        self.entrada_clave.grid(row=4, column=1, sticky="w")
-        ttk.Label(marco, text="Confirmar contraseña").grid(row=5, column=0, sticky="w", pady=4)
-        self.entrada_clave2 = ttk.Entry(marco, width=30, show="•")
-        self.entrada_clave2.grid(row=5, column=1, sticky="w")
-        self.lbl_ayuda_clave = ttk.Label(marco, text="", foreground="#6B7280", font=("Helvetica", 8))
-        self.lbl_ayuda_clave.grid(row=6, column=1, sticky="w")
+        self._campo(formulario, 2, "Rol", self.combo_rol)
+        self.entrada_clave = self._campo(
+            formulario, 3, "Contraseña", ttk.Entry(formulario, width=28, show="•"))
+        self.entrada_clave2 = self._campo(
+            formulario, 4, "Confirmar contraseña",
+            ttk.Entry(formulario, width=28, show="•"))
+        self.lbl_ayuda_clave = ttk.Label(formulario, text="", foreground="#6B7280",
+                                         font=("Helvetica", 8), wraplength=260)
+        self.lbl_ayuda_clave.grid(row=5, column=0, columnspan=2, sticky="w")
 
-        barra_form = ttk.Frame(marco)
-        barra_form.grid(row=7, column=1, sticky="w", pady=12)
-        self.btn_guardar_usuario = ttk.Button(barra_form, text="Crear usuario",
-                                               command=self._guardar_usuario)
-        self.btn_guardar_usuario.pack(side="left")
+        self.btn_guardar_usuario = ttk.Button(formulario, text="Crear usuario",
+                                              command=self._guardar_usuario)
+        self.btn_guardar_usuario.grid(row=6, column=0, columnspan=2,
+                                      sticky="ew", pady=(12, 0))
         self.btn_guardar_usuario.config(style="Accent.TButton")
 
-        ttk.Label(marco, text="Usuarios existentes:").grid(row=8, column=0, sticky="w", pady=(6, 0))
+        # --- Lista de cuentas (se queda con el espacio sobrante) -------------
+        lista = ttk.LabelFrame(marco, text=" Usuarios existentes ", padding=(10, 6))
+        lista.grid(row=0, column=1, sticky="nsew")
+        lista.columnconfigure(0, weight=1)
+        lista.rowconfigure(0, weight=1)
+
         # La lista va con barra de desplazamiento: el número de cuentas crece
         # con el tiempo y no debe quedar ninguna fuera de la vista.
-        contenedor_usuarios = ttk.Frame(marco)
-        contenedor_usuarios.grid(row=9, column=0, columnspan=2, sticky="w", pady=6)
         self.tabla_usuarios = ttk.Treeview(
-            contenedor_usuarios, columns=("usuario", "nombre", "rol"),
-            show="headings", height=8)
+            lista, columns=("usuario", "nombre", "rol"), show="headings", height=8)
         self.tabla_usuarios.heading("usuario", text="Usuario")
         self.tabla_usuarios.heading("nombre", text="Nombre")
         self.tabla_usuarios.heading("rol", text="Rol")
-        self.tabla_usuarios.column("usuario", width=130)
-        self.tabla_usuarios.column("nombre", width=220)
-        self.tabla_usuarios.column("rol", width=120)
-        barra_usuarios = ttk.Scrollbar(contenedor_usuarios, orient="vertical",
+        # Las tres columnas crecen a la vez, así el ancho sobrante se reparte
+        # en lugar de acumularse todo en una y dejar un hueco enorme.
+        #
+        # `stretch` solo REPARTE el espacio que sobra: nunca encoge una columna
+        # por debajo de su `width`. Por eso los anchos de partida son modestos,
+        # de forma que las tres caben con la ventana en su tamaño mínimo y se
+        # ensanchan solas cuando hay sitio.
+        self.tabla_usuarios.column("usuario", width=100, minwidth=90, stretch=True)
+        self.tabla_usuarios.column("nombre", width=150, minwidth=140, stretch=True)
+        self.tabla_usuarios.column("rol", width=105, minwidth=100, stretch=True)
+        barra_usuarios = ttk.Scrollbar(lista, orient="vertical",
                                        command=self.tabla_usuarios.yview)
-        self.tabla_usuarios.configure(yscrollcommand=barra_usuarios.set)
-        barra_usuarios.pack(side="right", fill="y")
-        self.tabla_usuarios.pack(side="left", fill="both", expand=True)
+        # Barra horizontal por si el equipo usa una fuente mayor y las columnas
+        # no llegan a caber: así "Rol" nunca queda inalcanzable.
+        barra_usuarios_h = ttk.Scrollbar(lista, orient="horizontal",
+                                         command=self.tabla_usuarios.xview)
+        self.tabla_usuarios.configure(yscrollcommand=barra_usuarios.set,
+                                      xscrollcommand=barra_usuarios_h.set)
+        self.tabla_usuarios.grid(row=0, column=0, sticky="nsew")
+        barra_usuarios.grid(row=0, column=1, sticky="ns")
+        barra_usuarios_h.grid(row=1, column=0, sticky="ew")
         self.tabla_usuarios.bind("<<TreeviewSelect>>", self._al_seleccionar_usuario)
 
-        barra_tabla = ttk.Frame(marco)
-        barra_tabla.grid(row=10, column=0, columnspan=2, sticky="w")
-        ttk.Button(barra_tabla, text="Editar seleccionado",
+        # Los botones actúan sobre la fila seleccionada, que queda justo encima,
+        # así que se etiquetan en corto para que las tres quepan aunque la
+        # ventana esté en su tamaño mínimo.
+        barra_tabla = ttk.Frame(lista)
+        barra_tabla.grid(row=2, column=0, columnspan=2, sticky="w", pady=(8, 0))
+        ttk.Button(barra_tabla, text="Editar",
                    command=self._editar_usuario_seleccionado).pack(side="left")
         ttk.Button(barra_tabla, text="Restablecer contraseña",
                    command=self._restablecer_clave_seleccionado).pack(side="left", padx=6)
-        ttk.Button(barra_tabla, text="Eliminar seleccionado",
-                   command=self._eliminar_usuario_seleccionado).pack(side="left", padx=6)
+        ttk.Button(barra_tabla, text="Eliminar",
+                   command=self._eliminar_usuario_seleccionado).pack(side="left")
 
         self._nuevo_usuario()
         self._refrescar_usuarios()
