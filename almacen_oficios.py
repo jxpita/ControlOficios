@@ -184,22 +184,32 @@ def _validar_fecha_asignacion(fecha_asignacion: str, fecha_recepcion: str) -> st
     return fecha_asignacion
 
 
-def _exigir_respuesta_para_finalizar(estado: str, archivo_respuesta: str,
-                                     estado_previo: str = "") -> None:
-    """Un oficio solo puede PASAR a "Finalizado" si ya tiene adjunta la
-    respuesta en PDF.
+def _exigir_datos_para_finalizar(estado: str, archivo_respuesta: str,
+                                 fecha_asignacion: str, fecha_respuesta: str,
+                                 estado_previo: str = "") -> None:
+    """Un oficio solo puede PASAR a "Finalizado" si el expediente está completo:
+    fecha de asignación, fecha de respuesta y la respuesta en PDF adjunta.
 
-    La regla se aplica al marcar el oficio como finalizado. Los que ya estaban
-    finalizados antes de existir esta exigencia siguen siendo editables (por
-    ejemplo, para corregirles la observación), porque de lo contrario quedarían
-    bloqueados para siempre.
+    La regla se aplica al MARCARLO como finalizado. Los que ya estaban
+    finalizados (por ser anteriores a estas exigencias o por venir de una carga
+    masiva de histórico) siguen siendo editables —por ejemplo, para corregirles
+    la observación—, porque de lo contrario quedarían bloqueados para siempre.
     """
     if estado != "Finalizado" or estado_previo == "Finalizado":
         return
+    faltan = []
+    if not (fecha_asignacion or "").strip():
+        faltan.append("la fecha de asignación")
+    if not (fecha_respuesta or "").strip():
+        faltan.append("la fecha de respuesta")
     if not (archivo_respuesta or "").strip():
-        raise ValueError(
-            "Para finalizar el oficio debe adjuntar antes la respuesta en PDF."
-        )
+        faltan.append("la respuesta en PDF adjunta")
+    if faltan:
+        if len(faltan) > 1:
+            detalle = ", ".join(faltan[:-1]) + " y " + faltan[-1]
+        else:
+            detalle = faltan[0]
+        raise ValueError(f"Para finalizar el oficio falta {detalle}.")
 
 
 def _guardar_documento(referencia: str, ruta_origen: str, carpeta: Path,
@@ -307,9 +317,10 @@ def registrar_oficio(codigo_oficio: str, fecha_recepcion: str, fecha_oficio: str
     nombre_empleado = (nombre_empleado or "").strip()
     id_empleado = (id_empleado or "").strip()
     estado = _resolver_estado(nombre_empleado, estado, fecha_respuesta)
-    # Finalizar exige la respuesta adjunta, así que para registrar un oficio ya
-    # finalizado hay que aportarla en el mismo formulario.
-    _exigir_respuesta_para_finalizar(estado, ruta_respuesta)
+    # Finalizar exige el expediente completo, así que para registrar de entrada
+    # un oficio ya finalizado hay que aportarlo todo en el mismo formulario.
+    _exigir_datos_para_finalizar(estado, ruta_respuesta, fecha_asignacion,
+                                 fecha_respuesta)
 
     registros = _leer_registros()
     # La referencia del oficio no puede repetirse (aunque la Referencia UDC sea
@@ -360,6 +371,137 @@ def registrar_oficio(codigo_oficio: str, fecha_recepcion: str, fecha_oficio: str
         f"responsable={nombre_empleado or '(sin responsable)'}; estado={estado}",
         registrado_por)
     return referencia
+
+
+@bloqueo.con_bloqueo("oficios")
+def importar_oficios(filas: List[Dict], importado_por: str,
+                     actor_rol: str = None) -> Dict:
+    """Da de alta en bloque los oficios de una carga masiva.
+
+    Pensado para volcar el histórico que se llevaba en la matriz de Excel, así
+    que es más permisivo que el alta manual, y a propósito:
+
+    - No exige el documento del oficio ni la respuesta en PDF: esos archivos no
+      existen para lo ya tramitado. Los registros importados quedan igual que
+      los anteriores a esas exigencias, y se les puede adjuntar después.
+    - Respeta el estado que traiga el archivo, incluido "Finalizado", porque es
+      el estado real de un expediente ya cerrado. Las exigencias para FINALIZAR
+      siguen vigentes para cualquier cambio posterior hecho desde la aplicación.
+
+    Lo que sí se valida es la coherencia de cada fila: fechas con formato y
+    orden correctos, estado válido y referencias sin repetir. Las filas que no
+    pasan se descartan y se informa de ellas, sin abortar el resto.
+
+    Se hace en una sola escritura: la carga entera se guarda de golpe.
+    """
+    if actor_rol is not None and actor_rol not in ROLES_GESTORES:
+        raise ValueError(
+            "La carga masiva de oficios está reservada a administradores y al "
+            "superusuario."
+        )
+    registros = _leer_registros()
+    referencias = {r.get("referencia", "").strip().upper() for r in registros}
+    codigos = {r.get("codigo_oficio", "").strip().casefold() for r in registros}
+
+    importados, omitidos, fallidos = [], [], []
+    ahora = datetime.now().isoformat(timespec="seconds")
+    for fila in filas:
+        numero = fila.get("_fila", "?")
+        try:
+            nuevo = _preparar_importado(fila, registros, referencias, codigos,
+                                        importado_por, ahora)
+        except _FilaRepetida as duplicada:
+            omitidos.append(f"Fila {numero}: {duplicada}")
+            continue
+        except ValueError as error:
+            fallidos.append(f"Fila {numero}: {error}")
+            continue
+        registros.append(nuevo)
+        referencias.add(nuevo["referencia"].upper())
+        codigos.add(nuevo["codigo_oficio"].casefold())
+        importados.append(nuevo["referencia"])
+
+    if importados:
+        _guardar_registros(registros)
+    registro_actividad.registrar(
+        "CARGA_MASIVA",
+        f"importados={len(importados)}; omitidos={len(omitidos)}; "
+        f"con errores={len(fallidos)}", importado_por)
+    return {"importados": importados, "omitidos": omitidos, "fallidos": fallidos}
+
+
+class _FilaRepetida(ValueError):
+    """La fila corresponde a un oficio que ya está registrado."""
+
+
+def _preparar_importado(fila: Dict, registros: List[Dict], referencias: set,
+                        codigos: set, importado_por: str, ahora: str) -> Dict:
+    """Valida una fila de la carga masiva y devuelve el registro a guardar."""
+    codigo_oficio = (fila.get("codigo_oficio") or "").strip()
+    if not codigo_oficio:
+        raise ValueError("falta la referencia del oficio.")
+    if codigo_oficio.casefold() in codigos:
+        raise _FilaRepetida(
+            f"el oficio «{codigo_oficio}» ya está registrado.")
+
+    referencia = (fila.get("referencia") or "").strip().upper()
+    if referencia and referencia in referencias:
+        raise _FilaRepetida(f"la referencia «{referencia}» ya está registrada.")
+    if not referencia:
+        # Sin Referencia UDC en el archivo se genera la siguiente disponible.
+        referencia = _generar_referencia(registros)
+
+    fecha_recepcion = (fila.get("fecha_recepcion") or "").strip()
+    if not fecha_recepcion:
+        # Sin fecha de emisión se usa la de asignación, que es cuando el oficio
+        # ya estaba con nosotros; y si tampoco la hay, la del propio oficio.
+        fecha_recepcion = ((fila.get("fecha_asignacion") or "").strip()
+                           or (fila.get("fecha_oficio") or "").strip())
+    if not fecha_recepcion:
+        raise ValueError("no tiene ninguna fecha de la que deducir la recepción.")
+    _validar_fecha(fecha_recepcion, "Fecha de recepción")
+
+    fecha_oficio = (fila.get("fecha_oficio") or "").strip() or fecha_recepcion
+    _validar_fecha(fecha_oficio, "Fecha de oficio")
+    if datetime.strptime(fecha_oficio, "%Y-%m-%d") > datetime.strptime(fecha_recepcion, "%Y-%m-%d"):
+        raise ValueError(
+            "la fecha del oficio es posterior a la de recepción.")
+
+    fecha_respuesta = _validar_fecha_respuesta(
+        fila.get("fecha_respuesta"), fecha_recepcion)
+    fecha_asignacion = _validar_fecha_asignacion(
+        fila.get("fecha_asignacion"), fecha_recepcion)
+    cantidad = _validar_cantidad_investigados(fila.get("cantidad_investigados"))
+
+    nombre_empleado = (fila.get("empleado") or "").strip()
+    id_empleado = (fila.get("id_empleado") or "").strip()
+    estado = fila.get("estado") or "Por asignar"
+    if estado not in ESTADOS:
+        raise ValueError(f"el estado «{estado}» no es válido.")
+    estado = _resolver_estado(nombre_empleado, estado, fecha_respuesta)
+
+    return {
+        "referencia": referencia,
+        "codigo_oficio": codigo_oficio,
+        "causal_oficio": (fila.get("causal_oficio") or "").strip(),
+        "referencia_sb": (fila.get("referencia_sb") or "").strip(),
+        "fecha_recepcion": fecha_recepcion,
+        "fecha_oficio": fecha_oficio,
+        "fecha_asignacion": fecha_asignacion,
+        "fecha_respuesta": fecha_respuesta,
+        "cantidad_investigados": cantidad,
+        "id_empleado": id_empleado,
+        "empleado": nombre_empleado,
+        "estado": estado,
+        "observacion": (fila.get("observacion") or "").strip(),
+        "archivo_oficio": "",
+        "archivo_respuesta": "",
+        "registrado_por": importado_por,
+        "fecha_registro": ahora,
+        "origen": "carga masiva",
+        "historial": [{"estado": estado, "por": importado_por, "cuando": ahora,
+                       "evento": "Importado desde la matriz"}],
+    }
 
 
 def proxima_referencia() -> str:
@@ -431,12 +573,17 @@ def actualizar_oficio(referencia: str, nuevo_estado: str, id_empleado: str,
             else:
                 nueva_fecha = registro.get("fecha_respuesta", "")
             estado_final = _resolver_estado(nombre_empleado, nuevo_estado, nueva_fecha)
-            _exigir_respuesta_para_finalizar(
-                estado_final, registro.get("archivo_respuesta", ""),
-                registro.get("estado", ""))
+            # La fecha de asignación se resuelve ANTES de comprobar si se puede
+            # finalizar: puede venir en esta misma llamada.
             if fecha_asignacion is not None:
                 nueva_asignacion = _validar_fecha_asignacion(
                     fecha_asignacion, registro["fecha_recepcion"])
+            else:
+                nueva_asignacion = registro.get("fecha_asignacion", "")
+            _exigir_datos_para_finalizar(
+                estado_final, registro.get("archivo_respuesta", ""),
+                nueva_asignacion, nueva_fecha, registro.get("estado", ""))
+            if fecha_asignacion is not None:
                 if nueva_asignacion != registro.get("fecha_asignacion", ""):
                     registro["fecha_asignacion"] = nueva_asignacion
                     cambios.append(
@@ -515,8 +662,11 @@ def actualizar_estado_asignado(referencia: str, actor: str, nuevo_estado: str,
                 nueva_fecha = registro.get("fecha_respuesta", "")
             estado_final = _resolver_estado(
                 registro.get("empleado", ""), nuevo_estado, nueva_fecha)
-            _exigir_respuesta_para_finalizar(
+            # El usuario regular no maneja la fecha de asignación: se comprueba
+            # la que ya tenga el oficio (la pone un gestor al asignárselo).
+            _exigir_datos_para_finalizar(
                 estado_final, registro.get("archivo_respuesta", ""),
+                registro.get("fecha_asignacion", ""), nueva_fecha,
                 registro.get("estado", ""))
             if cantidad_investigados is not None:
                 nueva_cantidad = _validar_cantidad_investigados(cantidad_investigados)

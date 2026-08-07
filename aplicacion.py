@@ -10,6 +10,7 @@ from pathlib import Path
 import autenticacion
 import configuracion
 import almacen_oficios as oficios
+import carga_masiva
 import parametros
 import respaldo
 import visor_pdf
@@ -328,6 +329,9 @@ class AplicacionPrincipal(ttk.Frame):
         # Oficio cargado en el panel de edición: evita recargarlo (y borrar lo
         # que se esté escribiendo) cuando el listado se refresca solo.
         self._referencia_en_edicion = None
+
+        # Etiquetas de texto largo que se re-ajustan al ancho de la ventana.
+        self._etiquetas_ajustables = []
 
         # --- Marco superior con logo ---
         self._crear_cabecera()
@@ -1659,7 +1663,12 @@ class AplicacionPrincipal(ttk.Frame):
         """Permite al superusuario o a un administrador indicar la última
         Referencia UDC registrada en el Excel anterior, para que el sistema
         continúe desde ahí."""
-        marco = self.pestana_configuracion
+        # Toda la pestaña va en un área con desplazamiento: con varios paneles
+        # (carpeta de datos, secuencial, carga masiva y copias de seguridad) los
+        # botones de los últimos se salían de la ventana y no había forma de
+        # alcanzarlos.
+        self.configuracion_lienzo, marco = self._crear_area_desplazable(
+            self.pestana_configuracion)
 
         ttk.Label(marco, text="Configuración del sistema",
                   font=("Helvetica", 13, "bold")).pack(anchor="w", pady=(0, 8))
@@ -1669,9 +1678,8 @@ class AplicacionPrincipal(ttk.Frame):
         # carpeta de versión está usando la suya.
         marco_ruta = ttk.LabelFrame(marco, text=" Carpeta de datos en uso ", padding=(12, 6))
         marco_ruta.pack(fill="x", pady=(0, 12))
-        ttk.Label(marco_ruta, text=str(configuracion.DIR_DATOS),
-                  font=("Helvetica", 9, "bold"), wraplength=760,
-                  justify="left").pack(anchor="w")
+        self._etiqueta_ajustable(marco_ruta, str(configuracion.DIR_DATOS),
+                                 font=("Helvetica", 9, "bold")).pack(anchor="w")
         if configuracion.DIR_DATOS.parent == configuracion.DIR_BASE:
             detalle = ("Se está usando la carpeta contigua al ejecutable. Para "
                        "compartir los datos entre versiones, cree junto al "
@@ -1681,20 +1689,19 @@ class AplicacionPrincipal(ttk.Frame):
         else:
             detalle = "Carpeta configurada fuera del ejecutable (uso compartido)."
             color = "#15803d"
-        ttk.Label(marco_ruta, text=detalle, foreground=color,
-                  font=("Helvetica", 8), wraplength=760,
-                  justify="left").pack(anchor="w", pady=(2, 0))
+        self._etiqueta_ajustable(marco_ruta, detalle, foreground=color,
+                                 font=("Helvetica", 8)).pack(anchor="w", pady=(2, 0))
 
         panel = ttk.LabelFrame(marco, text=" Secuencial inicial de la Referencia UDC ",
                                padding=12)
         panel.pack(fill="x")
 
-        ttk.Label(
-            panel, wraplength=760, justify="left",
-            text="Indique la ÚLTIMA Referencia UDC registrada.\n"
-                 f"Formato: {PREFIJO_REFERENCIA}-AAAA-NNNN  "
-                 f"(por ejemplo {PREFIJO_REFERENCIA}-{date.today().year}-0241 → "
-                 f"el próximo oficio será {PREFIJO_REFERENCIA}-{date.today().year}-0242)."
+        self._etiqueta_ajustable(
+            panel,
+            "Indique la ÚLTIMA Referencia UDC registrada.\n"
+            f"Formato: {PREFIJO_REFERENCIA}-AAAA-NNNN  "
+            f"(por ejemplo {PREFIJO_REFERENCIA}-{date.today().year}-0241 → "
+            f"el próximo oficio será {PREFIJO_REFERENCIA}-{date.today().year}-0242)."
         ).grid(row=0, column=0, columnspan=2, sticky="w", pady=(0, 10))
 
         ttk.Label(panel, text="Última Referencia UDC registrada").grid(
@@ -1709,32 +1716,109 @@ class AplicacionPrincipal(ttk.Frame):
         self.lbl_secuencial = ttk.Label(panel, text="", font=("Helvetica", 9))
         self.lbl_secuencial.grid(row=3, column=0, columnspan=2, sticky="w", pady=(8, 0))
 
-        ttk.Label(
-            panel, foreground="#6B7280", font=("Helvetica", 8), wraplength=760,
-            justify="left",
-            text="El secuencial es por año: cada año la numeración vuelve a empezar "
-                 "en 0001. Solo el superusuario y los administradores pueden "
-                 "modificar este valor. Reconfigurarlo no genera referencias duplicadas."
+        self._etiqueta_ajustable(
+            panel,
+            "El secuencial es por año: cada año la numeración vuelve a empezar "
+            "en 0001. Solo el superusuario y los administradores pueden "
+            "modificar este valor. Reconfigurarlo no genera referencias duplicadas.",
+            foreground="#6B7280", font=("Helvetica", 8)
         ).grid(row=4, column=0, columnspan=2, sticky="w", pady=(10, 0))
+
+        # --- Carga masiva de oficios (gestores) ------------------------------
+        self._construir_panel_carga_masiva(marco)
 
         # --- Copias de seguridad: EXCLUSIVO del superusuario -----------------
         if self._es_superusuario():
             self._construir_panel_respaldos(marco)
 
+        # Los textos largos se re-ajustan al ancho de la pestaña.
+        self.configuracion_lienzo.bind("<Configure>", self._ajustar_etiquetas,
+                                       add="+")
         self._refrescar_configuracion()
+
+    def _etiqueta_ajustable(self, contenedor, texto, **kw):
+        """Etiqueta de texto largo cuyo ancho de corte sigue al de la ventana.
+
+        Con un `wraplength` fijo el texto se corta siempre a la misma anchura y
+        deja media pestaña vacía cuando la ventana está maximizada.
+        """
+        etiqueta = ttk.Label(contenedor, text=texto, justify="left", **kw)
+        self._etiquetas_ajustables.append(etiqueta)
+        return etiqueta
+
+    def _ajustar_etiquetas(self, evento=None):
+        ancho = self.configuracion_lienzo.winfo_width() - 90
+        if ancho < 200:
+            return
+        for etiqueta in self._etiquetas_ajustables:
+            try:
+                # Una etiqueta sin wraplength devuelve cadena vacía, no 0.
+                actual = str(etiqueta.cget("wraplength")).strip()
+                if actual != str(ancho):
+                    etiqueta.config(wraplength=ancho)
+            except tk.TclError:
+                pass          # la etiqueta ya no existe
+
+    def _construir_panel_carga_masiva(self, marco):
+        """Panel para volcar de una vez el histórico de la matriz de Excel."""
+        panel = ttk.LabelFrame(marco, text=" Carga masiva de oficios ", padding=12)
+        panel.pack(fill="x", pady=(14, 0))
+
+        self._etiqueta_ajustable(
+            panel,
+            "Permite dar de alta de una sola vez los oficios que se venían "
+            "llevando en la matriz de Excel. Se admite la propia matriz "
+            "(.xlsx) o un CSV con la misma cabecera. Las columnas se "
+            "reconocen por su nombre, así que no importa el orden.\n"
+            "Antes de guardar nada se muestra un resumen de lo que se va a "
+            "importar y de lo que se va a descartar."
+        ).pack(anchor="w", pady=(0, 8))
+
+        btn = ttk.Button(panel, text="Cargar archivo…",
+                         command=self._abrir_carga_masiva)
+        btn.pack(anchor="w")
+        btn.config(style="Accent.TButton")
+
+        self._etiqueta_ajustable(
+            panel,
+            "Los oficios importados no llevan el documento del oficio ni la "
+            "respuesta en PDF (no existen para lo ya tramitado); se pueden "
+            "adjuntar después desde la pestaña Oficios.",
+            foreground="#6B7280", font=("Helvetica", 8)
+        ).pack(anchor="w", pady=(8, 0))
+
+    def _abrir_carga_masiva(self):
+        ruta = filedialog.askopenfilename(
+            title="Seleccione la matriz de oficios",
+            filetypes=[("Matriz de oficios", "*.xlsx *.xlsm *.csv"),
+                       ("Excel", "*.xlsx *.xlsm"), ("CSV", "*.csv")])
+        if not ruta:
+            return
+        try:
+            resumen = carga_masiva.preparar(ruta, autenticacion.listar_usuarios())
+        except ValueError as error:
+            messagebox.showerror("No se pudo leer el archivo", str(error))
+            return
+        if not resumen["filas"]:
+            messagebox.showinfo(
+                "Sin oficios",
+                "El archivo no contiene ninguna fila con datos de oficios.")
+            return
+        dialogo = DialogoCargaMasiva(self, self.usuario, resumen)
+        self.wait_window(dialogo)
+        self._refrescar_listado()
 
     def _construir_panel_respaldos(self, marco):
         """Panel de copias de seguridad. Solo lo ve el superusuario."""
         panel = ttk.LabelFrame(marco, text=" Copias de seguridad ", padding=12)
         panel.pack(fill="x", pady=(14, 0))
 
-        ttk.Label(
-            panel, wraplength=760, justify="left",
-            text="La aplicación crea automáticamente una copia al día, la primera "
-                 "vez que alguien la abre. Se guardan en datos\\respaldos y se "
-                 "conservan los últimos "
-                 f"{DIAS_RESPALDO_POR_DEFECTO} días.\n"
-                 "No se incluyen los PDF de respuesta."
+        self._etiqueta_ajustable(
+            panel,
+            "La aplicación crea automáticamente una copia al día, la primera "
+            "vez que alguien la abre. Se guardan en datos\\respaldos y se "
+            f"conservan los últimos {DIAS_RESPALDO_POR_DEFECTO} días.\n"
+            "No se incluyen los PDF de respuesta."
         ).pack(anchor="w", pady=(0, 8))
 
         self.lbl_respaldos = ttk.Label(panel, text="", font=("Helvetica", 9))
@@ -1749,12 +1833,12 @@ class AplicacionPrincipal(ttk.Frame):
         ttk.Button(barra, text="Abrir carpeta de copias",
                    command=self._abrir_carpeta_respaldos).pack(side="left", padx=6)
 
-        ttk.Label(
-            panel, foreground="#6B7280", font=("Helvetica", 8), wraplength=760,
-            justify="left",
-            text="La copia incluye la clave maestra: quien tenga el archivo puede "
-                 "descifrar los datos. Si copia los respaldos a otro lugar, "
-                 "protéjalo igual que la carpeta datos."
+        self._etiqueta_ajustable(
+            panel,
+            "La copia incluye la clave maestra: quien tenga el archivo puede "
+            "descifrar los datos. Si copia los respaldos a otro lugar, "
+            "protéjalo igual que la carpeta datos.",
+            foreground="#6B7280", font=("Helvetica", 8)
         ).pack(anchor="w", pady=(10, 0))
 
     def _refrescar_panel_respaldos(self):
@@ -2092,6 +2176,136 @@ class AplicacionPrincipal(ttk.Frame):
             self._refrescar_tablero()
         elif actual is self.pestana_usuarios and self._puede_gestionar_usuarios():
             self._refrescar_usuarios()
+
+
+# ============================================================================
+#  CARGA MASIVA DE OFICIOS
+# ============================================================================
+class DialogoCargaMasiva(tk.Toplevel):
+    """Muestra qué se va a importar y, si se confirma, lo guarda.
+
+    La carga no se hace a ciegas: primero se ve cuántos oficios entran, qué
+    filas se descartan y por qué, y con qué responsables se han emparejado.
+    """
+
+    def __init__(self, aplicacion, usuario, resumen):
+        super().__init__(aplicacion)
+        self.aplicacion = aplicacion
+        self.usuario = usuario
+        self.resumen = resumen
+        self.title("Carga masiva de oficios")
+        self.configure(bg=COLOR_BLANCO)
+        self.transient(aplicacion.winfo_toplevel())
+        self.grab_set()
+        self.minsize(720, 520)
+
+        marco = tk.Frame(self, bg=COLOR_BLANCO, padx=18, pady=16)
+        marco.pack(fill="both", expand=True)
+        marco.columnconfigure(0, weight=1)
+        marco.rowconfigure(2, weight=1)
+
+        filas = resumen["filas"]
+        tk.Label(marco, text=f"Se importarán {len(filas)} oficios",
+                 bg=COLOR_BLANCO, fg=COLOR_AZUL,
+                 font=("Helvetica", 12, "bold")).grid(row=0, column=0, sticky="w")
+
+        avisos = self._texto_avisos(resumen)
+        tk.Label(marco, text=avisos, bg=COLOR_BLANCO, fg="#6B7280",
+                 font=("Helvetica", 8), justify="left", wraplength=680).grid(
+                     row=1, column=0, sticky="w", pady=(4, 10))
+
+        # Vista previa de lo que se va a guardar.
+        contenedor = ttk.Frame(marco)
+        contenedor.grid(row=2, column=0, sticky="nsew")
+        contenedor.columnconfigure(0, weight=1)
+        contenedor.rowconfigure(0, weight=1)
+        columnas = ("referencia", "codigo", "oficio", "recepcion", "asignacion",
+                    "respuesta", "investigados", "responsable", "estado")
+        titulos = ("Referencia UDC", "Referencia oficio", "F. oficio",
+                   "F. recepción", "F. asignación", "F. respuesta",
+                   "Investigados", "Responsable", "Estado")
+        tabla = ttk.Treeview(contenedor, columns=columnas, show="headings",
+                             height=12)
+        for columna, titulo in zip(columnas, titulos):
+            tabla.heading(columna, text=titulo)
+            tabla.column(columna, width=110, minwidth=80, stretch=True)
+        for fila in filas:
+            tabla.insert("", "end", values=(
+                fila.get("referencia", ""), fila.get("codigo_oficio", ""),
+                fila.get("fecha_oficio", ""), fila.get("fecha_recepcion", ""),
+                fila.get("fecha_asignacion", ""), fila.get("fecha_respuesta", ""),
+                fila.get("cantidad_investigados", ""),
+                fila.get("empleado", "") or "(sin responsable)",
+                fila.get("estado", "")))
+        barra = ttk.Scrollbar(contenedor, orient="vertical", command=tabla.yview)
+        barra_h = ttk.Scrollbar(contenedor, orient="horizontal", command=tabla.xview)
+        tabla.configure(yscrollcommand=barra.set, xscrollcommand=barra_h.set)
+        tabla.grid(row=0, column=0, sticky="nsew")
+        barra.grid(row=0, column=1, sticky="ns")
+        barra_h.grid(row=1, column=0, sticky="ew")
+
+        botones = tk.Frame(marco, bg=COLOR_BLANCO)
+        botones.grid(row=3, column=0, sticky="e", pady=(14, 0))
+        ttk.Button(botones, text="Cancelar", command=self.destroy).pack(side="right")
+        btn = ttk.Button(botones, text=f"Importar {len(filas)} oficios",
+                         command=self._importar)
+        btn.pack(side="right", padx=6)
+        btn.config(style="Accent.TButton")
+
+    def _texto_avisos(self, resumen):
+        """Resume en pocas líneas lo que conviene saber antes de confirmar."""
+        lineas = []
+        if resumen["errores"]:
+            lineas.append(
+                f"{len(resumen['errores'])} filas se descartan por datos "
+                f"incorrectos: {resumen['errores'][0]}"
+                + (" …" if len(resumen["errores"]) > 1 else ""))
+        if resumen["responsables_sin_identificar"]:
+            nombres = ", ".join(resumen["responsables_sin_identificar"][:5])
+            lineas.append(
+                "Estos nombres de la matriz no corresponden a ninguna cuenta "
+                f"del sistema: {nombres}. Sus oficios conservan el nombre como "
+                "responsable, pero nadie podrá trabajarlos hasta que un gestor "
+                "los reasigne a una cuenta real.")
+        cantidad = resumen.get("sin_responsable_anotado") or 0
+        if cantidad:
+            sujeto = ("1 oficio ya tramitado no indica quién lo atendió"
+                      if cantidad == 1 else
+                      f"{cantidad} oficios ya tramitados no indican quién los "
+                      "atendió")
+            lineas.append(
+                f"{sujeto}: entran como «{carga_masiva.RESPONSABLE_NO_CONSTA}» "
+                "para no perder el expediente.")
+        if resumen["columnas_ignoradas"]:
+            lineas.append(
+                "Columnas de la matriz sin equivalente en la aplicación (se "
+                "ignoran): " + ", ".join(resumen["columnas_ignoradas"]) + ".")
+        lineas.append(
+            "Los oficios ya finalizados en la matriz se importan como tales, "
+            "sin exigir la respuesta en PDF.")
+        return "\n".join(lineas)
+
+    def _importar(self):
+        try:
+            resultado = oficios.importar_oficios(
+                self.resumen["filas"], self.usuario["usuario"],
+                self.usuario.get("rol"))
+        except ValueError as error:
+            messagebox.showerror("Error", str(error), parent=self)
+            return
+        detalle = [f"Oficios importados: {len(resultado['importados'])}"]
+        if resultado["omitidos"]:
+            detalle.append(
+                f"Omitidos por estar ya registrados: {len(resultado['omitidos'])}")
+        if resultado["fallidos"]:
+            detalle.append(f"Descartados por datos incorrectos: "
+                           f"{len(resultado['fallidos'])}")
+            detalle.append("")
+            detalle.extend(resultado["fallidos"][:10])
+            if len(resultado["fallidos"]) > 10:
+                detalle.append("…")
+        messagebox.showinfo("Carga masiva", "\n".join(detalle), parent=self)
+        self.destroy()
 
 
 # ============================================================================

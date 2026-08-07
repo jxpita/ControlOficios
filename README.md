@@ -38,7 +38,7 @@ pip install cryptography pymupdf pillow openpyxl
 | **cryptography** | `cryptography` | **Sí** | Cifrado Fernet de `oficios.dat` y `credenciales.dat`; hashing PBKDF2 de contraseñas | La app **no arranca** |
 | **PyMuPDF** | `fitz` | No | Visor de PDF integrado: renderiza cada página de la respuesta | "Ver respuesta (PDF)" ofrece abrirlo con el lector del sistema |
 | **Pillow** | `PIL` | No | 1) Logo del banco en la cabecera y el login. 2) Mejora la nitidez del visor de PDF (renderiza a 2× y reduce con LANCZOS) | Sin logo; el visor usa el modo PPM nativo de Tk (funciona, algo menos nítido) |
-| **openpyxl** | `openpyxl` | No | Exportar los oficios a Excel (`.xlsx`) desde la pestaña *Oficios* | El desplegable de formato se queda en CSV, que no necesita ninguna librería |
+| **openpyxl** | `openpyxl` | No | 1) Exportar los oficios a Excel (`.xlsx`). 2) Leer la matriz `.xlsx` en la carga masiva | Exportar se queda en CSV y la carga masiva solo admite CSV; ninguna de las dos necesita librerías |
 
 Las dependencias opcionales se importan con `try/except ImportError` y siempre
 tienen una alternativa, así que **la aplicación funciona sin ellas**.
@@ -236,11 +236,15 @@ aparecen en su desplegable de responsables y el almacén rechaza la asignación
 aunque se intente por otra vía. Sí puede seguir editando un oficio que ya
 estuviera asignado a un superusuario, mientras no cambie el responsable.
 
-**Para marcar un oficio como "Finalizado" hay que adjuntar antes la respuesta en
-PDF.** La regla se aplica al pasar a ese estado: los oficios que ya estaban
-finalizados antes de existir esta exigencia siguen siendo editables. Tampoco se
-puede quitar la respuesta de un oficio finalizado sin reabrirlo primero
-(borrando su fecha de respuesta).
+**Para marcar un oficio como "Finalizado" el expediente tiene que estar
+completo**: fecha de asignación, fecha de respuesta y la respuesta en PDF
+adjunta. Si falta algo, el mensaje dice exactamente qué.
+
+La regla se aplica al **pasar** a ese estado: los oficios que ya estaban
+finalizados —por ser anteriores a estas exigencias o por venir de una carga
+masiva de histórico— siguen siendo editables, porque si no quedarían bloqueados
+para siempre. Tampoco se puede quitar la respuesta de un oficio finalizado sin
+reabrirlo primero (borrando su fecha de respuesta).
 
 ### Exportar oficios
 
@@ -264,6 +268,67 @@ programas los tratan como separador aunque el valor venga entrecomillado,
 partiendo la fila en columnas equivocadas. La barra vertical no aparece en la
 práctica en el texto de un oficio, así que la importación es inequívoca. Es un
 detalle interno del formato: **la interfaz no lo menciona**.
+
+### Carga masiva de oficios
+
+`carga_masiva.py` vuelca de una vez el histórico que la unidad llevaba en la
+matriz de Excel ("Matriz-Req-Inf"). Está en la pestaña *Configuración*, así que
+solo la usan administradores y el superusuario; la restricción se valida también
+en el almacenamiento (`almacen_oficios.importar_oficios`).
+
+Admite la propia matriz (`.xlsx`) o un CSV con la misma cabecera. **Las columnas
+se reconocen por su texto, no por su posición**, de modo que si se inserta o se
+mueve una columna la carga sigue funcionando. En la matriz la cabecera está en
+la **fila 4** (de la columna **B** a la **AA**) y los datos empiezan en la 5.
+
+| Columna de la matriz | Campo del oficio |
+|---|---|
+| Ref Prev & Cump | `referencia` (Referencia UDC) |
+| Referencia - Oficio FGE; Juzgado, Tribunal | `codigo_oficio` (Referencia oficio) |
+| Referencia - Circular Superintendencia Bancos | `referencia_sb` |
+| Delito | `causal_oficio` |
+| Fecha Circular | `fecha_oficio` |
+| Fecha Emisión | `fecha_recepcion` |
+| Fecha Asignación | `fecha_asignacion` |
+| Fecha Envío | `fecha_respuesta` |
+| Usuario | responsable |
+| Estado | `estado` |
+| Observación | `observacion` |
+| (nº de filas con la misma Referencia UDC) | `cantidad_investigados` |
+
+Las demás columnas (Mes, Prioridad, Medio Respuesta, Días, Canal Recepción, los
+datos del investigado, Expediente Fiscal, Tipo de Acción, Tipo de Implicado, LCI
+y el bloque RCSA) no tienen equivalente y se ignoran; el resumen previo las
+enumera.
+
+**Decisiones a tener en cuenta:**
+
+- **Varias filas con la misma Referencia UDC** se entienden como un mismo oficio
+  con varios investigados: se agrupan en un registro y la cantidad de
+  investigados es el número de filas.
+- La columna *Usuario* trae la persona en formato `C. Roman`, que no es un
+  nombre de cuenta. Se intenta encajar por cuenta, por nombre completo y por la
+  forma *inicial. apellido*. **Si no se encuentra la cuenta, se conserva el
+  nombre de la matriz sin enlazarlo a ningún usuario**: el expediente dice quién
+  lo atendió aunque esa persona ya no tenga cuenta, y así no se pierde la fila.
+  Esos oficios solo los ve un gestor, que puede reasignarlos.
+- Un oficio ya respondido cuya matriz **no anota usuario** entra con el
+  responsable `(no consta en la matriz)` (`RESPONSABLE_NO_CONSTA`). No es un
+  nombre inventado: deja constancia de que el dato falta y evita descartar un
+  expediente real, porque un oficio con fecha de respuesta necesita responsable.
+- **No se exige el documento del oficio ni la respuesta en PDF**: no existen
+  para lo ya tramitado. Se pueden adjuntar después.
+- **Se respeta el estado del archivo, incluido "Finalizado"**, porque es el
+  estado real de un expediente cerrado. Las exigencias para *finalizar* siguen
+  vigentes para cualquier cambio posterior hecho desde la aplicación.
+- No se duplican oficios: las filas cuya Referencia UDC o Referencia oficio ya
+  estén registradas se omiten y se informa de ellas. Las Referencias UDC del
+  archivo se conservan, de modo que la numeración automática continúa a partir
+  de la mayor.
+
+Antes de guardar nada se muestra una **vista previa** con lo que se va a
+importar y los avisos anteriores. La carga entera se guarda en una sola
+escritura y queda anotada en la bitácora como `CARGA_MASIVA`.
 
 ### Documento del oficio
 
@@ -340,6 +405,7 @@ oficios_tracker/
 ├── metricas.py           # Cálculo de métricas del tablero
 ├── herramienta_admin.py  # Utilidad de consola para el administrador (ver 3.1)
 ├── requirements.txt      # Dependencias del proyecto
+├── carga_masiva.py       # Lectura y mapeo de la matriz de Excel/CSV
 ├── respaldo.py           # Copia de seguridad automática (una por día)
 ├── respaldo_datos.ps1    # Copia de seguridad programable de datos/ (Windows)
 └── datos/                # Se crea sola; contiene:

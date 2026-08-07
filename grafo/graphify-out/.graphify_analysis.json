@@ -6,18 +6,21 @@
       "almacen_oficios_actualizar_oficio",
       "almacen_oficios_adjuntar_respuesta",
       "almacen_oficios_eliminar_respuesta",
-      "almacen_oficios_exigir_respuesta_para_finalizar",
+      "almacen_oficios_exigir_datos_para_finalizar",
       "almacen_oficios_exportar_csv",
       "almacen_oficios_exportar_oficios",
       "almacen_oficios_exportar_xlsx",
       "almacen_oficios_fila_exportacion",
+      "almacen_oficios_filarepetida",
       "almacen_oficios_filtrar_oficios",
       "almacen_oficios_generar_referencia",
       "almacen_oficios_guardar_documento",
       "almacen_oficios_guardar_registros",
       "almacen_oficios_hay_soporte_xlsx",
+      "almacen_oficios_importar_oficios",
       "almacen_oficios_leer_registros",
       "almacen_oficios_listar_oficios_visibles",
+      "almacen_oficios_preparar_importado",
       "almacen_oficios_proxima_referencia",
       "almacen_oficios_puede_editar",
       "almacen_oficios_py_path",
@@ -26,29 +29,32 @@
       "almacen_oficios_rationale_143",
       "almacen_oficios_rationale_158",
       "almacen_oficios_rationale_173",
-      "almacen_oficios_rationale_189",
-      "almacen_oficios_rationale_207",
-      "almacen_oficios_rationale_233",
-      "almacen_oficios_rationale_256",
-      "almacen_oficios_rationale_366",
-      "almacen_oficios_rationale_375",
-      "almacen_oficios_rationale_397",
-      "almacen_oficios_rationale_488",
-      "almacen_oficios_rationale_555",
+      "almacen_oficios_rationale_190",
+      "almacen_oficios_rationale_217",
+      "almacen_oficios_rationale_243",
+      "almacen_oficios_rationale_266",
+      "almacen_oficios_rationale_379",
+      "almacen_oficios_rationale_434",
+      "almacen_oficios_rationale_439",
+      "almacen_oficios_rationale_508",
+      "almacen_oficios_rationale_517",
+      "almacen_oficios_rationale_539",
       "almacen_oficios_rationale_56",
-      "almacen_oficios_rationale_575",
-      "almacen_oficios_rationale_580",
-      "almacen_oficios_rationale_587",
-      "almacen_oficios_rationale_623",
-      "almacen_oficios_rationale_651",
+      "almacen_oficios_rationale_635",
       "almacen_oficios_rationale_68",
-      "almacen_oficios_rationale_739",
-      "almacen_oficios_rationale_746",
-      "almacen_oficios_rationale_760",
-      "almacen_oficios_rationale_769",
-      "almacen_oficios_rationale_825",
-      "almacen_oficios_rationale_849",
+      "almacen_oficios_rationale_705",
+      "almacen_oficios_rationale_725",
+      "almacen_oficios_rationale_730",
+      "almacen_oficios_rationale_737",
+      "almacen_oficios_rationale_773",
+      "almacen_oficios_rationale_801",
+      "almacen_oficios_rationale_889",
+      "almacen_oficios_rationale_896",
+      "almacen_oficios_rationale_910",
+      "almacen_oficios_rationale_919",
       "almacen_oficios_rationale_94",
+      "almacen_oficios_rationale_975",
+      "almacen_oficios_rationale_999",
       "almacen_oficios_reemplazar_documento",
       "almacen_oficios_registrar_oficio",
       "almacen_oficios_resolver_estado",
@@ -60,7 +66,10 @@
       "almacen_oficios_validar_cantidad_investigados",
       "almacen_oficios_validar_fecha",
       "almacen_oficios_validar_fecha_asignacion",
-      "almacen_oficios_validar_fecha_respuesta"
+      "almacen_oficios_validar_fecha_respuesta",
+      "registro_actividad_rationale_43",
+      "registro_actividad_registrar",
+      "valueerror"
     ],
     "1": [
       "autenticacion",
@@ -107,27 +116,30 @@
       "cifrado_rationale_33",
       "cifrado_rationale_40",
       "cifrado_verificar_clave",
-      "fernet",
-      "registro_actividad_rationale_43",
-      "registro_actividad_registrar"
+      "fernet"
     ],
     "2": [
       "aplicacion",
       "aplicacion_aplicacionprincipal_cerrar_sesion",
       "aplicacion_aplicacionprincipal_exportar_oficios",
+      "aplicacion_dialogocargamasiva",
+      "aplicacion_dialogocargamasiva_importar",
+      "aplicacion_dialogocargamasiva_init",
+      "aplicacion_dialogocargamasiva_texto_avisos",
       "aplicacion_dialogoexportar",
       "aplicacion_dialogoexportar_init",
       "aplicacion_iniciar",
       "aplicacion_maximizar_ventana",
-      "aplicacion_rationale_1370",
-      "aplicacion_rationale_2102",
-      "aplicacion_rationale_2282",
-      "aplicacion_rationale_260",
-      "aplicacion_rationale_43",
-      "aplicacion_rationale_575",
+      "aplicacion_rationale_1374",
+      "aplicacion_rationale_2186",
+      "aplicacion_rationale_2257",
+      "aplicacion_rationale_2316",
+      "aplicacion_rationale_2496",
+      "aplicacion_rationale_261",
+      "aplicacion_rationale_44",
+      "aplicacion_rationale_579",
       "aplicacion_selectorarchivo",
       "aplicacion_selectorarchivo_actualizar",
-      "aplicacion_selectorarchivo_elegir",
       "aplicacion_selectorarchivo_init",
       "aplicacion_selectorarchivo_set",
       "aplicacion_ventanaingreso",
@@ -206,9 +218,34 @@
       "herramienta_admin_rationale_76"
     ],
     "5": [
+      "carga_masiva",
+      "carga_masiva_a_fecha",
+      "carga_masiva_a_texto",
+      "carga_masiva_agrupar_por_referencia",
+      "carga_masiva_emparejar_responsables",
+      "carga_masiva_leer_archivo",
+      "carga_masiva_leer_csv",
+      "carga_masiva_leer_xlsx",
+      "carga_masiva_mapear_cabecera",
+      "carga_masiva_normalizar",
+      "carga_masiva_preparar",
+      "carga_masiva_py_path",
+      "carga_masiva_rationale_1",
+      "carga_masiva_rationale_119",
+      "carga_masiva_rationale_131",
+      "carga_masiva_rationale_163",
+      "carga_masiva_rationale_186",
+      "carga_masiva_rationale_241",
+      "carga_masiva_rationale_266",
+      "carga_masiva_rationale_318",
+      "carga_masiva_rationale_87",
+      "carga_masiva_rationale_94"
+    ],
+    "6": [
       "aplicacion_aplicacionprincipal",
       "aplicacion_aplicacionprincipal_abrir_carpeta_respaldos",
       "aplicacion_aplicacionprincipal_ajustar_alto_tabla",
+      "aplicacion_aplicacionprincipal_ajustar_etiquetas",
       "aplicacion_aplicacionprincipal_ajustar_titulo_cabecera",
       "aplicacion_aplicacionprincipal_al_cambiar_pestana",
       "aplicacion_aplicacionprincipal_al_girar_rueda",
@@ -216,22 +253,17 @@
       "aplicacion_aplicacionprincipal_cambiar_clave_propia",
       "aplicacion_aplicacionprincipal_campo",
       "aplicacion_aplicacionprincipal_configurar_estilos",
-      "aplicacion_aplicacionprincipal_construir_configuracion",
-      "aplicacion_aplicacionprincipal_construir_panel_respaldos",
       "aplicacion_aplicacionprincipal_crear_respaldo_manual",
-      "aplicacion_aplicacionprincipal_es_superusuario",
       "aplicacion_aplicacionprincipal_guardar_secuencial",
       "aplicacion_aplicacionprincipal_refrescar_configuracion",
       "aplicacion_aplicacionprincipal_refrescar_panel_respaldos",
-      "aplicacion_rationale_1102",
-      "aplicacion_rationale_1660",
-      "aplicacion_rationale_1728",
-      "aplicacion_rationale_478",
-      "aplicacion_rationale_500",
-      "aplicacion_rationale_717",
-      "aplicacion_rationale_740"
+      "aplicacion_rationale_1106",
+      "aplicacion_rationale_482",
+      "aplicacion_rationale_504",
+      "aplicacion_rationale_721",
+      "aplicacion_rationale_744"
     ],
-    "6": [
+    "7": [
       "visor_pdf",
       "visor_pdf_abrir_con_sistema",
       "visor_pdf_abrir_visor",
@@ -252,45 +284,47 @@
       "visor_pdf_visorpdf_pagina_anterior",
       "visor_pdf_visorpdf_pagina_siguiente"
     ],
-    "7": [
+    "8": [
+      "aplicacion_aplicacionprincipal_abrir_carga_masiva",
       "aplicacion_aplicacionprincipal_adjuntar_respuesta",
       "aplicacion_aplicacionprincipal_aplicar_cambios",
       "aplicacion_aplicacionprincipal_cambiar_documento",
       "aplicacion_aplicacionprincipal_clave_por_etiqueta",
-      "aplicacion_aplicacionprincipal_construir_filtros",
-      "aplicacion_aplicacionprincipal_construir_listado",
       "aplicacion_aplicacionprincipal_eliminar_respuesta",
+      "aplicacion_aplicacionprincipal_guardar_oficio",
       "aplicacion_aplicacionprincipal_limpiar_filtros",
       "aplicacion_aplicacionprincipal_refrescar_listado",
+      "aplicacion_aplicacionprincipal_responsable_por_display",
       "aplicacion_dialogoexportar_exportar",
-      "aplicacion_rationale_1221",
-      "aplicacion_rationale_1279",
-      "aplicacion_rationale_1302",
-      "aplicacion_rationale_1322",
-      "aplicacion_rationale_917",
-      "aplicacion_rationale_975",
+      "aplicacion_rationale_1225",
+      "aplicacion_rationale_1283",
+      "aplicacion_rationale_1306",
+      "aplicacion_rationale_1326",
+      "aplicacion_rationale_616",
+      "aplicacion_rationale_979",
       "aplicacion_selectorarchivo_get"
     ],
-    "8": [
-      "aplicacion_aplicacionprincipal_al_recuperar_foco",
-      "aplicacion_aplicacionprincipal_alcanza_a",
-      "aplicacion_aplicacionprincipal_aviso_sin_alcance",
-      "aplicacion_aplicacionprincipal_construir_usuarios",
-      "aplicacion_aplicacionprincipal_editar_usuario_seleccionado",
-      "aplicacion_aplicacionprincipal_eliminar_usuario_seleccionado",
-      "aplicacion_aplicacionprincipal_guardar_usuario",
-      "aplicacion_aplicacionprincipal_nuevo_usuario",
-      "aplicacion_aplicacionprincipal_refrescar_responsables",
-      "aplicacion_aplicacionprincipal_refrescar_usuarios",
-      "aplicacion_aplicacionprincipal_roles_asignables",
-      "aplicacion_rationale_1471",
-      "aplicacion_rationale_2071",
-      "aplicacion_rationale_622",
-      "aplicacion_rationale_664",
-      "aplicacion_rationale_671",
-      "aplicacion_rationale_683"
-    ],
     "9": [
+      "aplicacion_aplicacionprincipal_construir_filtros",
+      "aplicacion_aplicacionprincipal_construir_listado",
+      "aplicacion_aplicacionprincipal_construir_registro",
+      "aplicacion_aplicacionprincipal_construir_tablero",
+      "aplicacion_aplicacionprincipal_crear_area_desplazable",
+      "aplicacion_aplicacionprincipal_crear_cabecera",
+      "aplicacion_aplicacionprincipal_crear_lienzo",
+      "aplicacion_aplicacionprincipal_grupo",
+      "aplicacion_aplicacionprincipal_init",
+      "aplicacion_aplicacionprincipal_lanzar_respaldo_diario",
+      "aplicacion_aplicacionprincipal_puede_gestionar_usuarios",
+      "aplicacion_rationale_1918",
+      "aplicacion_rationale_414",
+      "aplicacion_rationale_645",
+      "aplicacion_rationale_653",
+      "aplicacion_rationale_693",
+      "aplicacion_rationale_759",
+      "aplicacion_rationale_921"
+    ],
+    "10": [
       "almacen_oficios_listar_oficios",
       "metricas",
       "metricas_convertir_fecha",
@@ -308,7 +342,25 @@
       "metricas_serie_por_dia",
       "metricas_serie_por_mes"
     ],
-    "10": [
+    "11": [
+      "aplicacion_rationale_117",
+      "aplicacion_rationale_150",
+      "aplicacion_rationale_70",
+      "aplicacion_rationale_82",
+      "aplicacion_selectorarchivo_elegir",
+      "aplicacion_selectorfecha",
+      "aplicacion_selectorfecha_alternar_calendario",
+      "aplicacion_selectorfecha_cambiar_mes",
+      "aplicacion_selectorfecha_cerrar",
+      "aplicacion_selectorfecha_dibujar_calendario",
+      "aplicacion_selectorfecha_elegir",
+      "aplicacion_selectorfecha_fecha_base",
+      "aplicacion_selectorfecha_get",
+      "aplicacion_selectorfecha_init",
+      "aplicacion_selectorfecha_set",
+      "aplicacion_selectorfecha_ubicar_popup"
+    ],
+    "12": [
       "date",
       "respaldo",
       "respaldo_archivos_a_respaldar",
@@ -326,53 +378,19 @@
       "respaldo_rationale_90",
       "respaldo_ruta_del_dia"
     ],
-    "11": [
-      "aplicacion_aplicacionprincipal_construir_registro",
-      "aplicacion_aplicacionprincipal_construir_tablero",
-      "aplicacion_aplicacionprincipal_crear_area_desplazable",
-      "aplicacion_aplicacionprincipal_crear_cabecera",
-      "aplicacion_aplicacionprincipal_crear_lienzo",
-      "aplicacion_aplicacionprincipal_grupo",
-      "aplicacion_aplicacionprincipal_init",
-      "aplicacion_aplicacionprincipal_lanzar_respaldo_diario",
-      "aplicacion_aplicacionprincipal_puede_gestionar_usuarios",
-      "aplicacion_rationale_1834",
-      "aplicacion_rationale_410",
-      "aplicacion_rationale_641",
-      "aplicacion_rationale_649",
-      "aplicacion_rationale_689",
-      "aplicacion_rationale_755"
-    ],
-    "12": [
-      "aplicacion_rationale_116",
-      "aplicacion_rationale_149",
-      "aplicacion_rationale_69",
-      "aplicacion_rationale_81",
-      "aplicacion_selectorfecha",
-      "aplicacion_selectorfecha_alternar_calendario",
-      "aplicacion_selectorfecha_cambiar_mes",
-      "aplicacion_selectorfecha_cerrar",
-      "aplicacion_selectorfecha_dibujar_calendario",
-      "aplicacion_selectorfecha_elegir",
-      "aplicacion_selectorfecha_fecha_base",
-      "aplicacion_selectorfecha_get",
-      "aplicacion_selectorfecha_init",
-      "aplicacion_selectorfecha_set",
-      "aplicacion_selectorfecha_ubicar_popup"
-    ],
     "13": [
-      "aplicacion_aplicacionprincipal_al_seleccionar_oficio",
-      "aplicacion_aplicacionprincipal_display_responsable",
-      "aplicacion_aplicacionprincipal_guardar_oficio",
-      "aplicacion_aplicacionprincipal_oficio_por_referencia",
-      "aplicacion_aplicacionprincipal_responsable_por_display",
-      "aplicacion_aplicacionprincipal_usuarios_sistema",
-      "aplicacion_aplicacionprincipal_valores_responsables",
-      "aplicacion_rationale_1176",
-      "aplicacion_rationale_591",
-      "aplicacion_rationale_599",
-      "aplicacion_rationale_612",
-      "aplicacion_rationale_633"
+      "aplicacion_aplicacionprincipal_al_recuperar_foco",
+      "aplicacion_aplicacionprincipal_construir_usuarios",
+      "aplicacion_aplicacionprincipal_eliminar_usuario_seleccionado",
+      "aplicacion_aplicacionprincipal_guardar_usuario",
+      "aplicacion_aplicacionprincipal_nuevo_usuario",
+      "aplicacion_aplicacionprincipal_refrescar_responsables",
+      "aplicacion_aplicacionprincipal_refrescar_usuarios",
+      "aplicacion_aplicacionprincipal_roles_asignables",
+      "aplicacion_rationale_1475",
+      "aplicacion_rationale_2155",
+      "aplicacion_rationale_626",
+      "aplicacion_rationale_687"
     ],
     "14": [
       "aplicacion_aplicacionprincipal_dibujar_anillo_estados",
@@ -381,59 +399,93 @@
       "aplicacion_aplicacionprincipal_dibujar_barras_meses",
       "aplicacion_aplicacionprincipal_refrescar_tablero",
       "aplicacion_aplicacionprincipal_tarjeta",
-      "aplicacion_rationale_1922",
-      "aplicacion_rationale_1948",
-      "aplicacion_rationale_1972",
-      "aplicacion_rationale_2023"
+      "aplicacion_rationale_2006",
+      "aplicacion_rationale_2032",
+      "aplicacion_rationale_2056",
+      "aplicacion_rationale_2107"
     ],
     "15": [
+      "aplicacion_aplicacionprincipal_al_seleccionar_oficio",
+      "aplicacion_aplicacionprincipal_display_responsable",
+      "aplicacion_aplicacionprincipal_oficio_por_referencia",
+      "aplicacion_aplicacionprincipal_usuarios_sistema",
+      "aplicacion_aplicacionprincipal_valores_responsables",
+      "aplicacion_rationale_1180",
+      "aplicacion_rationale_595",
+      "aplicacion_rationale_603",
+      "aplicacion_rationale_637"
+    ],
+    "16": [
+      "aplicacion_aplicacionprincipal_construir_configuracion",
+      "aplicacion_aplicacionprincipal_construir_panel_carga_masiva",
+      "aplicacion_aplicacionprincipal_construir_panel_respaldos",
+      "aplicacion_aplicacionprincipal_es_superusuario",
+      "aplicacion_aplicacionprincipal_etiqueta_ajustable",
+      "aplicacion_rationale_1664",
+      "aplicacion_rationale_1741",
+      "aplicacion_rationale_1764",
+      "aplicacion_rationale_1813"
+    ],
+    "17": [
+      "aplicacion_aplicacionprincipal_alcanza_a",
+      "aplicacion_aplicacionprincipal_aviso_sin_alcance",
+      "aplicacion_aplicacionprincipal_editar_usuario_seleccionado",
+      "aplicacion_aplicacionprincipal_pedir_nueva_clave",
+      "aplicacion_aplicacionprincipal_restablecer_clave_seleccionado",
+      "aplicacion_rationale_1595",
+      "aplicacion_rationale_668",
+      "aplicacion_rationale_675"
+    ],
+    "18": [
       "aplicacion_aplicacionprincipal_mostrar_pdf",
       "aplicacion_aplicacionprincipal_ver_documento",
       "aplicacion_aplicacionprincipal_ver_respuesta",
-      "aplicacion_rationale_1257",
-      "aplicacion_rationale_1342",
-      "aplicacion_rationale_1355"
+      "aplicacion_rationale_1261",
+      "aplicacion_rationale_1346",
+      "aplicacion_rationale_1359"
     ],
-    "16": [
-      "aplicacion_aplicacionprincipal_pedir_nueva_clave",
-      "aplicacion_aplicacionprincipal_restablecer_clave_seleccionado",
-      "aplicacion_rationale_1591"
-    ],
-    "17": [
+    "19": [
       "respaldo_datos",
       "respaldo_datos_escribir_registro"
     ]
   },
   "cohesion": {
-    "0": 0.06440677966101695,
-    "1": 0.09343200740055504,
-    "2": 0.11088709677419355,
+    "0": 0.06820119352088662,
+    "1": 0.09393939393939393,
+    "2": 0.09309309309309309,
     "3": 0.09885057471264368,
     "4": 0.11384615384615385,
-    "5": 0.10869565217391304,
-    "6": 0.18128654970760233,
-    "7": 0.16176470588235295,
-    "8": 0.16176470588235295,
-    "9": 0.225,
-    "10": 0.21666666666666667,
-    "11": 0.1523809523809524,
-    "12": 0.2,
-    "13": 0.19696969696969696,
+    "5": 0.15151515151515152,
+    "6": 0.12105263157894737,
+    "7": 0.18128654970760233,
+    "8": 0.1568627450980392,
+    "9": 0.13725490196078433,
+    "10": 0.225,
+    "11": 0.18333333333333332,
+    "12": 0.21666666666666667,
+    "13": 0.24242424242424243,
     "14": 0.2,
-    "15": 0.3333333333333333,
-    "16": 0.6666666666666666,
-    "17": 1.0
+    "15": 0.25,
+    "16": 0.2777777777777778,
+    "17": 0.25,
+    "18": 0.3333333333333333,
+    "19": 1.0
   },
   "gods": [
     {
       "id": "aplicacion_aplicacionprincipal",
       "label": "AplicacionPrincipal",
-      "degree": 67
+      "degree": 71
     },
     {
       "id": "registro_actividad_registrar",
       "label": "registrar()",
-      "degree": 22
+      "degree": 23
+    },
+    {
+      "id": "almacen_oficios_registrar_oficio",
+      "label": "registrar_oficio()",
+      "degree": 16
     },
     {
       "id": "aplicacion_selectorfecha",
@@ -446,18 +498,18 @@
       "degree": 16
     },
     {
-      "id": "almacen_oficios_registrar_oficio",
-      "label": "registrar_oficio()",
+      "id": "almacen_oficios_leer_registros",
+      "label": "_leer_registros()",
       "degree": 15
     },
     {
       "id": "bloqueo_con_bloqueo",
       "label": "con_bloqueo()",
-      "degree": 14
+      "degree": 15
     },
     {
-      "id": "almacen_oficios_leer_registros",
-      "label": "_leer_registros()",
+      "id": "almacen_oficios_actualizar_oficio",
+      "label": "actualizar_oficio()",
       "degree": 13
     },
     {
@@ -466,14 +518,9 @@
       "degree": 13
     },
     {
-      "id": "almacen_oficios_actualizar_oficio",
-      "label": "actualizar_oficio()",
-      "degree": 12
-    },
-    {
       "id": "autenticacion_leer_usuarios",
       "label": "_leer_usuarios()",
-      "degree": 11
+      "degree": 12
     }
   ],
   "surprises": [
@@ -536,38 +583,38 @@
   "questions": [
     {
       "type": "bridge_node",
-      "question": "Why does `AplicacionPrincipal` connect `Community 5` to `Community 2`, `Community 7`, `Community 8`, `Community 11`, `Community 13`, `Community 14`, `Community 15`, `Community 16`?",
-      "why": "High betweenness centrality (0.439) - this node is a cross-community bridge."
+      "question": "Why does `AplicacionPrincipal` connect `Community 6` to `Community 2`, `Community 8`, `Community 9`, `Community 13`, `Community 14`, `Community 15`, `Community 16`, `Community 17`, `Community 18`?",
+      "why": "High betweenness centrality (0.420) - this node is a cross-community bridge."
     },
     {
       "type": "bridge_node",
-      "question": "Why does `SelectorFecha` connect `Community 12` to `Community 2`, `Community 11`, `Community 7`?",
-      "why": "High betweenness centrality (0.075) - this node is a cross-community bridge."
+      "question": "Why does `SelectorFecha` connect `Community 11` to `Community 9`, `Community 2`?",
+      "why": "High betweenness centrality (0.068) - this node is a cross-community bridge."
+    },
+    {
+      "type": "verify_inferred",
+      "question": "Are the 18 inferred relationships involving `ValueError` (e.g. with `cambiar_clave_propia()` and `crear_usuario()`) actually correct?",
+      "why": "`ValueError` has 18 INFERRED edges - model-reasoned connections that need verification."
     },
     {
       "type": "low_cohesion",
       "question": "Should `Community 0` be split into smaller, more focused modules?",
-      "why": "Cohesion score 0.06440677966101695 - nodes in this community are weakly interconnected."
+      "why": "Cohesion score 0.06820119352088662 - nodes in this community are weakly interconnected."
     },
     {
       "type": "low_cohesion",
       "question": "Should `Community 1` be split into smaller, more focused modules?",
-      "why": "Cohesion score 0.09343200740055504 - nodes in this community are weakly interconnected."
+      "why": "Cohesion score 0.09393939393939393 - nodes in this community are weakly interconnected."
     },
     {
       "type": "low_cohesion",
       "question": "Should `Community 2` be split into smaller, more focused modules?",
-      "why": "Cohesion score 0.11088709677419355 - nodes in this community are weakly interconnected."
+      "why": "Cohesion score 0.09309309309309309 - nodes in this community are weakly interconnected."
     },
     {
       "type": "low_cohesion",
       "question": "Should `Community 3` be split into smaller, more focused modules?",
       "why": "Cohesion score 0.09885057471264368 - nodes in this community are weakly interconnected."
-    },
-    {
-      "type": "low_cohesion",
-      "question": "Should `Community 4` be split into smaller, more focused modules?",
-      "why": "Cohesion score 0.11384615384615385 - nodes in this community are weakly interconnected."
     }
   ]
 }
