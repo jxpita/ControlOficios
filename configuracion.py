@@ -121,6 +121,11 @@ ARCHIVO_LOG = DIR_DATOS / "actividad.log"   # bitácora de auditoría (texto pla
 # --- Respuestas en PDF adjuntas a los oficios --------------------------------
 DIR_RESPUESTAS = _crear_subcarpeta("respuestas")
 
+# --- Documento del oficio (obligatorio al registrarlo) -----------------------
+DIR_DOCUMENTOS = _crear_subcarpeta("documentos")
+# Formatos admitidos para el documento del oficio.
+EXTENSIONES_DOCUMENTO = (".pdf", ".docx")
+
 # --- Copias de seguridad automáticas -----------------------------------------
 # Van SIEMPRE dentro de la carpeta de datos, así que si esta vive en el recurso
 # compartido, las copias también (nunca quedan en el equipo de cada persona).

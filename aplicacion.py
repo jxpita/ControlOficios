@@ -4,6 +4,7 @@ import time
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 from datetime import date, datetime
+from pathlib import Path
 
 import autenticacion
 import configuracion
@@ -218,6 +219,46 @@ class SelectorFecha(tk.Frame):
         self._cerrar()
 
 
+class SelectorArchivo(ttk.Frame):
+    """Campo para elegir un archivo: botón + nombre del archivo elegido.
+
+    Guarda la ruta completa pero muestra solo el nombre, que es lo único que
+    aporta información en el formulario.
+    """
+
+    def __init__(self, maestro, tipos, titulo="Seleccionar archivo", ancho=34):
+        super().__init__(maestro)
+        self._tipos = tipos
+        self._titulo = titulo
+        self._ruta = ""
+        ttk.Button(self, text="Examinar…", command=self._elegir).pack(side="left")
+        self.etiqueta = ttk.Label(self, text="(ningún archivo)", width=ancho,
+                                  foreground="#6B7280", font=("Helvetica", 8))
+        self.etiqueta.pack(side="left", padx=6)
+        self.btn_quitar = ttk.Button(self, text="Quitar", width=7,
+                                     command=lambda: self.set(""))
+        self.btn_quitar.pack(side="left")
+        self._actualizar()
+
+    def _elegir(self):
+        ruta = filedialog.askopenfilename(title=self._titulo, filetypes=self._tipos)
+        if ruta:
+            self.set(ruta)
+
+    def _actualizar(self):
+        nombre = Path(self._ruta).name if self._ruta else ""
+        self.etiqueta.config(text=nombre or "(ningún archivo)",
+                             foreground=COLOR_TEXTO if nombre else "#6B7280")
+        self.btn_quitar.state(["!disabled"] if nombre else ["disabled"])
+
+    def get(self):
+        return self._ruta
+
+    def set(self, ruta):
+        self._ruta = ruta or ""
+        self._actualizar()
+
+
 class AplicacionPrincipal(ttk.Frame):
     # Texto que representa "ningún responsable" en los desplegables.
     SIN_RESPONSABLE = "(Sin responsable)"
@@ -244,6 +285,10 @@ class AplicacionPrincipal(ttk.Frame):
 
         # Áreas con desplazamiento vertical (pestañas Oficios y Tablero).
         self._lienzos_desplazables = set()
+
+        # Oficio cargado en el panel de edición: evita recargarlo (y borrar lo
+        # que se esté escribiendo) cuando el listado se refresca solo.
+        self._referencia_en_edicion = None
 
         # --- Marco superior con logo ---
         self._crear_cabecera()
@@ -479,8 +524,17 @@ class AplicacionPrincipal(ttk.Frame):
         return f"{nombre} ({usuario})" if nombre else usuario
 
     def _valores_responsables(self):
+        """Personas a las que se les puede asignar un oficio.
+
+        Un administrador no puede asignar oficios a un superusuario, así que
+        esas cuentas no aparecen en su desplegable. El superusuario ve a todos.
+        """
+        usuarios = self._usuarios_sistema()
+        if self.usuario.get("rol") == ROL_ADMINISTRADOR:
+            usuarios = [u for u in usuarios
+                        if u.get("rol") != ROL_SUPERUSUARIO]
         return [self._display_responsable(u["usuario"], u["nombre"])
-                for u in self._usuarios_sistema()]
+                for u in usuarios]
 
     def _responsable_por_display(self, display):
         """A partir del texto del desplegable devuelve (usuario, nombre).
@@ -641,24 +695,32 @@ class AplicacionPrincipal(ttk.Frame):
         self.entrada_fecha_recepcion = SelectorFecha(marco)
         self.entrada_fecha_recepcion.grid(row=5, column=1, sticky="w", pady=4)
 
-        ttk.Label(marco, text="Fecha de respuesta").grid(row=6, column=0, sticky="w", pady=4)
-        self.entrada_fecha_respuesta = SelectorFecha(marco, permitir_vacio=True)
-        self.entrada_fecha_respuesta.grid(row=6, column=1, sticky="w", pady=4)
+        ttk.Label(marco, text="Fecha de asignación").grid(row=6, column=0, sticky="w", pady=4)
+        self.entrada_fecha_asignacion = SelectorFecha(marco, permitir_vacio=True)
+        self.entrada_fecha_asignacion.grid(row=6, column=1, sticky="w", pady=4)
 
-        ttk.Label(marco, text="Usuario responsable").grid(row=7, column=0, sticky="w", pady=4)
+        ttk.Label(marco, text="Fecha de respuesta").grid(row=7, column=0, sticky="w", pady=4)
+        self.entrada_fecha_respuesta = SelectorFecha(marco, permitir_vacio=True)
+        self.entrada_fecha_respuesta.grid(row=7, column=1, sticky="w", pady=4)
+
+        ttk.Label(marco, text="Cant. investigados").grid(row=8, column=0, sticky="w", pady=4)
+        self.entrada_investigados = ttk.Entry(marco, width=12)
+        self.entrada_investigados.grid(row=8, column=1, sticky="w", pady=4)
+
+        ttk.Label(marco, text="Usuario responsable").grid(row=9, column=0, sticky="w", pady=4)
         if self._puede_gestionar_usuarios():
             # Gestores: pueden asignar el oficio a cualquier usuario.
             self.combo_empleado = ttk.Combobox(
                 marco, width=37, state="readonly",
                 values=[self.SIN_RESPONSABLE] + self._valores_responsables())
             self.combo_empleado.current(0)  # por defecto: sin responsable
-            self.combo_empleado.grid(row=7, column=1, sticky="w", pady=4)
+            self.combo_empleado.grid(row=9, column=1, sticky="w", pady=4)
             estados_registro = ESTADOS
         else:
             # Usuario regular: los oficios que registra se le asignan a él.
             self.combo_empleado = None
             propio = ttk.Frame(marco)
-            propio.grid(row=7, column=1, sticky="w", pady=4)
+            propio.grid(row=9, column=1, sticky="w", pady=4)
             ttk.Label(propio, text=self.usuario["nombre"],
                 font=("Helvetica", 10, "bold")).pack(side="left")
             ttk.Label(propio, text="(" + self.usuario["usuario"] + ")",
@@ -668,24 +730,41 @@ class AplicacionPrincipal(ttk.Frame):
             # Con responsable, "Por asignar" no aplica.
             estados_registro = ["En proceso", "Finalizado"]
 
-        ttk.Label(marco, text="Estado *").grid(row=8, column=0, sticky="w", pady=4)
+        ttk.Label(marco, text="Estado *").grid(row=10, column=0, sticky="w", pady=4)
         self.combo_estado = ttk.Combobox(marco, width=25, state="readonly",
                                          values=estados_registro)
         self.combo_estado.current(0)
-        self.combo_estado.grid(row=8, column=1, sticky="w", pady=4)
+        self.combo_estado.grid(row=10, column=1, sticky="w", pady=4)
 
-        ttk.Label(marco, text="Observación").grid(row=9, column=0, sticky="nw", pady=4)
+        # El documento del oficio es obligatorio: no se registra un oficio sin
+        # su soporte digital.
+        ttk.Label(marco, text="Documento del oficio *").grid(row=11, column=0, sticky="w", pady=4)
+        self.archivo_oficio = SelectorArchivo(
+            marco, [("Documentos", "*.pdf *.docx"), ("PDF", "*.pdf"),
+                    ("Word", "*.docx")],
+            "Seleccione el documento del oficio (PDF o Word)")
+        self.archivo_oficio.grid(row=11, column=1, sticky="w", pady=4)
+
+        ttk.Label(marco, text="Respuesta en PDF").grid(row=12, column=0, sticky="w", pady=4)
+        self.archivo_respuesta_registro = SelectorArchivo(
+            marco, [("PDF", "*.pdf")], "Seleccione la respuesta en PDF")
+        self.archivo_respuesta_registro.grid(row=12, column=1, sticky="w", pady=4)
+        ttk.Label(marco, text="Solo hace falta para registrar un oficio ya finalizado",
+                  foreground="#6B7280", font=("Helvetica", 8)).grid(
+                      row=13, column=1, sticky="w")
+
+        ttk.Label(marco, text="Observación").grid(row=14, column=0, sticky="nw", pady=4)
         self.texto_observacion = tk.Text(marco, width=44, height=4, wrap="word",
                                          font=("Helvetica", 10),
                                          highlightthickness=1, highlightbackground="#CBD2DE",
                                          relief="flat")
-        self.texto_observacion.grid(row=9, column=1, sticky="w", pady=4)
+        self.texto_observacion.grid(row=14, column=1, sticky="w", pady=4)
 
         ttk.Label(marco, text="* Campos obligatorios", foreground="#6B7280",
-                  font=("Helvetica", 8)).grid(row=10, column=1, sticky="w")
+                  font=("Helvetica", 8)).grid(row=15, column=1, sticky="w")
 
         btn = ttk.Button(marco, text="Registrar oficio", command=self._guardar_oficio)
-        btn.grid(row=11, column=1, sticky="w", pady=14)
+        btn.grid(row=16, column=1, sticky="w", pady=14)
         # Estilo especial para el botón principal
         estilo = ttk.Style()
         estilo.configure("Accent.TButton", background=COLOR_AZUL, foreground=COLOR_BLANCO, font=("Helvetica", 10, "bold"))
@@ -712,6 +791,10 @@ class AplicacionPrincipal(ttk.Frame):
                 causal_oficio=self.entrada_causal.get(),
                 referencia_sb=self.entrada_referencia_sb.get(),
                 actor_rol=self.usuario.get("rol"),
+                ruta_documento=self.archivo_oficio.get(),
+                fecha_asignacion=self.entrada_fecha_asignacion.get(),
+                cantidad_investigados=self.entrada_investigados.get(),
+                ruta_respuesta=self.archivo_respuesta_registro.get(),
             )
         except ValueError as error:
             messagebox.showerror("Error", str(error))
@@ -719,9 +802,12 @@ class AplicacionPrincipal(ttk.Frame):
         messagebox.showinfo("Registrado",
                             f"Oficio registrado.\nReferencia UDC: {referencia}")
         for entrada in (self.entrada_codigo, self.entrada_causal,
-                        self.entrada_referencia_sb):
+                        self.entrada_referencia_sb, self.entrada_investigados):
             entrada.delete(0, "end")
+        self.entrada_fecha_asignacion.set("")
         self.entrada_fecha_respuesta.set("")
+        self.archivo_oficio.set("")
+        self.archivo_respuesta_registro.set("")
         self.texto_observacion.delete("1.0", "end")
         if self.combo_empleado is not None:
             self.combo_empleado.current(0)
@@ -804,13 +890,15 @@ class AplicacionPrincipal(ttk.Frame):
 
         # --- 2) Tabla de oficios (orden: oficio -> recepción -> respuesta) --
         columnas = ("referencia", "codigo", "causal", "sb", "oficio", "recepcion",
-                    "respuesta", "empleado", "estado", "pdf", "observacion")
+                    "asignacion", "respuesta", "investigados", "empleado",
+                    "estado", "pdf", "observacion")
         titulos = ("Referencia UDC", "Referencia oficio", "Causal oficio",
-                   "Referencia SB", "F. oficio", "F. recepción", "F. respuesta",
-                   "Responsable", "Estado", "PDF", "Observación")
+                   "Referencia SB", "F. oficio", "F. recepción", "F. asignación",
+                   "F. respuesta", "Cant. investigados", "Responsable",
+                   "Estado", "PDF", "Observación")
         # Referencia UDC y Referencia oficio con ancho suficiente para verse
         # completas (p. ej. "REQ-INF-2026-0241").
-        anchos = (150, 150, 150, 120, 90, 95, 95, 150, 90, 40, 200)
+        anchos = (150, 150, 150, 120, 90, 95, 95, 95, 115, 150, 90, 40, 200)
         contenedor = ttk.Frame(marco)
         # Altura fija (no expand): dentro de un área desplazable la tabla debe
         # tener alto propio para que el panel inferior siga siendo alcanzable.
@@ -837,15 +925,32 @@ class AplicacionPrincipal(ttk.Frame):
         fila = ttk.Frame(panel)
         fila.pack(fill="x")
 
+        if es_gestor:
+            # La fecha de asignación acompaña al responsable, así que solo la
+            # manejan quienes pueden reasignar.
+            ttk.Label(fila, text="F. asignación").pack(side="left")
+            self.edicion_fecha_asignacion = SelectorFecha(fila, permitir_vacio=True)
+            self.edicion_fecha_asignacion.pack(side="left", padx=(6, 16))
+        else:
+            self.edicion_fecha_asignacion = None
+
         ttk.Label(fila, text="F. respuesta").pack(side="left")
         self.edicion_fecha_respuesta = SelectorFecha(fila, permitir_vacio=True)
         self.edicion_fecha_respuesta.pack(side="left", padx=(6, 16))
 
+        ttk.Label(fila, text="Cant. investigados").pack(side="left")
+        self.edicion_cantidad = ttk.Entry(fila, width=6)
+        self.edicion_cantidad.pack(side="left", padx=(6, 16))
+
+        # Segunda fila: responsable y estado (así ninguna queda apretada).
+        fila2 = ttk.Frame(panel)
+        fila2.pack(fill="x", pady=(6, 0))
+
         if es_gestor:
             # Solo administrador / superusuario pueden reasignar responsable.
-            ttk.Label(fila, text="Responsable").pack(side="left")
+            ttk.Label(fila2, text="Responsable").pack(side="left")
             self.combo_responsable_edicion = ttk.Combobox(
-                fila, width=24, state="readonly",
+                fila2, width=24, state="readonly",
                 values=[self.SIN_RESPONSABLE] + self._valores_responsables())
             self.combo_responsable_edicion.current(0)
             self.combo_responsable_edicion.pack(side="left", padx=(6, 16))
@@ -854,8 +959,8 @@ class AplicacionPrincipal(ttk.Frame):
             # El usuario solo alterna entre En proceso y Finalizado.
             estados_disponibles = ["En proceso", "Finalizado"]
 
-        ttk.Label(fila, text="Estado").pack(side="left")
-        self.combo_nuevo_estado = ttk.Combobox(fila, width=13, state="readonly",
+        ttk.Label(fila2, text="Estado").pack(side="left")
+        self.combo_nuevo_estado = ttk.Combobox(fila2, width=13, state="readonly",
                                                values=estados_disponibles)
         self.combo_nuevo_estado.current(0)
         self.combo_nuevo_estado.pack(side="left", padx=6)
@@ -873,12 +978,18 @@ class AplicacionPrincipal(ttk.Frame):
         btn_guardar = ttk.Button(barra, text="Guardar cambios", command=self._aplicar_cambios)
         btn_guardar.pack(side="left")
         btn_guardar.config(style="Accent.TButton")
+        ttk.Button(barra, text="Ver oficio",
+                   command=self._ver_documento).pack(side="left", padx=6)
+        ttk.Button(barra, text="Cambiar oficio",
+                   command=self._cambiar_documento).pack(side="left")
         ttk.Button(barra, text="Adjuntar respuesta (PDF)",
                    command=self._adjuntar_respuesta).pack(side="left", padx=6)
         ttk.Button(barra, text="Ver respuesta (PDF)",
                    command=self._ver_respuesta).pack(side="left")
         ttk.Button(barra, text="Eliminar PDF",
                    command=self._eliminar_respuesta).pack(side="left", padx=6)
+        ttk.Button(barra, text="Exportar…",
+                   command=self._exportar_oficios).pack(side="right")
 
         # Al seleccionar un oficio, precargar sus valores actuales.
         self.tabla.bind("<<TreeviewSelect>>", self._al_seleccionar_oficio)
@@ -914,7 +1025,9 @@ class AplicacionPrincipal(ttk.Frame):
                     registro.get("causal_oficio", ""),
                     registro.get("referencia_sb", ""),
                     registro["fecha_oficio"], registro["fecha_recepcion"],
+                    registro.get("fecha_asignacion", ""),
                     registro.get("fecha_respuesta", ""),
+                    registro.get("cantidad_investigados", ""),
                     registro.get("empleado", ""), registro["estado"],
                     "Sí" if registro.get("archivo_respuesta") else "",
                     observacion))
@@ -929,38 +1042,48 @@ class AplicacionPrincipal(ttk.Frame):
                 text=f"Mostrando {len(registros)} de {total_visibles} oficios."
                 if len(registros) != total_visibles else "")
         # Conservar la selección tras refrescar, si el oficio sigue existiendo.
-        # Se marca el restablecimiento para que el panel de edición NO se
-        # recargue: si el usuario estaba escribiendo una observación, un
-        # refresco automático no debe borrarle lo escrito.
-        self._restableciendo_seleccion = True
-        try:
-            for referencia in seleccion_previa:
-                if self.tabla.exists(referencia):
-                    self.tabla.selection_set(referencia)
-        finally:
-            self._restableciendo_seleccion = False
+        for referencia in seleccion_previa:
+            if self.tabla.exists(referencia):
+                self.tabla.selection_set(referencia)
 
     def _al_seleccionar_oficio(self, evento=None):
-        """Precarga el panel de edición con los datos del oficio seleccionado."""
-        if getattr(self, "_restableciendo_seleccion", False):
-            return          # refresco automático: no pisar lo que se esté editando
+        """Precarga el panel de edición con los datos del oficio seleccionado.
+
+        Solo recarga cuando cambia el oficio seleccionado. Es importante: al
+        refrescar el listado se borran y reinsertan las filas, y Tk entrega el
+        <<TreeviewSelect>> resultante MÁS TARDE, ya fuera de esta llamada. Si se
+        recargara en cada aviso, ese evento diferido pisaría lo que la persona
+        acabara de elegir en el panel (estado, fecha u observación) justo antes
+        de pulsar "Guardar cambios".
+        """
         seleccion = self.tabla.selection()
         if not seleccion:
             return
+        if seleccion[0] == getattr(self, "_referencia_en_edicion", None):
+            return          # mismo oficio: no pisar lo que se esté editando
         registro = self._oficio_por_referencia(seleccion[0])
         if registro is None:
             return
+        self._referencia_en_edicion = seleccion[0]
         self.edicion_fecha_respuesta.set(registro.get("fecha_respuesta", ""))
+        self.edicion_cantidad.delete(0, "end")
+        self.edicion_cantidad.insert(0, registro.get("cantidad_investigados", ""))
         self.edicion_observacion.delete("1.0", "end")
         self.edicion_observacion.insert("1.0", registro.get("observacion", ""))
 
         if self._puede_gestionar_usuarios():
+            self.edicion_fecha_asignacion.set(registro.get("fecha_asignacion", ""))
             display = self._display_responsable(
                 registro.get("id_empleado", ""), registro.get("empleado", ""))
-            if display and display in self._valores_responsables():
-                self.combo_responsable_edicion.set(display)
-            else:
-                self.combo_responsable_edicion.set(self.SIN_RESPONSABLE)
+            valores = [self.SIN_RESPONSABLE] + self._valores_responsables()
+            if display and display not in valores:
+                # El oficio está asignado a alguien fuera del alcance de quien
+                # mira (un administrador viendo un oficio de un superusuario):
+                # se muestra para no perderlo al guardar, aunque no pueda
+                # asignárselo a otro oficio.
+                valores.append(display)
+            self.combo_responsable_edicion.config(values=valores)
+            self.combo_responsable_edicion.set(display or self.SIN_RESPONSABLE)
             if registro.get("estado") in ESTADOS:
                 self.combo_nuevo_estado.set(registro["estado"])
         else:
@@ -978,6 +1101,7 @@ class AplicacionPrincipal(ttk.Frame):
             return
         fecha_respuesta = self.edicion_fecha_respuesta.get()
         observacion = self.edicion_observacion.get("1.0", "end")
+        cantidad = self.edicion_cantidad.get()
         try:
             if self._puede_gestionar_usuarios():
                 id_empleado, nombre_empleado = self._responsable_por_display(
@@ -985,11 +1109,14 @@ class AplicacionPrincipal(ttk.Frame):
                 estado_final = oficios.actualizar_oficio(
                     seleccion[0], self.combo_nuevo_estado.get(),
                     id_empleado, nombre_empleado, self.usuario["usuario"],
-                    self.usuario.get("rol"), fecha_respuesta, observacion)
+                    self.usuario.get("rol"), fecha_respuesta, observacion,
+                    fecha_asignacion=self.edicion_fecha_asignacion.get(),
+                    cantidad_investigados=cantidad)
             else:
                 estado_final = oficios.actualizar_estado_asignado(
                     seleccion[0], self.usuario["usuario"],
-                    self.combo_nuevo_estado.get(), fecha_respuesta, observacion)
+                    self.combo_nuevo_estado.get(), fecha_respuesta, observacion,
+                    cantidad_investigados=cantidad)
         except ValueError as error:
             messagebox.showerror("Error", str(error))
             return
@@ -997,6 +1124,51 @@ class AplicacionPrincipal(ttk.Frame):
         # reflejarlo en el desplegable.
         if estado_final in self.combo_nuevo_estado.cget("values"):
             self.combo_nuevo_estado.set(estado_final)
+        self._refrescar_listado()
+
+    # ---- Documento del oficio ------------------------------------------------
+    def _ver_documento(self):
+        """Abre el documento del oficio (PDF dentro de la aplicación; el Word,
+        con el programa del sistema)."""
+        seleccion = self.tabla.selection()
+        if not seleccion:
+            messagebox.showwarning("Sin selección", "Seleccione un oficio en la lista.")
+            return
+        ruta = oficios.ruta_documento(seleccion[0])
+        if ruta is None:
+            messagebox.showinfo(
+                "Sin documento",
+                "Este oficio no tiene el documento adjunto.\n\n"
+                "Los oficios registrados antes de esta versión pueden no "
+                "tenerlo: use \"Cambiar oficio\" para adjuntarlo.")
+            return
+        if ruta.suffix.lower() != ".pdf":
+            # Word: no hay visor integrado, lo abre el programa asociado.
+            if not visor_pdf.abrir_con_sistema(ruta):
+                messagebox.showerror("Error", "No se pudo abrir el documento.")
+            return
+        self._mostrar_pdf(ruta, f"Oficio {seleccion[0]}")
+
+    def _cambiar_documento(self):
+        """Sustituye el documento del oficio por si se cargó el equivocado."""
+        seleccion = self.tabla.selection()
+        if not seleccion:
+            messagebox.showwarning("Sin selección", "Seleccione un oficio en la lista.")
+            return
+        ruta = filedialog.askopenfilename(
+            title="Seleccione el documento del oficio (PDF o Word)",
+            filetypes=[("Documentos", "*.pdf *.docx"), ("PDF", "*.pdf"),
+                       ("Word", "*.docx")])
+        if not ruta:
+            return
+        try:
+            oficios.reemplazar_documento(seleccion[0], ruta,
+                                         self.usuario["usuario"],
+                                         self.usuario.get("rol"))
+        except ValueError as error:
+            messagebox.showerror("Error", str(error))
+            return
+        messagebox.showinfo("Listo", "Documento del oficio actualizado.")
         self._refrescar_listado()
 
     # ---- Respuesta en PDF ---------------------------------------------------
@@ -1051,7 +1223,12 @@ class AplicacionPrincipal(ttk.Frame):
             messagebox.showinfo("Sin respuesta",
                                 "Este oficio no tiene una respuesta en PDF adjunta.")
             return
-        if visor_pdf.abrir_visor(self, ruta, f"Respuesta · {seleccion[0]}"):
+        self._mostrar_pdf(ruta, f"Respuesta · {seleccion[0]}")
+
+    def _mostrar_pdf(self, ruta, titulo):
+        """Abre un PDF en el visor integrado y, si no está disponible, ofrece
+        el lector del sistema."""
+        if visor_pdf.abrir_visor(self, ruta, titulo):
             return
         # Sin PyMuPDF instalado: ofrecer el lector del sistema.
         if messagebox.askyesno(
@@ -1061,6 +1238,12 @@ class AplicacionPrincipal(ttk.Frame):
                 "¿Desea abrirlo con el lector de PDF del sistema?"):
             if not visor_pdf.abrir_con_sistema(ruta):
                 messagebox.showerror("Error", "No se pudo abrir el PDF.")
+
+    # ---- Exportación ---------------------------------------------------------
+    def _exportar_oficios(self):
+        """Exporta a CSV los oficios de una fecha o de un rango de fechas."""
+        dialogo = DialogoExportar(self, self.usuario)
+        self.wait_window(dialogo)
 
     def _construir_usuarios(self):
         marco = self.pestana_usuarios
@@ -1097,19 +1280,26 @@ class AplicacionPrincipal(ttk.Frame):
                                                command=self._guardar_usuario)
         self.btn_guardar_usuario.pack(side="left")
         self.btn_guardar_usuario.config(style="Accent.TButton")
-        ttk.Button(barra_form, text="Nuevo",
-                   command=self._nuevo_usuario).pack(side="left", padx=6)
 
         ttk.Label(marco, text="Usuarios existentes:").grid(row=8, column=0, sticky="w", pady=(6, 0))
+        # La lista va con barra de desplazamiento: el número de cuentas crece
+        # con el tiempo y no debe quedar ninguna fuera de la vista.
+        contenedor_usuarios = ttk.Frame(marco)
+        contenedor_usuarios.grid(row=9, column=0, columnspan=2, sticky="w", pady=6)
         self.tabla_usuarios = ttk.Treeview(
-            marco, columns=("usuario", "nombre", "rol"), show="headings", height=8)
+            contenedor_usuarios, columns=("usuario", "nombre", "rol"),
+            show="headings", height=8)
         self.tabla_usuarios.heading("usuario", text="Usuario")
         self.tabla_usuarios.heading("nombre", text="Nombre")
         self.tabla_usuarios.heading("rol", text="Rol")
         self.tabla_usuarios.column("usuario", width=130)
         self.tabla_usuarios.column("nombre", width=220)
         self.tabla_usuarios.column("rol", width=120)
-        self.tabla_usuarios.grid(row=9, column=0, columnspan=2, sticky="w", pady=6)
+        barra_usuarios = ttk.Scrollbar(contenedor_usuarios, orient="vertical",
+                                       command=self.tabla_usuarios.yview)
+        self.tabla_usuarios.configure(yscrollcommand=barra_usuarios.set)
+        barra_usuarios.pack(side="right", fill="y")
+        self.tabla_usuarios.pack(side="left", fill="both", expand=True)
         self.tabla_usuarios.bind("<<TreeviewSelect>>", self._al_seleccionar_usuario)
 
         barra_tabla = ttk.Frame(marco)
@@ -1750,6 +1940,109 @@ class AplicacionPrincipal(ttk.Frame):
             self._refrescar_tablero()
         elif actual is self.pestana_usuarios and self._puede_gestionar_usuarios():
             self._refrescar_usuarios()
+
+
+# ============================================================================
+#  EXPORTACIÓN DE OFICIOS
+# ============================================================================
+class DialogoExportar(tk.Toplevel):
+    """Exporta los oficios a un CSV acotando por fecha.
+
+    Siempre hay que elegir un tipo de fecha y, al menos, la fecha inicial: si
+    se deja "hasta" vacío se exporta esa fecha única; si se completan las dos,
+    el rango entre ambas.
+    """
+
+    def __init__(self, aplicacion, usuario):
+        super().__init__(aplicacion)
+        self.aplicacion = aplicacion
+        self.usuario = usuario
+        self.title("Exportar oficios")
+        self.configure(bg=COLOR_BLANCO)
+        self.resizable(False, False)
+        self.transient(aplicacion.winfo_toplevel())
+        self.grab_set()
+
+        marco = tk.Frame(self, bg=COLOR_BLANCO, padx=18, pady=16)
+        marco.pack(fill="both", expand=True)
+
+        tk.Label(marco, text="Exportar oficios a CSV", bg=COLOR_BLANCO,
+                 fg=COLOR_AZUL, font=("Helvetica", 12, "bold")).grid(
+                     row=0, column=0, columnspan=2, sticky="w", pady=(0, 12))
+
+        tk.Label(marco, text="Tipo de fecha", bg=COLOR_BLANCO,
+                 fg=COLOR_TEXTO).grid(row=1, column=0, sticky="w", pady=4)
+        self._etiquetas = list(oficios.CAMPOS_FECHA.values())
+        self.combo_campo = ttk.Combobox(marco, width=22, state="readonly",
+                                        values=self._etiquetas)
+        self.combo_campo.current(1)      # por defecto, fecha de recepción
+        self.combo_campo.grid(row=1, column=1, sticky="w", pady=4)
+
+        tk.Label(marco, text="Desde *", bg=COLOR_BLANCO,
+                 fg=COLOR_TEXTO).grid(row=2, column=0, sticky="w", pady=4)
+        self.fecha_desde = SelectorFecha(marco, permitir_vacio=True)
+        self.fecha_desde.grid(row=2, column=1, sticky="w", pady=4)
+
+        tk.Label(marco, text="Hasta", bg=COLOR_BLANCO,
+                 fg=COLOR_TEXTO).grid(row=3, column=0, sticky="w", pady=4)
+        self.fecha_hasta = SelectorFecha(marco, permitir_vacio=True)
+        self.fecha_hasta.grid(row=3, column=1, sticky="w", pady=4)
+
+        tk.Label(marco, text="Deje \"hasta\" vacío para exportar una fecha única",
+                 bg=COLOR_BLANCO, fg="#6B7280", font=("Helvetica", 8)).grid(
+                     row=4, column=1, sticky="w")
+
+        barra = tk.Frame(marco, bg=COLOR_BLANCO)
+        barra.grid(row=5, column=0, columnspan=2, sticky="e", pady=(16, 0))
+        ttk.Button(barra, text="Cancelar", command=self.destroy).pack(side="right")
+        btn = ttk.Button(barra, text="Exportar", command=self._exportar)
+        btn.pack(side="right", padx=6)
+        btn.config(style="Accent.TButton")
+
+    def _exportar(self):
+        desde = self.fecha_desde.get()
+        hasta = self.fecha_hasta.get()
+        if not desde and not hasta:
+            messagebox.showerror(
+                "Falta la fecha",
+                "Indique una fecha para exportar, o un rango con las dos fechas.",
+                parent=self)
+            return
+        campo = self.aplicacion._clave_por_etiqueta(
+            oficios.CAMPOS_FECHA, self.combo_campo.get())
+        try:
+            registros = oficios.filtrar_oficios(
+                oficios.listar_oficios_visibles(
+                    self.usuario["usuario"], self.usuario.get("rol")),
+                campo_fecha=campo, desde=desde, hasta=hasta)
+        except ValueError as error:
+            messagebox.showerror("Filtro no válido", str(error), parent=self)
+            return
+        if not registros:
+            messagebox.showinfo(
+                "Sin resultados",
+                "Ningún oficio coincide con esa fecha o rango.", parent=self)
+            return
+
+        sufijo = desde if not hasta else f"{desde or 'inicio'}_a_{hasta}"
+        ruta = filedialog.asksaveasfilename(
+            parent=self, title="Guardar la exportación",
+            defaultextension=".csv", initialfile=f"oficios_{sufijo}.csv",
+            filetypes=[("CSV para Excel", "*.csv")])
+        if not ruta:
+            return
+        try:
+            cantidad = oficios.exportar_csv(
+                registros, ruta, self.usuario["usuario"],
+                f"{self.combo_campo.get()} {desde or ''}"
+                + (f"..{hasta}" if hasta else ""))
+        except ValueError as error:
+            messagebox.showerror("Error", str(error), parent=self)
+            return
+        messagebox.showinfo(
+            "Exportado",
+            f"Se exportaron {cantidad} oficios a:\n{ruta}", parent=self)
+        self.destroy()
 
 
 # ============================================================================

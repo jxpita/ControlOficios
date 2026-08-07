@@ -151,6 +151,9 @@ Solo **administrador y superusuario** pueden reasignar responsables o cambiar
 libremente el estado de cualquier oficio (respetando las reglas: un oficio con responsable no puede
 quedar "Por asignar"; "En proceso"/"Finalizado" exigen responsable).
 
+Un **administrador no puede asignar oficios a un superusuario**; el
+superusuario sí puede asignárselos a cualquiera.
+
 **Fecha de respuesta y estado:** si un oficio tiene fecha de respuesta es
 porque ya fue respondido, así que su estado es siempre **"Finalizado"**. La
 regla se aplica al registrar y al modificar, para cualquier rol: si se indica
@@ -171,9 +174,13 @@ el resto son opcionales.
 | Referencia SB | No | Texto libre |
 | Fecha de oficio | **Sí \*** | No puede ser posterior a la de recepción |
 | Fecha de recepción | **Sí \*** | |
+| Fecha de asignación | No | No puede ser anterior a la de recepción |
 | Fecha de respuesta | No | No puede ser anterior a la de recepción. **Si se indica, el oficio pasa a "Finalizado"** y exige responsable |
+| Cant. investigados | No | Número entero no negativo |
 | Usuario responsable | No | Sin responsable ⇒ "Por asignar" |
 | Estado | **Sí \*** | |
+| Documento del oficio | **Sí \*** | Archivo `.pdf` o `.docx`; se guarda en `datos/documentos/` |
+| Respuesta en PDF | No | Solo hace falta para registrar de entrada un oficio ya finalizado |
 | Observación | No | Texto libre, editable después |
 
 La **Referencia UDC** no se ingresa: la genera el sistema (ver más abajo).
@@ -187,10 +194,42 @@ del campo, y se ajusta para no salirse de la pantalla.
 
 **Qué puede modificar cada rol** en la pestaña *Oficios*:
 
-| | F. respuesta | Responsable | Estado | Observación |
-|---|---|---|---|---|
-| Superusuario / Administrador | ✅ | ✅ | ✅ (cualquiera) | ✅ |
-| Usuario (en sus oficios) | ✅ | ❌ | ✅ (En proceso ↔ Finalizado) | ✅ |
+| | F. asignación | F. respuesta | Cant. investigados | Responsable | Estado | Observación |
+|---|---|---|---|---|---|---|
+| Superusuario | ✅ | ✅ | ✅ | ✅ (cualquiera) | ✅ (cualquiera) | ✅ |
+| Administrador | ✅ | ✅ | ✅ | ✅ (salvo superusuarios) | ✅ (cualquiera) | ✅ |
+| Usuario (en sus oficios) | ❌ | ✅ | ✅ | ❌ | ✅ (En proceso ↔ Finalizado) | ✅ |
+
+Un **administrador no puede asignar oficios a un superusuario**: esas cuentas no
+aparecen en su desplegable de responsables y el almacén rechaza la asignación
+aunque se intente por otra vía. Sí puede seguir editando un oficio que ya
+estuviera asignado a un superusuario, mientras no cambie el responsable.
+
+**Para marcar un oficio como "Finalizado" hay que adjuntar antes la respuesta en
+PDF.** La regla se aplica al pasar a ese estado: los oficios que ya estaban
+finalizados antes de existir esta exigencia siguen siendo editables. Tampoco se
+puede quitar la respuesta de un oficio finalizado sin reabrirlo primero
+(borrando su fecha de respuesta).
+
+### Exportar oficios
+
+El botón **Exportar…** de la pestaña *Oficios* genera un CSV acotado por fecha:
+se elige el tipo de fecha (oficio, recepción, asignación o respuesta) y una
+fecha única o un rango. El archivo sale en UTF-8 con BOM y separador `;`, de
+modo que Excel en español lo abre con las columnas y las tildes correctas. Cada
+persona exporta únicamente los oficios que puede ver.
+
+### Documento del oficio
+
+Todo oficio se registra con **su documento**, en `.pdf` o `.docx`. El archivo se
+copia a `datos/documentos/` con el nombre `<referencia>.<extensión>` y queda en
+solo lectura, como el resto de los datos.
+
+- **"Ver oficio"** abre el documento: los PDF en el visor integrado y los Word
+  con el programa asociado del sistema.
+- **"Cambiar oficio"** lo sustituye, por si se cargó el archivo equivocado.
+- Los oficios registrados con versiones anteriores no tienen documento; al
+  intentar verlo, la aplicación lo indica y sugiere adjuntarlo.
 
 ### Respuesta en PDF
 
@@ -263,6 +302,7 @@ oficios_tracker/
     ├── oficios.dat         (registros, cifrado; con copia .bak)
     ├── parametros.dat      (secuencial inicial de la Referencia UDC, cifrado)
     ├── actividad.log       (bitácora de auditoría, texto plano)
+    ├── documentos/         (documento del oficio, uno por oficio: PDF o Word)
     ├── respuestas/         (PDF de respuesta, uno por oficio)
     └── respaldos/          (copias de seguridad diarias, .zip)
 ```
@@ -582,6 +622,7 @@ En el repositorio hay un `datos.ruta.ejemplo` con las variantes comentadas
 │   ├── oficios.dat
 │   ├── credenciales.dat
 │   ├── clave_maestra.key
+│   ├── documentos\             (documento del oficio: PDF o Word)
 │   ├── respuestas\             (PDF de respuesta)
 │   └── respaldos\              (copias diarias, también en el compartido)
 ├── app\
@@ -642,8 +683,9 @@ creó, no se repite.
 - Se conservan los últimos **30 días**; las más antiguas se eliminan solas.
 - Incluyen los archivos pequeños y críticos: `oficios.dat`,
   `credenciales.dat`, `parametros.dat`, `clave_maestra.key` y `actividad.log`.
-- **No incluyen los PDF de respuesta** ni los archivos temporales, de bloqueo
-  o `.bak`.
+- **No incluyen los documentos de los oficios ni los PDF de respuesta** (van
+  en subcarpetas, que el respaldo no recorre) ni los archivos temporales, de
+  bloqueo o `.bak`.
 - Se ejecuta **en segundo plano**: la ventana abre sin esperar. Si el respaldo
   falla, queda anotado en la bitácora (`RESPALDO_FALLIDO`) pero **nunca impide
   usar la aplicación**.
