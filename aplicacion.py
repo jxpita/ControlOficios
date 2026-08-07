@@ -3,6 +3,7 @@ import threading
 import time
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
+from tkinter import font as tkfont
 from datetime import date, datetime
 from pathlib import Path
 
@@ -420,9 +421,42 @@ class AplicacionPrincipal(ttk.Frame):
         btn_clave.bind("<Leave>", lambda e: btn_clave.config(bg=COLOR_BLANCO))
 
         # Título de la aplicación
-        lbl_app = tk.Label(cabecera, text="Control de Oficios — Unidad de Cumplimiento",
-                           font=("Arial", 14), fg=COLOR_BLANCO, bg=COLOR_AZUL)
-        lbl_app.pack(side="right", padx=20, pady=10)
+        self.lbl_app = tk.Label(cabecera, text=self._TITULO_LARGO,
+                                font=("Arial", 14), fg=COLOR_BLANCO, bg=COLOR_AZUL)
+        self.lbl_app.pack(side="right", padx=20, pady=10)
+
+        # Widgets de ancho fijo de la cabecera: lo que quede es para el título.
+        self._cabecera = cabecera
+        self._cabecera_fijos = [w for w in (lbl_logo if logo_img else None,
+                                            lbl_titulo, btn_salir, btn_clave)
+                                if w is not None]
+        cabecera.bind("<Configure>", self._ajustar_titulo_cabecera)
+
+    # Título de la cabecera, en versión larga y corta.
+    _TITULO_LARGO = "Control de Oficios — Unidad de Cumplimiento"
+    _TITULO_CORTO = "Control de Oficios"
+
+    def _ajustar_titulo_cabecera(self, evento=None):
+        """Acorta el título de la cabecera cuando la ventana es estrecha.
+
+        `pack` no encoge los widgets: al faltar sitio recorta el último, y el
+        título acababa solapándose con el nombre del banco. Aquí se mide el
+        espacio libre y se elige la versión más larga que quepa; si no cabe
+        ninguna, el título se oculta y quedan el logo y los botones.
+        """
+        try:
+            disponible = self._cabecera.winfo_width() - sum(
+                w.winfo_reqwidth() for w in self._cabecera_fijos)
+        except tk.TclError:
+            return
+        disponible -= 70          # separaciones de los pack (padx)
+        fuente = tkfont.Font(font=self.lbl_app.cget("font"))
+        for texto in (self._TITULO_LARGO, self._TITULO_CORTO, ""):
+            if fuente.measure(texto) <= disponible:
+                break
+        # Solo se reconfigura si cambia: reconfigurar dispara otro <Configure>.
+        if self.lbl_app.cget("text") != texto:
+            self.lbl_app.config(text=texto)
 
     def _cambiar_clave_propia(self):
         """Diálogo para que el usuario en sesión cambie su propia contraseña.
@@ -664,111 +698,138 @@ class AplicacionPrincipal(ttk.Frame):
                 return
             widget = getattr(widget, "master", None)
 
+    def _campo(self, grupo, fila, etiqueta, widget, ayuda=None, estirar=True):
+        """Coloca una etiqueta y su campo en una fila del grupo.
+
+        Con `estirar` el campo ocupa todo el ancho disponible de la columna, de
+        modo que el formulario aprovecha el espacio cuando la ventana crece.
+        """
+        ttk.Label(grupo, text=etiqueta).grid(row=fila, column=0, sticky="w",
+                                             padx=(0, 8), pady=4)
+        widget.grid(row=fila, column=1, sticky="ew" if estirar else "w", pady=4)
+        if ayuda:
+            ttk.Label(grupo, text=ayuda, foreground="#6B7280",
+                      font=("Helvetica", 8)).grid(row=fila + 1, column=1,
+                                                  sticky="w", pady=(0, 2))
+        return widget
+
+    def _grupo(self, contenedor, titulo, fila, columna, columnspan=1):
+        """Recuadro con título para agrupar campos afines."""
+        grupo = ttk.LabelFrame(contenedor, text=f" {titulo} ", padding=(10, 6))
+        grupo.grid(row=fila, column=columna, columnspan=columnspan,
+                   sticky="nsew", padx=(0, 10) if columna == 0 else 0,
+                   pady=(0, 10))
+        grupo.columnconfigure(1, weight=1)      # el campo crece, la etiqueta no
+        return grupo
+
     def _construir_registro(self):
         marco = self.pestana_registro
-        # Aplicar fondo blanco a todos los hijos
-        for child in marco.winfo_children():
-            child.configure(background=COLOR_BLANCO) if isinstance(child, tk.Widget) else None
 
-        ttk.Label(marco, text="Registrar nuevo oficio",
-                  font=("Helvetica", 13, "bold")).grid(row=0, column=0, columnspan=2, sticky="w", pady=(0, 15))
+        # El botón se ancla ABAJO y fuera del área desplazable, así nunca queda
+        # cortado ni fuera de la ventana por muy baja que sea la pantalla.
+        pie = ttk.Frame(marco)
+        pie.pack(side="bottom", fill="x", pady=(8, 0))
+        ttk.Label(pie, text="* Campos obligatorios", foreground="#6B7280",
+                  font=("Helvetica", 8)).pack(side="left")
+        btn = ttk.Button(pie, text="Registrar oficio", command=self._guardar_oficio)
+        btn.pack(side="right")
+        # Estilo especial para el botón principal
+        estilo = ttk.Style()
+        estilo.configure("Accent.TButton", background=COLOR_AZUL,
+                         foreground=COLOR_BLANCO, font=("Helvetica", 10, "bold"))
+        btn.config(style="Accent.TButton")
 
-        # Los campos obligatorios se marcan con un asterisco (*).
-        ttk.Label(marco, text="Referencia oficio *").grid(row=1, column=0, sticky="w", pady=4)
-        self.entrada_codigo = ttk.Entry(marco, width=40)
-        self.entrada_codigo.grid(row=1, column=1, sticky="w", pady=4)
+        # El resto del formulario va en un área con desplazamiento vertical.
+        self.registro_lienzo, contenido = self._crear_area_desplazable(marco)
 
-        ttk.Label(marco, text="Causal oficio").grid(row=2, column=0, sticky="w", pady=4)
-        self.entrada_causal = ttk.Entry(marco, width=40)
-        self.entrada_causal.grid(row=2, column=1, sticky="w", pady=4)
+        ttk.Label(contenido, text="Registrar nuevo oficio",
+                  font=("Helvetica", 13, "bold")).grid(
+                      row=0, column=0, columnspan=2, sticky="w", pady=(0, 12))
+        # Las dos columnas se reparten el ancho por igual.
+        contenido.columnconfigure(0, weight=1, uniform="formulario")
+        contenido.columnconfigure(1, weight=1, uniform="formulario")
 
-        ttk.Label(marco, text="Referencia SB").grid(row=3, column=0, sticky="w", pady=4)
-        self.entrada_referencia_sb = ttk.Entry(marco, width=40)
-        self.entrada_referencia_sb.grid(row=3, column=1, sticky="w", pady=4)
+        # --- Columna izquierda: identificación del oficio --------------------
+        datos = self._grupo(contenido, "Datos del oficio", 1, 0)
+        self.entrada_codigo = self._campo(
+            datos, 0, "Referencia oficio *", ttk.Entry(datos))
+        self.entrada_causal = self._campo(
+            datos, 1, "Causal oficio", ttk.Entry(datos))
+        self.entrada_referencia_sb = self._campo(
+            datos, 2, "Referencia SB", ttk.Entry(datos))
+        # Orden de fechas: oficio -> recepción.
+        self.entrada_fecha_oficio = self._campo(
+            datos, 3, "Fecha de oficio *", SelectorFecha(datos), estirar=False)
+        self.entrada_fecha_recepcion = self._campo(
+            datos, 4, "Fecha de recepción *", SelectorFecha(datos), estirar=False)
 
-        # Orden de fechas: oficio -> recepción -> respuesta.
-        ttk.Label(marco, text="Fecha de oficio *").grid(row=4, column=0, sticky="w", pady=4)
-        self.entrada_fecha_oficio = SelectorFecha(marco)
-        self.entrada_fecha_oficio.grid(row=4, column=1, sticky="w", pady=4)
-
-        ttk.Label(marco, text="Fecha de recepción *").grid(row=5, column=0, sticky="w", pady=4)
-        self.entrada_fecha_recepcion = SelectorFecha(marco)
-        self.entrada_fecha_recepcion.grid(row=5, column=1, sticky="w", pady=4)
-
-        ttk.Label(marco, text="Fecha de asignación").grid(row=6, column=0, sticky="w", pady=4)
-        self.entrada_fecha_asignacion = SelectorFecha(marco, permitir_vacio=True)
-        self.entrada_fecha_asignacion.grid(row=6, column=1, sticky="w", pady=4)
-
-        ttk.Label(marco, text="Fecha de respuesta").grid(row=7, column=0, sticky="w", pady=4)
-        self.entrada_fecha_respuesta = SelectorFecha(marco, permitir_vacio=True)
-        self.entrada_fecha_respuesta.grid(row=7, column=1, sticky="w", pady=4)
-
-        ttk.Label(marco, text="Cant. investigados").grid(row=8, column=0, sticky="w", pady=4)
-        self.entrada_investigados = ttk.Entry(marco, width=12)
-        self.entrada_investigados.grid(row=8, column=1, sticky="w", pady=4)
-
-        ttk.Label(marco, text="Usuario responsable").grid(row=9, column=0, sticky="w", pady=4)
+        # --- Columna derecha: asignación y seguimiento -----------------------
+        gestion = self._grupo(contenido, "Asignación y seguimiento", 1, 1)
         if self._puede_gestionar_usuarios():
             # Gestores: pueden asignar el oficio a cualquier usuario.
             self.combo_empleado = ttk.Combobox(
-                marco, width=37, state="readonly",
+                gestion, state="readonly",
                 values=[self.SIN_RESPONSABLE] + self._valores_responsables())
             self.combo_empleado.current(0)  # por defecto: sin responsable
-            self.combo_empleado.grid(row=9, column=1, sticky="w", pady=4)
+            self._campo(gestion, 0, "Usuario responsable", self.combo_empleado)
             estados_registro = ESTADOS
         else:
             # Usuario regular: los oficios que registra se le asignan a él.
             self.combo_empleado = None
-            propio = ttk.Frame(marco)
-            propio.grid(row=9, column=1, sticky="w", pady=4)
+            propio = ttk.Frame(gestion)
             ttk.Label(propio, text=self.usuario["nombre"],
-                font=("Helvetica", 10, "bold")).pack(side="left")
+                      font=("Helvetica", 10, "bold")).pack(side="left")
             ttk.Label(propio, text="(" + self.usuario["usuario"] + ")",
                       foreground="#6B7280", font=("Helvetica", 8)).pack(side="left")
-            # ttk.Label(propio, text="  (se le asigna automáticamente)",
-            #           foreground="#6B7280", font=("Helvetica", 8)).pack(side="left")
+            self._campo(gestion, 0, "Usuario responsable", propio, estirar=False)
             # Con responsable, "Por asignar" no aplica.
             estados_registro = ["En proceso", "Finalizado"]
 
-        ttk.Label(marco, text="Estado *").grid(row=10, column=0, sticky="w", pady=4)
-        self.combo_estado = ttk.Combobox(marco, width=25, state="readonly",
+        self.combo_estado = ttk.Combobox(gestion, state="readonly",
                                          values=estados_registro)
         self.combo_estado.current(0)
-        self.combo_estado.grid(row=10, column=1, sticky="w", pady=4)
+        self._campo(gestion, 1, "Estado *", self.combo_estado)
+        self.entrada_fecha_asignacion = self._campo(
+            gestion, 2, "Fecha de asignación",
+            SelectorFecha(gestion, permitir_vacio=True), estirar=False)
+        self.entrada_fecha_respuesta = self._campo(
+            gestion, 3, "Fecha de respuesta",
+            SelectorFecha(gestion, permitir_vacio=True), estirar=False)
+        self.entrada_investigados = self._campo(
+            gestion, 4, "Cant. investigados", ttk.Entry(gestion, width=10),
+            estirar=False)
 
+        # --- Documentos (ancho completo) -------------------------------------
+        documentos = self._grupo(contenido, "Documentos", 2, 0, columnspan=2)
         # El documento del oficio es obligatorio: no se registra un oficio sin
         # su soporte digital.
-        ttk.Label(marco, text="Documento del oficio *").grid(row=11, column=0, sticky="w", pady=4)
-        self.archivo_oficio = SelectorArchivo(
-            marco, [("Documentos", "*.pdf *.docx"), ("PDF", "*.pdf"),
-                    ("Word", "*.docx")],
-            "Seleccione el documento del oficio (PDF o Word)")
-        self.archivo_oficio.grid(row=11, column=1, sticky="w", pady=4)
+        self.archivo_oficio = self._campo(
+            documentos, 0, "Documento del oficio *",
+            SelectorArchivo(documentos,
+                            [("Documentos", "*.pdf *.docx"), ("PDF", "*.pdf"),
+                             ("Word", "*.docx")],
+                            "Seleccione el documento del oficio (PDF o Word)"),
+            estirar=False)
+        self.archivo_respuesta_registro = self._campo(
+            documentos, 1, "Respuesta en PDF",
+            SelectorArchivo(documentos, [("PDF", "*.pdf")],
+                            "Seleccione la respuesta en PDF"),
+            ayuda="Solo hace falta para registrar un oficio ya finalizado",
+            estirar=False)
 
-        ttk.Label(marco, text="Respuesta en PDF").grid(row=12, column=0, sticky="w", pady=4)
-        self.archivo_respuesta_registro = SelectorArchivo(
-            marco, [("PDF", "*.pdf")], "Seleccione la respuesta en PDF")
-        self.archivo_respuesta_registro.grid(row=12, column=1, sticky="w", pady=4)
-        ttk.Label(marco, text="Solo hace falta para registrar un oficio ya finalizado",
-                  foreground="#6B7280", font=("Helvetica", 8)).grid(
-                      row=13, column=1, sticky="w")
-
-        ttk.Label(marco, text="Observación").grid(row=14, column=0, sticky="nw", pady=4)
-        self.texto_observacion = tk.Text(marco, width=44, height=4, wrap="word",
+        # --- Observación (ancho completo y elástica) -------------------------
+        observacion = self._grupo(contenido, "Observación", 3, 0, columnspan=2)
+        # Aquí no hay columna de etiqueta: la caja ocupa todo el recuadro. Se
+        # anula el peso que _grupo() da a la columna 1 para que no se quede con
+        # el espacio sobrante.
+        observacion.columnconfigure(0, weight=1)
+        observacion.columnconfigure(1, weight=0)
+        self.texto_observacion = tk.Text(observacion, height=4, wrap="word",
                                          font=("Helvetica", 10),
-                                         highlightthickness=1, highlightbackground="#CBD2DE",
+                                         highlightthickness=1,
+                                         highlightbackground="#CBD2DE",
                                          relief="flat")
-        self.texto_observacion.grid(row=14, column=1, sticky="w", pady=4)
-
-        ttk.Label(marco, text="* Campos obligatorios", foreground="#6B7280",
-                  font=("Helvetica", 8)).grid(row=15, column=1, sticky="w")
-
-        btn = ttk.Button(marco, text="Registrar oficio", command=self._guardar_oficio)
-        btn.grid(row=16, column=1, sticky="w", pady=14)
-        # Estilo especial para el botón principal
-        estilo = ttk.Style()
-        estilo.configure("Accent.TButton", background=COLOR_AZUL, foreground=COLOR_BLANCO, font=("Helvetica", 10, "bold"))
-        btn.config(style="Accent.TButton")
+        self.texto_observacion.grid(row=0, column=0, columnspan=2, sticky="ew")
 
     def _guardar_oficio(self):
         # Solo la referencia del oficio y las fechas de oficio/recepción son
