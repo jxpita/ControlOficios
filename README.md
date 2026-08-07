@@ -71,6 +71,36 @@ python aplicacion.py
 En el primer arranque no hay usuarios: la pantalla pedirá crear el
 **superusuario**. Luego inicia sesión con esas credenciales.
 
+### Tamaño de la ventana
+
+La aplicación **abre maximizada** (`maximizar_ventana`, en `aplicacion.py`) pero
+la ventana queda **redimensionable**: el botón de maximizar/restaurar sigue
+operativo y cada persona la deja como prefiera. Solo se maximiza al arrancar;
+después de ingresar o de cerrar sesión se respeta el tamaño que tenga.
+
+Maximizar no es igual en todos los sistemas, así que `maximizar_ventana` prueba
+en orden `state("zoomed")` (Windows), el atributo `-zoomed` (gestores de
+ventanas de Linux) y, si ninguno surte efecto, fija el tamaño de la pantalla.
+Nunca toca `resizable`, que es lo que bloquearía el botón de maximizar.
+
+Por debajo de **940 × 620** (`TAMANO_MINIMO`) la ventana deja de encoger: es el
+punto en el que todavía caben las dos columnas de los formularios y las tablas
+completas.
+
+### Cómo se adaptan las pantallas
+
+| Pantalla | Comportamiento al cambiar el tamaño |
+|---|---|
+| **Ingreso** | La tarjeta se queda en `ANCHO_TARJETA_INGRESO` (430 px) y se centra. Un formulario de una sola columna estirado de lado a lado de un monitor es incómodo de leer |
+| **Registrar oficio** | Dos columnas que se reparten el ancho; el botón *Registrar oficio* va anclado abajo, fuera del área desplazable, así que nunca queda fuera de la vista |
+| **Oficios** | La tabla **crece con la ventana** (`_ajustar_alto_tabla`): al maximizar se ven muchas más filas. La columna *Observación* absorbe el ancho sobrante |
+| **Usuarios** | El formulario mantiene su ancho a la izquierda y la lista se queda con todo el espacio restante, a lo ancho y a lo alto |
+| **Cabecera** | El título se acorta cuando no cabe, para no solaparse con el nombre del banco |
+
+Dentro de un área desplazable una tabla no puede "expandirse" sola, porque el
+lienzo mide el contenido y no al revés. Por eso en *Oficios* se calcula cuántas
+filas caben entre el panel de filtros y el de edición y se le fija ese alto.
+
 ## 2.1 Roles de usuario
 
 - **Superusuario:** es el primer usuario que se crea. Es el único que puede

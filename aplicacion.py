@@ -29,6 +29,42 @@ except ImportError:
     PILLOW_AVAILABLE = False
 
 
+# Tamaño por debajo del cual la ventana deja de encoger: es el punto en el que
+# todavía caben las dos columnas de los formularios y las tablas completas.
+TAMANO_MINIMO = (940, 620)
+
+# Ancho máximo de la tarjeta de ingreso. Los formularios de una sola columna se
+# vuelven incómodos de leer estirados de lado a lado de un monitor, así que la
+# tarjeta se queda en este ancho y se centra.
+ANCHO_TARJETA_INGRESO = 430
+
+
+def maximizar_ventana(ventana):
+    """Abre la ventana ocupando toda la pantalla, sin bloquear el redimensionado.
+
+    No hay una forma única de maximizar entre sistemas: Windows entiende
+    `state("zoomed")` y los gestores de ventanas de Linux usan el atributo
+    "-zoomed". Si ninguna funciona (o no hay gestor de ventanas), se recurre a
+    fijar el tamaño de la pantalla, que da el mismo resultado visible.
+
+    Importante: NO se toca `resizable`, de modo que el botón de
+    maximizar/restaurar sigue disponible y la ventana se puede reajustar.
+    """
+    ventana.update_idletasks()
+    ancho_pantalla = ventana.winfo_screenwidth()
+    alto_pantalla = ventana.winfo_screenheight()
+    for intento in (lambda: ventana.state("zoomed"),
+                    lambda: ventana.attributes("-zoomed", True)):
+        try:
+            intento()
+        except tk.TclError:
+            continue
+        ventana.update_idletasks()
+        if ventana.winfo_width() >= ancho_pantalla * 0.8:
+            return
+    ventana.geometry(f"{ancho_pantalla}x{alto_pantalla}+0+0")
+
+
 class SelectorFecha(tk.Frame):
     """Campo de fecha con calendario emergente. No requiere librerías externas.
 
@@ -272,8 +308,10 @@ class AplicacionPrincipal(ttk.Frame):
         # --- Configuración de la ventana ---
         maestro.title(f"Control de Oficios · {self.usuario['nombre']} "
                       f"({self.usuario.get('rol', ROL_USUARIO)})")
-        maestro.geometry("1060x720")
-        maestro.minsize(940, 620)
+        # No se fija un tamaño: se conserva el que tenga la ventana (maximizado
+        # al arrancar, o el que la persona haya elegido). Solo se garantiza el
+        # mínimo por debajo del cual el contenido dejaría de caber.
+        maestro.minsize(*TAMANO_MINIMO)
         maestro.resizable(True, True)
         if ARCHIVO_ICONO.exists():
             try:
@@ -923,6 +961,7 @@ class AplicacionPrincipal(ttk.Frame):
         self.lbl_resultados = ttk.Label(fila3, text="", foreground="#6B7280",
                                         font=("Helvetica", 8))
         self.lbl_resultados.pack(side="right")
+        return panel
 
     def _limpiar_filtros(self):
         self.entrada_busqueda.delete(0, "end")
@@ -947,7 +986,7 @@ class AplicacionPrincipal(ttk.Frame):
         es_gestor = self._puede_gestionar_usuarios()
 
         # --- 1) Filtros de búsqueda -----------------------------------------
-        self._construir_filtros(marco)
+        self._marco_filtros = self._construir_filtros(marco)
 
         # --- 2) Tabla de oficios (orden: oficio -> recepción -> respuesta) --
         columnas = ("referencia", "codigo", "causal", "sb", "oficio", "recepcion",
@@ -959,7 +998,7 @@ class AplicacionPrincipal(ttk.Frame):
                    "Estado", "PDF", "Observación")
         # Referencia UDC y Referencia oficio con ancho suficiente para verse
         # completas (p. ej. "REQ-INF-2026-0241").
-        anchos = (150, 150, 150, 120, 90, 95, 95, 95, 115, 150, 90, 40, 200)
+        anchos = (150, 150, 150, 120, 90, 95, 100, 95, 135, 150, 90, 40, 200)
         contenedor = ttk.Frame(marco)
         # Altura fija (no expand): dentro de un área desplazable la tabla debe
         # tener alto propio para que el panel inferior siga siendo alcanzable.
@@ -982,6 +1021,7 @@ class AplicacionPrincipal(ttk.Frame):
         panel = ttk.LabelFrame(marco, text=" Modificar oficio seleccionado ",
                                padding=(8, 4))
         panel.pack(fill="x", pady=(4, 0))
+        self._panel_edicion = panel
 
         fila = ttk.Frame(panel)
         fila.pack(fill="x")
@@ -1054,7 +1094,32 @@ class AplicacionPrincipal(ttk.Frame):
 
         # Al seleccionar un oficio, precargar sus valores actuales.
         self.tabla.bind("<<TreeviewSelect>>", self._al_seleccionar_oficio)
+        # La tabla crece con la ventana: al maximizar se ven muchas más filas.
+        self.oficios_lienzo.bind("<Configure>", self._ajustar_alto_tabla, add="+")
         self._refrescar_listado()
+
+    def _ajustar_alto_tabla(self, evento=None):
+        """Ajusta cuántas filas muestra la tabla de oficios al alto disponible.
+
+        Dentro de un área desplazable la tabla no puede "expandirse" sola: el
+        lienzo mide el contenido, no al revés. Así que se calcula cuántas filas
+        caben entre el panel de filtros y el de edición, y se le fija ese alto.
+        """
+        alto_visible = self.oficios_lienzo.winfo_height()
+        if alto_visible <= 1:
+            return
+        try:
+            alto_fila = int(ttk.Style().lookup("Treeview", "rowheight") or 20)
+        except (tk.TclError, ValueError):
+            alto_fila = 20
+        alto_fila = max(alto_fila, 16)
+        # Lo que ocupan los paneles de arriba y de abajo, más los márgenes y la
+        # barra horizontal de la tabla.
+        ocupado = (self._marco_filtros.winfo_reqheight()
+                   + self._panel_edicion.winfo_reqheight() + 70)
+        filas = max(6, (alto_visible - ocupado) // alto_fila)
+        if self.tabla.cget("height") != filas:
+            self.tabla.config(height=filas)
 
     def _refrescar_listado(self):
         if not hasattr(self, "tabla"):
@@ -2168,11 +2233,11 @@ class VentanaIngreso(tk.Frame):
         self.pack(fill="both", expand=True)
 
         maestro.title("Control de Oficios · Ingreso")
-        self._centrar(440, 600)
-        try:
-            maestro.resizable(False, False)
-        except tk.TclError:
-            pass
+        # La ventana de ingreso comparte la ventana principal, así que conserva
+        # su tamaño y sigue siendo redimensionable. La tarjeta se centra y no
+        # se estira (ver `_construir_marco`).
+        maestro.minsize(*TAMANO_MINIMO)
+        maestro.resizable(True, True)
 
         # Ícono
         if ARCHIVO_ICONO.exists():
@@ -2187,13 +2252,6 @@ class VentanaIngreso(tk.Frame):
             self._formulario_ingreso()
         else:
             self._formulario_primer_uso()
-
-    def _centrar(self, ancho, alto):
-        """Centra la ventana en la pantalla."""
-        self.maestro.update_idletasks()
-        x = (self.maestro.winfo_screenwidth() - ancho) // 2
-        y = (self.maestro.winfo_screenheight() - alto) // 3
-        self.maestro.geometry(f"{ancho}x{alto}+{x}+{max(y, 0)}")
 
     def _configurar_estilos(self):
         estilo = ttk.Style()
@@ -2248,13 +2306,23 @@ class VentanaIngreso(tk.Frame):
         tk.Label(banner, text="Uso Interno", bg=COLOR_AZUL,
                  fg=self.COLOR_SUBTITULO, font=("Helvetica", 8)).pack(pady=(1, 0))
 
-        # Cuerpo con tarjeta.
+        # Cuerpo con la tarjeta centrada y de ancho acotado. Las columnas de los
+        # lados absorben el espacio sobrante, así que al maximizar la ventana la
+        # tarjeta no se estira: se queda centrada y con un ancho cómodo de leer.
         cuerpo = tk.Frame(self, bg=self.COLOR_FONDO)
         cuerpo.pack(fill="both", expand=True)
+        cuerpo.columnconfigure(0, weight=1, uniform="lados")
+        cuerpo.columnconfigure(1, weight=0, minsize=ANCHO_TARJETA_INGRESO)
+        cuerpo.columnconfigure(2, weight=1, uniform="lados")
+        cuerpo.rowconfigure(0, weight=1)
+
         tarjeta = tk.Frame(cuerpo, bg=COLOR_BLANCO,
                            highlightbackground=self.COLOR_BORDE,
                            highlightthickness=1)
-        tarjeta.pack(fill="both", expand=True, padx=34, pady=28)
+        # "ew": ocupa el ancho de su columna y se ajusta a su contenido a lo
+        # alto, quedando centrada verticalmente en vez de estirarse hasta el
+        # borde inferior de la pantalla.
+        tarjeta.grid(row=0, column=1, sticky="ew", pady=28)
 
         interno = tk.Frame(tarjeta, bg=COLOR_BLANCO)
         interno.pack(fill="both", expand=True, padx=30, pady=26)
@@ -2385,6 +2453,13 @@ def iniciar():
                              configuracion.ERROR_DATOS)
         raiz.destroy()
         return
+    # La aplicación abre maximizada, pero la ventana queda redimensionable: el
+    # botón de maximizar/restaurar sigue operativo y cada persona la deja como
+    # prefiera. Solo se maximiza aquí, al arrancar; después de ingresar o de
+    # cerrar sesión se respeta el tamaño que tenga en ese momento.
+    raiz.minsize(*TAMANO_MINIMO)
+    raiz.resizable(True, True)
+    maximizar_ventana(raiz)
     VentanaIngreso(raiz)
     raiz.mainloop()
 
