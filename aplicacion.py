@@ -1992,8 +1992,20 @@ class DialogoExportar(tk.Toplevel):
                  bg=COLOR_BLANCO, fg="#6B7280", font=("Helvetica", 8)).grid(
                      row=4, column=1, sticky="w")
 
+        tk.Label(marco, text="Formato", bg=COLOR_BLANCO,
+                 fg=COLOR_TEXTO).grid(row=5, column=0, sticky="w", pady=(10, 4))
+        self._formatos = list(oficios.FORMATOS_EXPORTACION)
+        self.combo_formato = ttk.Combobox(marco, width=22, state="readonly",
+                                          values=self._formatos)
+        self.combo_formato.current(0)      # por defecto, Excel
+        self.combo_formato.grid(row=5, column=1, sticky="w", pady=(10, 4))
+        if not oficios.hay_soporte_xlsx():
+            # Sin openpyxl no se puede generar el .xlsx: se deja el CSV, que no
+            # necesita ninguna librería externa.
+            self.combo_formato.set("CSV (.csv)")
+
         barra = tk.Frame(marco, bg=COLOR_BLANCO)
-        barra.grid(row=5, column=0, columnspan=2, sticky="e", pady=(16, 0))
+        barra.grid(row=6, column=0, columnspan=2, sticky="e", pady=(16, 0))
         ttk.Button(barra, text="Cancelar", command=self.destroy).pack(side="right")
         btn = ttk.Button(barra, text="Exportar", command=self._exportar)
         btn.pack(side="right", padx=6)
@@ -2024,16 +2036,19 @@ class DialogoExportar(tk.Toplevel):
                 "Ningún oficio coincide con esa fecha o rango.", parent=self)
             return
 
+        etiqueta_formato = self.combo_formato.get()
+        extension = oficios.FORMATOS_EXPORTACION[etiqueta_formato]
         sufijo = desde if not hasta else f"{desde or 'inicio'}_a_{hasta}"
         ruta = filedialog.asksaveasfilename(
             parent=self, title="Guardar la exportación",
-            defaultextension=".csv", initialfile=f"oficios_{sufijo}.csv",
-            filetypes=[("CSV para Excel", "*.csv")])
+            defaultextension=extension,
+            initialfile=f"oficios_{sufijo}{extension}",
+            filetypes=[(etiqueta_formato, f"*{extension}")])
         if not ruta:
             return
         try:
-            cantidad = oficios.exportar_csv(
-                registros, ruta, self.usuario["usuario"],
+            cantidad = oficios.exportar_oficios(
+                registros, ruta, extension, self.usuario["usuario"],
                 f"{self.combo_campo.get()} {desde or ''}"
                 + (f"..{hasta}" if hasta else ""))
         except ValueError as error:

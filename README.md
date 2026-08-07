@@ -20,7 +20,7 @@ para repartirse dentro del área.
 
 ### Dependencias externas
 
-La aplicación usa **solo tres** librerías de terceros. Instalación completa
+La aplicación usa **solo cuatro** librerías de terceros. Instalación completa
 (recomendada, para tener todas las funciones):
 
 ```bash
@@ -30,7 +30,7 @@ pip install -r requirements.txt
 O, si prefieres instalarlas a mano:
 
 ```bash
-pip install cryptography pymupdf pillow
+pip install cryptography pymupdf pillow openpyxl
 ```
 
 | Librería | `import` | ¿Obligatoria? | Para qué se usa | Si falta… |
@@ -38,6 +38,7 @@ pip install cryptography pymupdf pillow
 | **cryptography** | `cryptography` | **Sí** | Cifrado Fernet de `oficios.dat` y `credenciales.dat`; hashing PBKDF2 de contraseñas | La app **no arranca** |
 | **PyMuPDF** | `fitz` | No | Visor de PDF integrado: renderiza cada página de la respuesta | "Ver respuesta (PDF)" ofrece abrirlo con el lector del sistema |
 | **Pillow** | `PIL` | No | 1) Logo del banco en la cabecera y el login. 2) Mejora la nitidez del visor de PDF (renderiza a 2× y reduce con LANCZOS) | Sin logo; el visor usa el modo PPM nativo de Tk (funciona, algo menos nítido) |
+| **openpyxl** | `openpyxl` | No | Exportar los oficios a Excel (`.xlsx`) desde la pestaña *Oficios* | El desplegable de formato se queda en CSV, que no necesita ninguna librería |
 
 Las dependencias opcionales se importan con `try/except ImportError` y siempre
 tienen una alternativa, así que **la aplicación funciona sin ellas**.
@@ -213,11 +214,26 @@ puede quitar la respuesta de un oficio finalizado sin reabrirlo primero
 
 ### Exportar oficios
 
-El botón **Exportar…** de la pestaña *Oficios* genera un CSV acotado por fecha:
-se elige el tipo de fecha (oficio, recepción, asignación o respuesta) y una
-fecha única o un rango. El archivo sale en UTF-8 con BOM y separador `;`, de
-modo que Excel en español lo abre con las columnas y las tildes correctas. Cada
-persona exporta únicamente los oficios que puede ver.
+El botón **Exportar…** de la pestaña *Oficios* genera un archivo acotado por
+fecha: se elige el tipo de fecha (oficio, recepción, asignación o respuesta),
+una fecha única o un rango, y el **formato** de salida. Cada persona exporta
+únicamente los oficios que puede ver.
+
+| Formato | Librería | Notas |
+|---|---|---|
+| **Excel (.xlsx)** | openpyxl (opcional) | Opción por defecto. Cabecera con los colores corporativos, panel congelado y autofiltro |
+| **CSV (.csv)** | ninguna | Siempre disponible. UTF-8 con BOM para que Excel respete las tildes |
+
+Si **openpyxl no está instalado**, el desplegable se sitúa en CSV y, si aun así
+se pide un `.xlsx`, se explica cómo instalarla. El CSV no depende de nada.
+
+**Separador del CSV:** se usa la **barra vertical** (`|`), definida en
+`almacen_oficios.SEPARADOR_CSV`. La razón es que los campos de texto libre del
+oficio (observación, causal) pueden contener comas y puntos y coma, y algunos
+programas los tratan como separador aunque el valor venga entrecomillado,
+partiendo la fila en columnas equivocadas. La barra vertical no aparece en la
+práctica en el texto de un oficio, así que la importación es inequívoca. Es un
+detalle interno del formato: **la interfaz no lo menciona**.
 
 ### Documento del oficio
 

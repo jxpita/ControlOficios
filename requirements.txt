@@ -26,3 +26,7 @@ pymupdf>=1.24
 # (render a 2x reducido con LANCZOS). Sin ella no se ve el logo y el visor usa
 # el modo PPM nativo de Tk.
 pillow>=10.0
+
+# Exportación de oficios a Excel (.xlsx) desde la pestaña Oficios. Sin ella el
+# desplegable de formato se queda en CSV, que no necesita ninguna librería.
+openpyxl>=3.1

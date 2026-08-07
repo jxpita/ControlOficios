@@ -724,30 +724,121 @@ COLUMNAS_EXPORTACION = {
 }
 
 
-def exportar_csv(registros: List[Dict], ruta_destino: str, exportado_por: str = "",
-                 detalle: str = "") -> int:
-    """Vuelca los oficios indicados a un CSV y devuelve cuántos escribió.
+# Separador del CSV exportado.
+#
+# Se usa la barra vertical en lugar de ';' o ',' porque los campos de texto
+# libre del oficio (observación, causal) pueden contener comas y puntos y coma,
+# y algunos programas los interpretan como separador aunque el valor venga
+# entrecomillado, partiendo la fila en columnas equivocadas. La barra vertical
+# no aparece en la práctica en el texto de un oficio, así que la importación es
+# inequívoca. Es un detalle interno del formato: no se menciona en la interfaz.
+SEPARADOR_CSV = "|"
 
-    Se usa UTF-8 con BOM y separador ';' para que Excel en español lo abra
-    directo, con las tildes correctas y las columnas ya separadas.
+
+def _fila_exportacion(registro: Dict) -> List[str]:
+    """Valores de un oficio en el orden de COLUMNAS_EXPORTACION, con los saltos
+    de línea de la observación colapsados en espacios."""
+    return [" ".join(str(registro.get(clave, "") or "").split())
+            for clave in COLUMNAS_EXPORTACION]
+
+
+def exportar_csv(registros: List[Dict], ruta_destino: str) -> None:
+    """Escribe los oficios en un CSV.
+
+    UTF-8 con BOM para que Excel respete las tildes, y `SEPARADOR_CSV` como
+    delimitador.
     """
+    destino = Path(ruta_destino)
+    with destino.open("w", newline="", encoding="utf-8-sig") as archivo:
+        escritor = csv.writer(archivo, delimiter=SEPARADOR_CSV)
+        escritor.writerow(COLUMNAS_EXPORTACION.values())
+        for registro in registros:
+            escritor.writerow(_fila_exportacion(registro))
+
+
+def hay_soporte_xlsx() -> bool:
+    """¿Está disponible openpyxl para exportar a Excel?"""
+    try:
+        import openpyxl                      # noqa: F401
+        return True
+    except ImportError:
+        return False
+
+
+def exportar_xlsx(registros: List[Dict], ruta_destino: str) -> None:
+    """Escribe los oficios en un libro de Excel (.xlsx).
+
+    Requiere openpyxl, que es opcional: si falta, se avisa para que se use el
+    CSV, que no necesita ninguna librería externa.
+    """
+    try:
+        from openpyxl import Workbook
+        from openpyxl.styles import Alignment, Font, PatternFill
+        from openpyxl.utils import get_column_letter
+    except ImportError:
+        raise ValueError(
+            "Para exportar a Excel hace falta la librería openpyxl:\n\n"
+            "    pip install openpyxl\n\n"
+            "Mientras tanto puede exportar en formato CSV."
+        )
+
+    libro = Workbook()
+    hoja = libro.active
+    hoja.title = "Oficios"
+
+    encabezados = list(COLUMNAS_EXPORTACION.values())
+    hoja.append(encabezados)
+    # Cabecera con los colores corporativos, para que se distinga de los datos.
+    relleno = PatternFill("solid", fgColor="152342")
+    for columna in range(1, len(encabezados) + 1):
+        celda = hoja.cell(row=1, column=columna)
+        celda.font = Font(bold=True, color="FFFFFF")
+        celda.fill = relleno
+        celda.alignment = Alignment(vertical="center")
+
+    for registro in registros:
+        hoja.append(_fila_exportacion(registro))
+
+    # Ancho de columna aproximado al contenido, acotado para que la observación
+    # no desborde la pantalla.
+    for indice, encabezado in enumerate(encabezados, start=1):
+        ancho = max([len(encabezado)]
+                    + [len(str(fila[indice - 1]))
+                       for fila in (_fila_exportacion(r) for r in registros)])
+        hoja.column_dimensions[get_column_letter(indice)].width = min(ancho + 2, 45)
+
+    hoja.freeze_panes = "A2"          # la cabecera queda fija al desplazarse
+    hoja.auto_filter.ref = hoja.dimensions
+    libro.save(ruta_destino)
+
+
+# Formatos que ofrece el desplegable de exportación: etiqueta -> extensión.
+FORMATOS_EXPORTACION = {
+    "Excel (.xlsx)": ".xlsx",
+    "CSV (.csv)": ".csv",
+}
+
+
+def exportar_oficios(registros: List[Dict], ruta_destino: str,
+                     formato: str = ".xlsx", exportado_por: str = "",
+                     detalle: str = "") -> int:
+    """Exporta los oficios al formato indicado y devuelve cuántos escribió."""
     if not registros:
         raise ValueError("No hay oficios que exportar con ese criterio.")
+    formato = (formato or "").lower()
+    if formato not in FORMATOS_EXPORTACION.values():
+        raise ValueError("Formato de exportación no válido.")
     destino = Path(ruta_destino)
     try:
-        with destino.open("w", newline="", encoding="utf-8-sig") as archivo:
-            escritor = csv.writer(archivo, delimiter=";")
-            escritor.writerow(COLUMNAS_EXPORTACION.values())
-            for registro in registros:
-                escritor.writerow([
-                    " ".join(str(registro.get(clave, "") or "").split())
-                    for clave in COLUMNAS_EXPORTACION
-                ])
+        if formato == ".xlsx":
+            exportar_xlsx(registros, str(destino))
+        else:
+            exportar_csv(registros, str(destino))
     except OSError as error:
         raise ValueError(f"No se pudo escribir el archivo: {error}")
     registro_actividad.registrar(
         "EXPORTAR_OFICIOS",
-        f"cantidad={len(registros)}; archivo={destino.name}"
+        f"cantidad={len(registros)}; formato={formato}; archivo={destino.name}"
         + (f"; {detalle}" if detalle else ""),
         exportado_por)
     return len(registros)
