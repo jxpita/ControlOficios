@@ -852,7 +852,6 @@ class AplicacionPrincipal(ttk.Frame):
             documentos, 1, "Respuesta en PDF",
             SelectorArchivo(documentos, [("PDF", "*.pdf")],
                             "Seleccione la respuesta en PDF"),
-            ayuda="Solo hace falta para registrar un oficio ya finalizado",
             estirar=False)
 
         # --- Observación (ancho completo y elástica) -------------------------
