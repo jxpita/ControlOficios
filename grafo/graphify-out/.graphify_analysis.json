@@ -130,11 +130,11 @@
       "aplicacion_dialogoexportar_init",
       "aplicacion_iniciar",
       "aplicacion_maximizar_ventana",
-      "aplicacion_rationale_1374",
-      "aplicacion_rationale_2186",
-      "aplicacion_rationale_2257",
-      "aplicacion_rationale_2316",
-      "aplicacion_rationale_2496",
+      "aplicacion_rationale_1373",
+      "aplicacion_rationale_2174",
+      "aplicacion_rationale_2245",
+      "aplicacion_rationale_2304",
+      "aplicacion_rationale_2484",
       "aplicacion_rationale_261",
       "aplicacion_rationale_44",
       "aplicacion_rationale_579",
@@ -257,7 +257,7 @@
       "aplicacion_aplicacionprincipal_guardar_secuencial",
       "aplicacion_aplicacionprincipal_refrescar_configuracion",
       "aplicacion_aplicacionprincipal_refrescar_panel_respaldos",
-      "aplicacion_rationale_1106",
+      "aplicacion_rationale_1105",
       "aplicacion_rationale_482",
       "aplicacion_rationale_504",
       "aplicacion_rationale_721",
@@ -296,12 +296,12 @@
       "aplicacion_aplicacionprincipal_refrescar_listado",
       "aplicacion_aplicacionprincipal_responsable_por_display",
       "aplicacion_dialogoexportar_exportar",
-      "aplicacion_rationale_1225",
-      "aplicacion_rationale_1283",
-      "aplicacion_rationale_1306",
-      "aplicacion_rationale_1326",
+      "aplicacion_rationale_1224",
+      "aplicacion_rationale_1282",
+      "aplicacion_rationale_1305",
+      "aplicacion_rationale_1325",
       "aplicacion_rationale_616",
-      "aplicacion_rationale_979",
+      "aplicacion_rationale_978",
       "aplicacion_selectorarchivo_get"
     ],
     "9": [
@@ -316,13 +316,13 @@
       "aplicacion_aplicacionprincipal_init",
       "aplicacion_aplicacionprincipal_lanzar_respaldo_diario",
       "aplicacion_aplicacionprincipal_puede_gestionar_usuarios",
-      "aplicacion_rationale_1918",
+      "aplicacion_rationale_1906",
       "aplicacion_rationale_414",
       "aplicacion_rationale_645",
       "aplicacion_rationale_653",
       "aplicacion_rationale_693",
       "aplicacion_rationale_759",
-      "aplicacion_rationale_921"
+      "aplicacion_rationale_920"
     ],
     "10": [
       "almacen_oficios_listar_oficios",
@@ -387,8 +387,8 @@
       "aplicacion_aplicacionprincipal_refrescar_responsables",
       "aplicacion_aplicacionprincipal_refrescar_usuarios",
       "aplicacion_aplicacionprincipal_roles_asignables",
-      "aplicacion_rationale_1475",
-      "aplicacion_rationale_2155",
+      "aplicacion_rationale_1474",
+      "aplicacion_rationale_2143",
       "aplicacion_rationale_626",
       "aplicacion_rationale_687"
     ],
@@ -399,10 +399,10 @@
       "aplicacion_aplicacionprincipal_dibujar_barras_meses",
       "aplicacion_aplicacionprincipal_refrescar_tablero",
       "aplicacion_aplicacionprincipal_tarjeta",
-      "aplicacion_rationale_2006",
-      "aplicacion_rationale_2032",
-      "aplicacion_rationale_2056",
-      "aplicacion_rationale_2107"
+      "aplicacion_rationale_1994",
+      "aplicacion_rationale_2020",
+      "aplicacion_rationale_2044",
+      "aplicacion_rationale_2095"
     ],
     "15": [
       "aplicacion_aplicacionprincipal_al_seleccionar_oficio",
@@ -410,7 +410,7 @@
       "aplicacion_aplicacionprincipal_oficio_por_referencia",
       "aplicacion_aplicacionprincipal_usuarios_sistema",
       "aplicacion_aplicacionprincipal_valores_responsables",
-      "aplicacion_rationale_1180",
+      "aplicacion_rationale_1179",
       "aplicacion_rationale_595",
       "aplicacion_rationale_603",
       "aplicacion_rationale_637"
@@ -421,10 +421,10 @@
       "aplicacion_aplicacionprincipal_construir_panel_respaldos",
       "aplicacion_aplicacionprincipal_es_superusuario",
       "aplicacion_aplicacionprincipal_etiqueta_ajustable",
-      "aplicacion_rationale_1664",
-      "aplicacion_rationale_1741",
-      "aplicacion_rationale_1764",
-      "aplicacion_rationale_1813"
+      "aplicacion_rationale_1663",
+      "aplicacion_rationale_1740",
+      "aplicacion_rationale_1763",
+      "aplicacion_rationale_1809"
     ],
     "17": [
       "aplicacion_aplicacionprincipal_alcanza_a",
@@ -432,7 +432,7 @@
       "aplicacion_aplicacionprincipal_editar_usuario_seleccionado",
       "aplicacion_aplicacionprincipal_pedir_nueva_clave",
       "aplicacion_aplicacionprincipal_restablecer_clave_seleccionado",
-      "aplicacion_rationale_1595",
+      "aplicacion_rationale_1594",
       "aplicacion_rationale_668",
       "aplicacion_rationale_675"
     ],
@@ -440,9 +440,9 @@
       "aplicacion_aplicacionprincipal_mostrar_pdf",
       "aplicacion_aplicacionprincipal_ver_documento",
       "aplicacion_aplicacionprincipal_ver_respuesta",
-      "aplicacion_rationale_1261",
-      "aplicacion_rationale_1346",
-      "aplicacion_rationale_1359"
+      "aplicacion_rationale_1260",
+      "aplicacion_rationale_1345",
+      "aplicacion_rationale_1358"
     ],
     "19": [
       "respaldo_datos",

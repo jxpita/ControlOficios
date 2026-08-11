@@ -1,13 +1,13 @@
 {
   "almacen_oficios.py": {
-    "mtime": 1786140403.7207177,
+    "mtime": 1786140908.2127242,
     "ast_hash": "10c8bdf7df6e4902cafbc415a8374da7",
     "semantic_hash": "10c8bdf7df6e4902cafbc415a8374da7"
   },
   "aplicacion.py": {
-    "mtime": 1786140741.3487222,
-    "ast_hash": "ce2d8252dc3c04247b3ed5d8a4a8d0e1",
-    "semantic_hash": "ce2d8252dc3c04247b3ed5d8a4a8d0e1"
+    "mtime": 1786460184.4556837,
+    "ast_hash": "0e456670a2984ffa24d2f25b036e3f8d",
+    "semantic_hash": "0e456670a2984ffa24d2f25b036e3f8d"
   },
   "autenticacion.py": {
     "mtime": 1786040970.9106526,
@@ -20,7 +20,7 @@
     "semantic_hash": "be68dfef4ef95ed0b58e941cd5c2fd61"
   },
   "carga_masiva.py": {
-    "mtime": 1786140616.9007206,
+    "mtime": 1786140908.2167244,
     "ast_hash": "a0d1123b47a5a1976dd70bf457268b0e",
     "semantic_hash": "a0d1123b47a5a1976dd70bf457268b0e"
   },

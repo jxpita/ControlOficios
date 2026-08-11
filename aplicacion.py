@@ -1720,7 +1720,7 @@ class AplicacionPrincipal(ttk.Frame):
             panel,
             "El secuencial es por año: cada año la numeración vuelve a empezar "
             "en 0001. Solo el superusuario y los administradores pueden "
-            "modificar este valor. Reconfigurarlo no genera referencias duplicadas.",
+            "modificar este valor.",
             foreground="#6B7280", font=("Helvetica", 8)
         ).grid(row=4, column=0, columnspan=2, sticky="w", pady=(10, 0))
 
@@ -1768,10 +1768,7 @@ class AplicacionPrincipal(ttk.Frame):
             panel,
             "Permite dar de alta de una sola vez los oficios que se venían "
             "llevando en la matriz de Excel. Se admite la propia matriz "
-            "(.xlsx) o un CSV con la misma cabecera. Las columnas se "
-            "reconocen por su nombre, así que no importa el orden.\n"
-            "Antes de guardar nada se muestra un resumen de lo que se va a "
-            "importar y de lo que se va a descartar."
+            "(.xlsx) o un CSV con la misma cabecera."
         ).pack(anchor="w", pady=(0, 8))
 
         btn = ttk.Button(panel, text="Cargar archivo…",
@@ -1782,8 +1779,8 @@ class AplicacionPrincipal(ttk.Frame):
         self._etiqueta_ajustable(
             panel,
             "Los oficios importados no llevan el documento del oficio ni la "
-            "respuesta en PDF (no existen para lo ya tramitado); se pueden "
-            "adjuntar después desde la pestaña Oficios.",
+            "respuesta en PDF; se pueden adjuntar después desde la pestaña "
+            "Oficios.",
             foreground="#6B7280", font=("Helvetica", 8)
         ).pack(anchor="w", pady=(8, 0))
 
@@ -1832,14 +1829,6 @@ class AplicacionPrincipal(ttk.Frame):
         btn.config(style="Accent.TButton")
         ttk.Button(barra, text="Abrir carpeta de copias",
                    command=self._abrir_carpeta_respaldos).pack(side="left", padx=6)
-
-        self._etiqueta_ajustable(
-            panel,
-            "La copia incluye la clave maestra: quien tenga el archivo puede "
-            "descifrar los datos. Si copia los respaldos a otro lugar, "
-            "protéjalo igual que la carpeta datos.",
-            foreground="#6B7280", font=("Helvetica", 8)
-        ).pack(anchor="w", pady=(10, 0))
 
     def _refrescar_panel_respaldos(self):
         if not hasattr(self, "lbl_respaldos"):
