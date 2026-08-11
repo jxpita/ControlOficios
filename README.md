@@ -343,15 +343,25 @@ enumera.
   con varios investigados: se agrupan en un registro y la cantidad de
   investigados es el número de filas.
 - La columna *Usuario* trae la persona en formato `C. Roman`, que no es un
-  nombre de cuenta. Se intenta encajar por cuenta, por nombre completo y por la
-  forma *inicial. apellido*. **Si no se encuentra la cuenta, se conserva el
-  nombre de la matriz sin enlazarlo a ningún usuario**: el expediente dice quién
-  lo atendió aunque esa persona ya no tenga cuenta, y así no se pierde la fila.
-  Esos oficios solo los ve un gestor, que puede reasignarlos.
-- Un oficio ya respondido cuya matriz **no anota usuario** entra con el
-  responsable `(no consta en la matriz)` (`RESPONSABLE_NO_CONSTA`). No es un
-  nombre inventado: deja constancia de que el dato falta y evita descartar un
-  expediente real, porque un oficio con fecha de respuesta necesita responsable.
+  nombre de cuenta. Se encaja por nombre de cuenta, por nombre completo y por la
+  forma *inicial + apellido* contra **cualquiera** de las palabras del nombre
+  (`_claves_de`), porque no se sabe de antemano cuál de los apellidos usaron:
+
+  | En la matriz | Cuenta del sistema |
+  |---|---|
+  | `C. Roman` | Camila Maria **Roman** Townsed |
+  | `J. Portero` | Joel Tyrone **Portero** Cervantes |
+  | `J. Rosero` | Juan Pablo **Rosero** Rodríguez |
+
+  Se toleran mayúsculas, tildes, el punto de la inicial y los espacios de más.
+- Si una forma apunta a **dos personas distintas** (dos `J. Rosero`) se
+  considera ambigua y **no se asigna**: es preferible dejar el oficio por
+  asignar que atribuírselo a quien no fue.
+- **Sin coincidencia, el oficio entra sin responsable y en "Por asignar"**, sea
+  cual sea el estado que traiga el archivo. Se le retira además la fecha de
+  respuesta, porque las reglas del sistema no admiten un oficio respondido sin
+  nadie a cargo y con ella puesta el estado saltaría a "Finalizado"; quien lo
+  asigne la vuelve a poner. La vista previa dice cuántos oficios quedan así.
 - **No se exige el documento del oficio ni la respuesta en PDF**: no existen
   para lo ya tramitado. Se pueden adjuntar después.
 - **Se respeta el estado del archivo, incluido "Finalizado"**, porque es el
@@ -395,34 +405,6 @@ Cada oficio puede llevar adjunta **la respuesta en PDF**:
 
 ## 2.3 Tablero (dashboard)
 
-### Carga de trabajo según el número de investigados
-
-Dos gráficos cruzan la cantidad de investigados con el tiempo que costó
-responder, para ver si los oficios con más personas pesan más:
-
-| Gráfico | Eje X | Eje Y |
-|---|---|---|
-| **Dispersión** (`esfuerzo_por_oficio`) | Investigados del oficio | Días de trabajo, con recta de tendencia |
-| **Barras** (`distribucion_investigados`) | Tramos: 1, 2-3, 4-5, 6-10, +10 | Nº de oficios, con la mediana de días sobre cada barra |
-
-Bajo el título de la dispersión se traduce la pendiente a lenguaje llano
-("cada investigado adicional suma X días de media"). Si la pendiente es
-prácticamente plana lo dice también: que el número de investigados **no**
-explique el tiempo empleado es un hallazgo igual de útil.
-
-Dos decisiones de cálculo:
-
-- Los días se cuentan de la **asignación** a la respuesta, no desde la
-  recepción: es el tiempo de trabajo real del analista, sin la espera previa al
-  reparto.
-- En las barras se usa la **mediana** y no el promedio, porque con pocos
-  oficios uno que tardó tres meses desplaza el promedio y da una idea falsa del
-  trabajo habitual. En la dispersión se ven todos los puntos, atípicos incluidos.
-
-Solo entran los oficios con los tres datos (investigados, fecha de asignación y
-fecha de respuesta); si no hay ninguno, cada gráfico explica por qué está vacío
-en lugar de mostrarse en blanco. Los puntos que coinciden se dibujan más
-grandes, para que no se oculten entre sí.
 
 El tablero tiene **desplazamiento vertical** y muestra únicamente los oficios
 que el usuario puede ver (ver *Visibilidad de los oficios*).

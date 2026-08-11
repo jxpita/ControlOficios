@@ -356,83 +356,109 @@ def agrupar_por_referencia(filas: List[Dict]) -> List[Dict]:
     return [agrupados[c] for c in orden]
 
 
-def emparejar_responsables(filas: List[Dict], usuarios: List[Dict]) -> List[str]:
+def _claves_de(nombre: str, cuenta: str):
+    """Formas con las que se puede nombrar a una persona en la matriz.
+
+    La matriz la anota como "C. Roman": la inicial del primer nombre y UNO de
+    sus apellidos. Como no se sabe cuál de las palabras del nombre completo es
+    el apellido que usaron, se generan todas las combinaciones posibles de
+    inicial + cada una de las palabras siguientes:
+
+        "Camila Maria Roman Townsed"  ->  c. maria / c. roman / c. townsed
+                                          (y las mismas sin el punto)
+
+    Así "C. Roman" encaja con Camila Maria Roman Townsed, "J. Portero" con Joel
+    Tyrone Portero Cervantes y "J. Rosero" con Juan Pablo Rosero Rodríguez.
+    """
+    claves = set()
+    if cuenta:
+        claves.add(normalizar(cuenta))
+    nombre = normalizar(nombre)
+    if not nombre:
+        return claves
+    claves.add(nombre)
+    partes = nombre.split()
+    if len(partes) >= 2:
+        inicial = partes[0][0]
+        for palabra in partes[1:]:
+            claves.add(f"{inicial}. {palabra}")
+            claves.add(f"{inicial} {palabra}")
+        # "Roman Townsed", "Camila Roman"... por si la matriz usa dos palabras.
+        claves.add(f"{partes[0]} {partes[-1]}")
+        claves.add(" ".join(partes[-2:]))
+    return claves
+
+
+def emparejar_responsables(filas: List[Dict], usuarios: List[Dict]) -> Dict:
     """Traduce la columna "Usuario" de la matriz a cuentas del sistema.
 
-    La matriz anota a la persona en formato "C. Roman", que no es un nombre de
-    usuario. Se intenta encajar por nombre de cuenta, por nombre completo y por
-    la forma "inicial. apellido".
+    Se prueba con el nombre de cuenta, el nombre completo y la forma
+    "inicial. apellido" contra CUALQUIERA de los apellidos de la persona (ver
+    `_claves_de`).
 
-    Cuando no se encuentra la cuenta se CONSERVA el nombre tal cual venía en la
-    matriz, pero sin enlazarlo a ningún usuario del sistema. Es lo fiel a un
-    histórico: el expediente dice quién lo atendió, aunque esa persona ya no
-    tenga cuenta. Además evita perder la fila entera, porque un oficio con
-    fecha de respuesta necesita responsable para poder quedar finalizado.
-    Esos oficios los ve solo un gestor, que puede reasignarlos a una cuenta
-    real. Devuelve la lista de nombres que no se pudieron identificar.
+    Si una misma forma apunta a dos personas distintas (dos "J. Rosero", por
+    ejemplo) se considera AMBIGUA y no se empareja: es preferible dejar el
+    oficio por asignar que atribuírselo a quien no fue.
+
+    Lo que no se consigue emparejar se deja SIN responsable; de eso se encarga
+    `preparar`, que además lo pone en "Por asignar". Devuelve un diccionario con
+    los nombres no reconocidos y los ambiguos, para poder informarlos.
     """
-    indice = {}
+    indice: Dict[str, Optional[Dict]] = {}
     for usuario in usuarios:
-        cuenta = usuario["usuario"]
-        nombre = usuario.get("nombre", "")
-        indice[normalizar(cuenta)] = usuario
-        indice[normalizar(nombre)] = usuario
-        partes = normalizar(nombre).split()
-        if len(partes) >= 2:
-            # "Juan Carlos Roman Diaz" -> "j. roman" y "j roman"
-            apellido = partes[len(partes) // 2] if len(partes) > 2 else partes[-1]
-            indice[f"{partes[0][0]}. {apellido}"] = usuario
-            indice[f"{partes[0][0]} {apellido}"] = usuario
+        for clave in _claves_de(usuario.get("nombre", ""), usuario["usuario"]):
+            if clave in indice and indice[clave] is not usuario:
+                indice[clave] = None          # ambigua: apunta a más de uno
+            else:
+                indice.setdefault(clave, usuario)
 
-    sin_identificar = []
+    sin_identificar, ambiguos = [], []
     for fila in filas:
-        buscado = normalizar(fila.get("empleado"))
+        original = fila.get("empleado", "")
+        buscado = normalizar(original)
+        fila["id_empleado"] = ""
         if not buscado:
-            fila["id_empleado"] = ""
             fila["empleado"] = ""
             continue
-        encontrado = indice.get(buscado) or indice.get(buscado.replace(".", "").strip())
-        if encontrado:
+        # Se prueba tal cual y sin el punto de la inicial ("J Rosero").
+        encontrado = indice.get(buscado, "sin clave")
+        if encontrado == "sin clave":
+            encontrado = indice.get(" ".join(buscado.replace(".", " ").split()),
+                                    "sin clave")
+        if encontrado not in (None, "sin clave"):
             fila["id_empleado"] = encontrado["usuario"]
             fila["empleado"] = encontrado["nombre"]
         else:
-            sin_identificar.append(fila["empleado"])
-            fila["id_empleado"] = ""      # sin cuenta: nadie puede actuar sobre él
-    return sorted(set(sin_identificar))
-
-
-# Marca para los oficios ya tramitados cuya matriz no anota quién los atendió.
-# No es un nombre inventado: deja constancia de que el dato no está, y permite
-# conservar el expediente (un oficio con fecha de respuesta necesita
-# responsable para poder quedar finalizado).
-RESPONSABLE_NO_CONSTA = "(no consta en la matriz)"
+            (ambiguos if encontrado is None else sin_identificar).append(original)
+            fila["empleado"] = ""
+    return {"sin_identificar": sorted(set(sin_identificar)),
+            "ambiguos": sorted(set(ambiguos))}
 
 
 def preparar(ruta, usuarios: List[Dict]) -> Dict:
     """Deja las filas listas para importar y resume lo que se va a hacer."""
     filas, ignoradas, errores = leer_archivo(ruta)
     filas = agrupar_por_referencia(filas)
-    sin_responsable = emparejar_responsables(filas, usuarios)
-    sin_constancia = 0
+    emparejados = emparejar_responsables(filas, usuarios)
+    sin_estado_original = 0
     for fila in filas:
         if not fila.get("empleado"):
-            # Si el oficio ya fue respondido, descartarlo por no saber quién lo
-            # atendió sería perder un expediente real: se deja constancia de
-            # que el dato no consta y se conserva la fila.
-            if fila.get("fecha_respuesta") or fila.get("estado") in (
-                    "En proceso", "Finalizado"):
-                fila["empleado"] = RESPONSABLE_NO_CONSTA
-                sin_constancia += 1
-            else:
-                # Sin responsable y sin respuesta, el único estado posible es
-                # "Por asignar": las reglas del sistema no admiten otro.
-                fila["estado"] = "Por asignar"
-        if fila.get("empleado") and fila.get("estado") not in ESTADOS:
+            # Sin responsable identificado el oficio entra POR ASIGNAR, sea
+            # cual sea el estado que traiga el archivo. Se retira también la
+            # fecha de respuesta: las reglas del sistema no admiten un oficio
+            # respondido sin nadie a cargo, y con ella puesta el estado saltaría
+            # a "Finalizado". Quien lo asigne la vuelve a poner.
+            if fila.get("estado") != "Por asignar" or fila.get("fecha_respuesta"):
+                sin_estado_original += 1
+            fila["estado"] = "Por asignar"
+            fila["fecha_respuesta"] = ""
+        elif fila.get("estado") not in ESTADOS:
             fila["estado"] = "En proceso"
     return {
         "filas": filas,
         "columnas_ignoradas": ignoradas,
         "errores": errores,
-        "responsables_sin_identificar": sin_responsable,
-        "sin_responsable_anotado": sin_constancia,
+        "responsables_sin_identificar": emparejados["sin_identificar"],
+        "responsables_ambiguos": emparejados["ambiguos"],
+        "puestos_por_asignar": sin_estado_original,
     }

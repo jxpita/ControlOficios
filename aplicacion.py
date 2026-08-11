@@ -1112,9 +1112,9 @@ class AplicacionPrincipal(ttk.Frame):
                    command=self._eliminar_respuesta).pack(side="left", padx=6)
         if es_gestor:
             # Mantenimiento: corregir lo mal tecleado y retirar un oficio.
-            ttk.Button(barra, text="Mantenimiento…",
+            ttk.Button(barra, text="Mantenimiento",
                        command=self._abrir_mantenimiento).pack(side="left")
-        ttk.Button(barra, text="Exportar…",
+        ttk.Button(barra, text="Exportar",
                    command=self._exportar_oficios).pack(side="right")
 
         # Al seleccionar un oficio, precargar sus valores actuales.
@@ -1972,13 +1972,6 @@ class AplicacionPrincipal(ttk.Frame):
         self.lienzo_responsables = self._crear_lienzo(fila, 240, lado="left", expandir=True)
         # Gráfico 4: recepciones por mes.
         self.lienzo_meses = self._crear_lienzo(self.tablero, 210)
-        # Gráficos 5 y 6: carga de trabajo según el número de investigados.
-        fila_investigados = ttk.Frame(self.tablero)
-        fila_investigados.pack(fill="x", pady=6)
-        self.lienzo_esfuerzo = self._crear_lienzo(fila_investigados, 250,
-                                                  lado="left", expandir=True)
-        self.lienzo_tramos = self._crear_lienzo(fila_investigados, 250,
-                                                lado="left", expandir=True)
 
     def _crear_lienzo(self, contenedor, alto, lado=None, expandir=False):
         lienzo = tk.Canvas(contenedor, height=alto, background=COLOR_BLANCO,
@@ -2034,170 +2027,13 @@ class AplicacionPrincipal(ttk.Frame):
         self._tarjeta(self.marco_tarjetas2, "Con PDF", datos["con_pdf"], "#1d4ed8")
         self._tarjeta(self.marco_tarjetas2, "Sin responsable",
                       datos["sin_responsable"], "#64748b")
-        personas = metricas.resumen_investigados(registros)
-        self._tarjeta(self.marco_tarjetas2, "Investigados",
-                      personas["total_investigados"], "#0f766e")
-        promedio_personas = personas["promedio_por_oficio"]
-        self._tarjeta(self.marco_tarjetas2, "Investigados/oficio",
-                      promedio_personas if promedio_personas is not None else "—",
-                      "#7c3aed")
 
         # Gráficos.
         self._dibujar_barras(metricas.serie_por_dia(14, registros))
         self._dibujar_anillo_estados(metricas.distribucion_estados(registros))
         self._dibujar_barras_horizontales(metricas.por_responsable(registros))
         self._dibujar_barras_meses(metricas.serie_por_mes(6, registros))
-        self._dibujar_esfuerzo(metricas.esfuerzo_por_oficio(registros))
-        self._dibujar_tramos_investigados(
-            metricas.distribucion_investigados(registros))
         self.tablero_lienzo.configure(scrollregion=self.tablero_lienzo.bbox("all"))
-
-    def _sin_datos(self, lienzo, titulo, mensaje):
-        """Deja el lienzo con su título y una explicación de por qué está vacío."""
-        lienzo.create_text(30, 12, text=titulo, anchor="w",
-                           font=("Helvetica", 9, "bold"), fill=COLOR_TEXTO)
-        ancho = lienzo.winfo_width() or 500
-        lienzo.create_text(ancho / 2, 120, text=mensaje, width=ancho - 60,
-                           justify="center", font=("Helvetica", 8),
-                           fill="#6B7280")
-
-    def _dibujar_esfuerzo(self, puntos):
-        """Dispersión: investigados (eje X) frente a días de trabajo (eje Y).
-
-        Cada punto es un oficio ya respondido. La recta de tendencia dice si el
-        número de personas explica el tiempo que costó atenderlo.
-        """
-        lienzo = self.lienzo_esfuerzo
-        lienzo.delete("all")
-        lienzo.update_idletasks()
-        titulo = "Carga por oficio: investigados vs. días de trabajo"
-        if not puntos:
-            self._sin_datos(
-                lienzo, titulo,
-                "Todavía no hay oficios con cantidad de investigados, fecha de "
-                "asignación y fecha de respuesta a la vez.")
-            return
-
-        ancho = lienzo.winfo_width() or 500
-        alto = 250
-        izq, der, arriba, abajo = 44, 16, 34, 40
-        x_max = max(x for x, _ in puntos)
-        y_max = max(y for _, y in puntos)
-        # Un poco de aire para que los puntos no queden pegados al borde.
-        x_tope = max(x_max, 1) * 1.1
-        y_tope = max(y_max, 1) * 1.1
-
-        def a_pantalla(x, y):
-            px = izq + (ancho - izq - der) * (x / x_tope)
-            py = alto - abajo - (alto - arriba - abajo) * (y / y_tope)
-            return px, py
-
-        lienzo.create_text(izq - 14, 12, text=titulo, anchor="w",
-                           font=("Helvetica", 9, "bold"), fill=COLOR_TEXTO)
-        # Ejes.
-        lienzo.create_line(izq, arriba, izq, alto - abajo, fill="#CBD2DE")
-        lienzo.create_line(izq, alto - abajo, ancho - der, alto - abajo,
-                           fill="#CBD2DE")
-        for parte in (0, 0.5, 1):
-            valor = y_tope * parte
-            _, py = a_pantalla(0, valor)
-            lienzo.create_line(izq, py, ancho - der, py, fill="#EEF1F6")
-            lienzo.create_text(izq - 6, py, text=f"{valor:.0f}", anchor="e",
-                               font=("Helvetica", 7), fill="#6B7280")
-            valor_x = x_tope * parte
-            px, _ = a_pantalla(valor_x, 0)
-            lienzo.create_text(px, alto - abajo + 10, text=f"{valor_x:.0f}",
-                               anchor="n", font=("Helvetica", 7), fill="#6B7280")
-        lienzo.create_text((izq + ancho - der) / 2, alto - 10,
-                           text="Investigados en el oficio",
-                           font=("Helvetica", 7), fill="#6B7280")
-        lienzo.create_text(12, (arriba + alto - abajo) / 2, text="Días",
-                           angle=90, font=("Helvetica", 7), fill="#6B7280")
-
-        # Recta de tendencia por debajo de los puntos.
-        tendencia = metricas.tendencia_esfuerzo(puntos)
-        if tendencia:
-            pendiente, corte = tendencia
-            x0, x1 = 0, x_tope
-            p0 = a_pantalla(x0, max(corte, 0))
-            p1 = a_pantalla(x1, max(pendiente * x1 + corte, 0))
-            lienzo.create_line(*p0, *p1, fill="#b45309", width=2, dash=(4, 3))
-
-        # Los puntos repetidos se marcan más grandes en vez de superponerse.
-        from collections import Counter
-        repeticiones = Counter(puntos)
-        for (x, y), veces in repeticiones.items():
-            px, py = a_pantalla(x, y)
-            radio = 3 + min(veces - 1, 4)
-            lienzo.create_oval(px - radio, py - radio, px + radio, py + radio,
-                               fill=COLOR_AZUL, outline="")
-
-        if tendencia:
-            pendiente = tendencia[0]
-            if pendiente >= 0.05:
-                texto = (f"Cada investigado adicional suma "
-                         f"{pendiente:.1f} días de media")
-            elif pendiente <= -0.05:
-                texto = ("El número de investigados no alarga el trámite "
-                         "(tendencia a la baja)")
-            else:
-                texto = "El número de investigados no explica el tiempo empleado"
-            lienzo.create_text(izq, 26, text=texto, anchor="w",
-                               font=("Helvetica", 8), fill="#b45309")
-        else:
-            lienzo.create_text(izq, 26, anchor="w", font=("Helvetica", 8),
-                               fill="#6B7280",
-                               text=f"{len(puntos)} oficio(s): hacen falta más "
-                                    "datos para calcular la tendencia")
-
-    def _dibujar_tramos_investigados(self, tramos):
-        """Barras: cuántos oficios hay en cada tramo de investigados.
-
-        Sobre cada barra va la mediana de días de ese tramo. Se usa la mediana
-        y no el promedio porque un solo oficio muy lento desplazaría el
-        promedio y daría una idea falsa del trabajo habitual.
-        """
-        lienzo = self.lienzo_tramos
-        lienzo.delete("all")
-        lienzo.update_idletasks()
-        titulo = "Oficios por número de investigados"
-        if not any(t["oficios"] for t in tramos):
-            self._sin_datos(
-                lienzo, titulo,
-                "Todavía no hay oficios con la cantidad de investigados "
-                "registrada.")
-            return
-
-        ancho = lienzo.winfo_width() or 500
-        alto = 250
-        izq, abajo, arriba = 40, 42, 46
-        maximo = max(t["oficios"] for t in tramos) or 1
-        ancho_barra = (ancho - izq - 16) / len(tramos)
-        lienzo.create_text(izq - 10, 12, text=titulo, anchor="w",
-                           font=("Helvetica", 9, "bold"), fill=COLOR_TEXTO)
-        lienzo.create_text(izq - 10, 26, anchor="w", font=("Helvetica", 8),
-                           fill="#6B7280",
-                           text="Sobre cada barra, la mediana de días de trabajo")
-        for indice, tramo in enumerate(tramos):
-            x0 = izq + indice * ancho_barra + 8
-            x1 = x0 + ancho_barra - 16
-            altura = (alto - abajo - arriba) * (tramo["oficios"] / maximo)
-            y1 = alto - abajo
-            y0 = y1 - altura
-            lienzo.create_rectangle(x0, y0, x1, y1, fill=COLOR_AZUL, outline="")
-            if tramo["oficios"]:
-                lienzo.create_text((x0 + x1) / 2, y0 - 9,
-                                   text=str(tramo["oficios"]),
-                                   font=("Helvetica", 8, "bold"))
-            mediana = tramo["mediana_dias"]
-            etiqueta = f"{mediana:g} d" if mediana is not None else "—"
-            lienzo.create_text((x0 + x1) / 2, y0 - 22, text=etiqueta,
-                               font=("Helvetica", 8), fill="#b45309")
-            lienzo.create_text((x0 + x1) / 2, y1 + 12, text=tramo["tramo"],
-                               font=("Helvetica", 8))
-        lienzo.create_text((izq + ancho - 16) / 2, alto - 12,
-                           text="Investigados por oficio",
-                           font=("Helvetica", 7), fill="#6B7280")
 
     def _dibujar_barras(self, serie):
         """Barras verticales: oficios recibidos por día."""
@@ -2601,21 +2437,21 @@ class DialogoCargaMasiva(tk.Toplevel):
                 f"incorrectos: {resumen['errores'][0]}"
                 + (" …" if len(resumen["errores"]) > 1 else ""))
         if resumen["responsables_sin_identificar"]:
-            nombres = ", ".join(resumen["responsables_sin_identificar"][:5])
+            nombres = ", ".join(resumen["responsables_sin_identificar"][:6])
             lineas.append(
-                "Estos nombres de la matriz no corresponden a ninguna cuenta "
-                f"del sistema: {nombres}. Sus oficios conservan el nombre como "
-                "responsable, pero nadie podrá trabajarlos hasta que un gestor "
-                "los reasigne a una cuenta real.")
-        cantidad = resumen.get("sin_responsable_anotado") or 0
+                "No se encontró cuenta para estos nombres de la matriz: "
+                f"{nombres}.")
+        if resumen.get("responsables_ambiguos"):
+            nombres = ", ".join(resumen["responsables_ambiguos"][:6])
+            lineas.append(
+                f"Estos nombres coinciden con más de una cuenta: {nombres}. No "
+                "se asignan, para no atribuir el oficio a quien no fue.")
+        cantidad = resumen.get("puestos_por_asignar") or 0
         if cantidad:
-            sujeto = ("1 oficio ya tramitado no indica quién lo atendió"
-                      if cantidad == 1 else
-                      f"{cantidad} oficios ya tramitados no indican quién los "
-                      "atendió")
             lineas.append(
-                f"{sujeto}: entran como «{carga_masiva.RESPONSABLE_NO_CONSTA}» "
-                "para no perder el expediente.")
+                f"{cantidad} oficio(s) entran como «Por asignar» por no tener "
+                "responsable identificado; se les retira la fecha de respuesta "
+                "hasta que un gestor los asigne.")
         if resumen["columnas_ignoradas"]:
             lineas.append(
                 "Columnas de la matriz sin equivalente en la aplicación (se "
