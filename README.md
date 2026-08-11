@@ -246,6 +246,36 @@ masiva de histórico— siguen siendo editables, porque si no quedarían bloquea
 para siempre. Tampoco se puede quitar la respuesta de un oficio finalizado sin
 reabrirlo primero (borrando su fecha de respuesta).
 
+### Mantenimiento de oficios
+
+El panel normal de *Oficios* no deja tocar los campos que **identifican** al
+oficio (Referencia oficio, Causal, Referencia SB y las fechas de oficio y
+recepción), así que un error de tecleo en ellos no tenía arreglo. El botón
+**Mantenimiento…** abre un diálogo que los corrige, y permite además retirar un
+oficio. Está reservado a **administradores y superusuario** —los dos con el
+mismo alcance— y todo queda en la bitácora (`CORREGIR_OFICIO`, `ANULAR_OFICIO`,
+`REACTIVAR_OFICIO`) y en el historial del propio oficio.
+
+Las correcciones pasan por las **mismas validaciones que el alta**: la
+Referencia oficio no puede repetirse, las fechas mantienen su orden y ninguna
+puede ser futura. Cambiar la fecha de recepción se comprueba además contra las
+de asignación y respuesta que ya tuviera el oficio.
+
+**Anular en vez de borrar.** No hay borrado real, a propósito:
+
+- La **Referencia UDC no se reutiliza**: un borrado dejaría un hueco en la
+  numeración imposible de explicar. Con la anulación el hueco queda justificado.
+- En una unidad de cumplimiento un registro que desaparece sin rastro es difícil
+  de sostener ante una auditoría; uno anulado, con motivo y autor, sí.
+- Es reversible: si se anula por error, se reactiva.
+
+Un oficio anulado exige **motivo**, sale del listado y de las métricas del
+tablero, y **no admite cambios de trámite** hasta reactivarlo. Los gestores lo
+recuperan con la casilla **Ver anulados** de los filtros, donde aparece en gris
+y con el estado `ANULADO`. Su Referencia oficio **queda libre**, que es
+justamente lo que permite retirar un registro mal escrito y volver a darlo de
+alta bien.
+
 ### Exportar oficios
 
 El botón **Exportar…** de la pestaña *Oficios* genera un archivo acotado por
@@ -364,6 +394,35 @@ Cada oficio puede llevar adjunta **la respuesta en PDF**:
   oficios; los gestores, en cualquiera.
 
 ## 2.3 Tablero (dashboard)
+
+### Carga de trabajo según el número de investigados
+
+Dos gráficos cruzan la cantidad de investigados con el tiempo que costó
+responder, para ver si los oficios con más personas pesan más:
+
+| Gráfico | Eje X | Eje Y |
+|---|---|---|
+| **Dispersión** (`esfuerzo_por_oficio`) | Investigados del oficio | Días de trabajo, con recta de tendencia |
+| **Barras** (`distribucion_investigados`) | Tramos: 1, 2-3, 4-5, 6-10, +10 | Nº de oficios, con la mediana de días sobre cada barra |
+
+Bajo el título de la dispersión se traduce la pendiente a lenguaje llano
+("cada investigado adicional suma X días de media"). Si la pendiente es
+prácticamente plana lo dice también: que el número de investigados **no**
+explique el tiempo empleado es un hallazgo igual de útil.
+
+Dos decisiones de cálculo:
+
+- Los días se cuentan de la **asignación** a la respuesta, no desde la
+  recepción: es el tiempo de trabajo real del analista, sin la espera previa al
+  reparto.
+- En las barras se usa la **mediana** y no el promedio, porque con pocos
+  oficios uno que tardó tres meses desplaza el promedio y da una idea falsa del
+  trabajo habitual. En la dispersión se ven todos los puntos, atípicos incluidos.
+
+Solo entran los oficios con los tres datos (investigados, fecha de asignación y
+fecha de respuesta); si no hay ninguno, cada gráfico explica por qué está vacío
+en lugar de mostrarse en blanco. Los puntos que coinciden se dibujan más
+grandes, para que no se oculten entre sí.
 
 El tablero tiene **desplazamiento vertical** y muestra únicamente los oficios
 que el usuario puede ver (ver *Visibilidad de los oficios*).

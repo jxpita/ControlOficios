@@ -1,13 +1,13 @@
 {
   "almacen_oficios.py": {
-    "mtime": 1786140908.2127242,
-    "ast_hash": "10c8bdf7df6e4902cafbc415a8374da7",
-    "semantic_hash": "10c8bdf7df6e4902cafbc415a8374da7"
+    "mtime": 1786460838.0813248,
+    "ast_hash": "4198999580af6c47bb8bd25277003edd",
+    "semantic_hash": "4198999580af6c47bb8bd25277003edd"
   },
   "aplicacion.py": {
-    "mtime": 1786460184.4556837,
-    "ast_hash": "0e456670a2984ffa24d2f25b036e3f8d",
-    "semantic_hash": "0e456670a2984ffa24d2f25b036e3f8d"
+    "mtime": 1786461177.5964925,
+    "ast_hash": "aa2b1066aea0691fffa4ff1477e49a8d",
+    "semantic_hash": "aa2b1066aea0691fffa4ff1477e49a8d"
   },
   "autenticacion.py": {
     "mtime": 1786040970.9106526,
@@ -40,9 +40,9 @@
     "semantic_hash": "83fc0b99b274caedb6324c0cf248a487"
   },
   "metricas.py": {
-    "mtime": 1785165566.2336574,
-    "ast_hash": "50d502ac20ae03dcfab0de4e3a2f745f",
-    "semantic_hash": "50d502ac20ae03dcfab0de4e3a2f745f"
+    "mtime": 1786460867.6204917,
+    "ast_hash": "1a624b2fcd4393867fcc69c26d9ee085",
+    "semantic_hash": "1a624b2fcd4393867fcc69c26d9ee085"
   },
   "parametros.py": {
     "mtime": 1785274400.9625113,

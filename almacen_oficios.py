@@ -184,6 +184,15 @@ def _validar_fecha_asignacion(fecha_asignacion: str, fecha_recepcion: str) -> st
     return fecha_asignacion
 
 
+def _exigir_no_anulado(registro: Dict) -> None:
+    """Un oficio anulado está retirado de la operación: no admite cambios de
+    trámite hasta que se reactive."""
+    if registro.get("anulado"):
+        raise ValueError(
+            "Este oficio está anulado. Reactívelo antes de modificarlo."
+        )
+
+
 def _exigir_datos_para_finalizar(estado: str, archivo_respuesta: str,
                                  fecha_asignacion: str, fecha_respuesta: str,
                                  estado_previo: str = "") -> None:
@@ -327,6 +336,8 @@ def registrar_oficio(codigo_oficio: str, fecha_recepcion: str, fecha_oficio: str
     # única). Se compara sin distinguir mayúsculas/minúsculas ni espacios.
     codigo_normalizado = codigo_oficio.casefold()
     for registro in registros:
+        if esta_anulado(registro):
+            continue          # un oficio retirado no reserva su referencia
         if registro.get("codigo_oficio", "").strip().casefold() == codigo_normalizado:
             raise ValueError(
                 f"Ya existe un oficio con la referencia \"{codigo_oficio}\". "
@@ -513,21 +524,34 @@ def listar_oficios() -> List[Dict]:
     return _leer_registros()
 
 
-def listar_oficios_visibles(actor: str, actor_rol: str) -> List[Dict]:
+def esta_anulado(registro: Dict) -> bool:
+    return bool(registro.get("anulado"))
+
+
+def listar_oficios_visibles(actor: str, actor_rol: str,
+                            incluir_anulados: bool = False) -> List[Dict]:
     """Oficios que puede VER el usuario en sesión.
 
     - Superusuario y administrador: todos.
     - Usuario regular: solo los que él registró o los que tiene asignados.
+
+    Los oficios ANULADOS quedan fuera salvo que se pidan expresamente, y solo
+    los ve un gestor: son registros retirados de la operación diaria que se
+    conservan por trazabilidad.
     """
     registros = _leer_registros()
     if actor_rol in ROLES_GESTORES:
-        return registros
-    actor_norm = (actor or "").strip().lower()
-    return [
-        registro for registro in registros
-        if (registro.get("id_empleado", "") or "").strip().lower() == actor_norm
-        or (registro.get("registrado_por", "") or "").strip().lower() == actor_norm
-    ]
+        visibles = registros
+    else:
+        actor_norm = (actor or "").strip().lower()
+        visibles = [
+            registro for registro in registros
+            if (registro.get("id_empleado", "") or "").strip().lower() == actor_norm
+            or (registro.get("registrado_por", "") or "").strip().lower() == actor_norm
+        ]
+    if incluir_anulados and actor_rol in ROLES_GESTORES:
+        return visibles
+    return [r for r in visibles if not esta_anulado(r)]
 
 
 @bloqueo.con_bloqueo("oficios")
@@ -559,6 +583,7 @@ def actualizar_oficio(referencia: str, nuevo_estado: str, id_empleado: str,
     registros = _leer_registros()
     for registro in registros:
         if registro["referencia"] == referencia:
+            _exigir_no_anulado(registro)
             cambios = []
             # La restricción de asignar a un superusuario solo aplica cuando el
             # responsable CAMBIA: un administrador puede seguir editando la
@@ -653,6 +678,7 @@ def actualizar_estado_asignado(referencia: str, actor: str, nuevo_estado: str,
             responsable = (registro.get("id_empleado", "") or "").strip().lower()
             if not responsable or responsable != actor_norm:
                 raise ValueError("Solo puede modificar oficios asignados a usted.")
+            _exigir_no_anulado(registro)
             cambios = []
             # La fecha de respuesta manda sobre el estado.
             if fecha_respuesta is not None:
@@ -697,6 +723,154 @@ def actualizar_estado_asignado(referencia: str, actor: str, nuevo_estado: str,
                     "ACTUALIZAR_OFICIO",
                     f"referencia={referencia}; " + "; ".join(cambios), actor)
             return estado_final
+    raise ValueError("No se encontró la referencia indicada.")
+
+
+# --- Mantenimiento: corrección de datos y anulación --------------------------
+# Campos que solo se pueden corregir desde el mantenimiento, porque identifican
+# al oficio y no forman parte de su trámite diario.
+CAMPOS_MANTENIMIENTO = ("codigo_oficio", "causal_oficio", "referencia_sb",
+                        "fecha_oficio", "fecha_recepcion")
+
+
+@bloqueo.con_bloqueo("oficios")
+def corregir_oficio(referencia: str, actor: str, actor_rol: str,
+                    **campos) -> List[str]:
+    """Corrige los datos de identificación de un oficio mal registrado.
+
+    Reservado a GESTORES (administrador y superusuario). Solo acepta los campos
+    de `CAMPOS_MANTENIMIENTO`; el resto del trámite (estado, responsable,
+    fechas de asignación y respuesta, observación) se cambia desde el panel
+    normal de la pestaña Oficios.
+
+    Se validan las mismas reglas que al registrar: la referencia del oficio no
+    puede repetirse y las fechas mantienen su orden. Devuelve la lista de
+    cambios aplicados.
+    """
+    if actor_rol not in ROLES_GESTORES:
+        raise ValueError(
+            "El mantenimiento de oficios está reservado a administradores y al "
+            "superusuario."
+        )
+    desconocidos = set(campos) - set(CAMPOS_MANTENIMIENTO)
+    if desconocidos:
+        raise ValueError(
+            f"No se pueden corregir estos campos: {', '.join(sorted(desconocidos))}.")
+
+    registros = _leer_registros()
+    for registro in registros:
+        if registro["referencia"] != referencia:
+            continue
+
+        # Los valores finales, mezclando lo que se corrige con lo que ya había.
+        nuevo = {campo: (campos[campo] if campo in campos
+                         else registro.get(campo, ""))
+                 for campo in CAMPOS_MANTENIMIENTO}
+
+        codigo = (nuevo["codigo_oficio"] or "").strip()
+        if not codigo:
+            raise ValueError("Debe indicar la referencia del oficio.")
+        for otro in registros:
+            if (otro is not registro and not esta_anulado(otro)
+                    and otro.get("codigo_oficio", "").strip().casefold()
+                    == codigo.casefold()):
+                raise ValueError(
+                    f"Ya existe otro oficio con la referencia «{codigo}».")
+
+        recepcion = _validar_fecha((nuevo["fecha_recepcion"] or "").strip(),
+                                   "Fecha de recepción")
+        oficio = _validar_fecha((nuevo["fecha_oficio"] or "").strip(),
+                                "Fecha de oficio")
+        if datetime.strptime(oficio, "%Y-%m-%d") > datetime.strptime(recepcion, "%Y-%m-%d"):
+            raise ValueError(
+                "La fecha de oficio no puede ser posterior a la de recepción.")
+        # Cambiar la recepción puede dejar incoherentes las otras dos fechas.
+        _validar_fecha_asignacion(registro.get("fecha_asignacion", ""), recepcion)
+        _validar_fecha_respuesta(registro.get("fecha_respuesta", ""), recepcion)
+
+        etiquetas = {"codigo_oficio": "Referencia oficio",
+                     "causal_oficio": "Causal oficio",
+                     "referencia_sb": "Referencia SB",
+                     "fecha_oficio": "F. oficio",
+                     "fecha_recepcion": "F. recepción"}
+        cambios = []
+        for campo in CAMPOS_MANTENIMIENTO:
+            valor = (nuevo[campo] or "").strip()
+            if valor != (registro.get(campo, "") or ""):
+                cambios.append(f"{etiquetas[campo]}: "
+                               f"«{registro.get(campo, '') or '(vacío)'}» → «{valor}»")
+                registro[campo] = valor
+        if cambios:
+            registro.setdefault("historial", []).append({
+                "evento": "Corrección: " + " · ".join(cambios),
+                "por": actor,
+                "cuando": datetime.now().isoformat(timespec="seconds"),
+            })
+            _guardar_registros(registros)
+            registro_actividad.registrar(
+                "CORREGIR_OFICIO",
+                f"referencia={referencia}; " + "; ".join(cambios), actor)
+        return cambios
+    raise ValueError("No se encontró la referencia indicada.")
+
+
+@bloqueo.con_bloqueo("oficios")
+def anular_oficio(referencia: str, motivo: str, actor: str,
+                  actor_rol: str) -> None:
+    """Retira un oficio de la operación sin borrarlo.
+
+    No se elimina a propósito: la Referencia UDC no se reutiliza, así que un
+    borrado real dejaría un hueco en la numeración imposible de explicar, y en
+    una unidad de cumplimiento un registro que desaparece sin rastro es difícil
+    de justificar. El oficio queda marcado, con su motivo y su autor, fuera del
+    listado y de las métricas, y se puede reactivar.
+    """
+    if actor_rol not in ROLES_GESTORES:
+        raise ValueError(
+            "Anular oficios está reservado a administradores y al superusuario.")
+    motivo = " ".join((motivo or "").split())
+    if len(motivo) < 5:
+        raise ValueError("Indique el motivo de la anulación.")
+
+    registros = _leer_registros()
+    for registro in registros:
+        if registro["referencia"] == referencia:
+            if esta_anulado(registro):
+                raise ValueError("Este oficio ya está anulado.")
+            ahora = datetime.now().isoformat(timespec="seconds")
+            registro["anulado"] = True
+            registro["motivo_anulacion"] = motivo
+            registro["anulado_por"] = actor
+            registro["fecha_anulacion"] = ahora
+            registro.setdefault("historial", []).append({
+                "evento": f"Anulado: {motivo}", "por": actor, "cuando": ahora})
+            _guardar_registros(registros)
+            registro_actividad.registrar(
+                "ANULAR_OFICIO", f"referencia={referencia}; motivo={motivo}", actor)
+            return
+    raise ValueError("No se encontró la referencia indicada.")
+
+
+@bloqueo.con_bloqueo("oficios")
+def reactivar_oficio(referencia: str, actor: str, actor_rol: str) -> None:
+    """Devuelve a la operación un oficio anulado por error."""
+    if actor_rol not in ROLES_GESTORES:
+        raise ValueError(
+            "Reactivar oficios está reservado a administradores y al superusuario.")
+    registros = _leer_registros()
+    for registro in registros:
+        if registro["referencia"] == referencia:
+            if not esta_anulado(registro):
+                raise ValueError("Este oficio no está anulado.")
+            ahora = datetime.now().isoformat(timespec="seconds")
+            registro["anulado"] = False
+            registro["motivo_anulacion"] = ""
+            registro.setdefault("historial", []).append({
+                "evento": "Reactivado", "por": actor, "cuando": ahora})
+            _guardar_registros(registros)
+            registro_actividad.registrar(
+                "REACTIVAR_OFICIO", f"referencia={referencia}", actor)
+            return
     raise ValueError("No se encontró la referencia indicada.")
 
 

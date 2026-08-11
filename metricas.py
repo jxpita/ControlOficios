@@ -127,3 +127,122 @@ def distribucion_estados(registros: Optional[List[Dict]] = None) -> List[Tuple[s
     """Cantidad por estado, en el orden definido en configuracion.ESTADOS."""
     conteo = Counter(reg.get("estado", "Desconocido") for reg in _registros(registros))
     return [(estado, conteo.get(estado, 0)) for estado in ESTADOS]
+
+
+# --- Carga de trabajo según el número de investigados ------------------------
+# Tramos en los que se agrupan los oficios: (etiqueta, mínimo, máximo).
+TRAMOS_INVESTIGADOS = [
+    ("1", 1, 1),
+    ("2-3", 2, 3),
+    ("4-5", 4, 5),
+    ("6-10", 6, 10),
+    ("+10", 11, None),
+]
+
+
+def _entero(valor) -> Optional[int]:
+    try:
+        numero = int(str(valor).strip())
+    except (ValueError, TypeError, AttributeError):
+        return None
+    return numero if numero > 0 else None
+
+
+def _mediana(valores: List[float]) -> Optional[float]:
+    if not valores:
+        return None
+    ordenados = sorted(valores)
+    mitad = len(ordenados) // 2
+    if len(ordenados) % 2:
+        return float(ordenados[mitad])
+    return (ordenados[mitad - 1] + ordenados[mitad]) / 2
+
+
+def esfuerzo_por_oficio(registros: Optional[List[Dict]] = None) -> List[Tuple[int, int]]:
+    """Pares (investigados, días de trabajo) de los oficios ya respondidos.
+
+    Los días se cuentan de la **asignación** a la respuesta, que es el tiempo de
+    trabajo real del analista; el tiempo desde la recepción incluye la espera
+    previa al reparto, que no depende de quien atiende el oficio.
+
+    Solo entran los oficios que tienen las dos fechas y una cantidad de
+    investigados registrada: sin esos tres datos el punto no dice nada.
+    """
+    puntos = []
+    for reg in _registros(registros):
+        investigados = _entero(reg.get("cantidad_investigados"))
+        asignacion = _convertir_fecha(reg.get("fecha_asignacion", ""))
+        respuesta = _convertir_fecha(reg.get("fecha_respuesta", ""))
+        if investigados and asignacion and respuesta and respuesta >= asignacion:
+            puntos.append((investigados, (respuesta - asignacion).days))
+    return puntos
+
+
+def tendencia_esfuerzo(puntos: List[Tuple[int, int]]) -> Optional[Tuple[float, float]]:
+    """Recta de tendencia (pendiente, punto de corte) por mínimos cuadrados.
+
+    La pendiente se lee como "días que suma cada investigado adicional".
+    Devuelve None si no hay puntos suficientes o si todos tienen el mismo
+    número de investigados (no habría nada que correlacionar).
+    """
+    if len(puntos) < 3:
+        return None
+    n = len(puntos)
+    suma_x = sum(x for x, _ in puntos)
+    suma_y = sum(y for _, y in puntos)
+    suma_xy = sum(x * y for x, y in puntos)
+    suma_xx = sum(x * x for x, _ in puntos)
+    denominador = n * suma_xx - suma_x * suma_x
+    if not denominador:
+        return None
+    pendiente = (n * suma_xy - suma_x * suma_y) / denominador
+    corte = (suma_y - pendiente * suma_x) / n
+    return pendiente, corte
+
+
+def distribucion_investigados(registros: Optional[List[Dict]] = None) -> List[Dict]:
+    """Oficios agrupados por tramo de investigados.
+
+    Para cada tramo devuelve cuántos oficios hay y la MEDIANA de días de los que
+    ya están respondidos. Se usa la mediana y no el promedio porque con pocos
+    oficios uno que tardó tres meses desplaza el promedio y da una idea falsa
+    del trabajo habitual.
+    """
+    registros = _registros(registros)
+    resultado = []
+    for etiqueta, minimo, maximo in TRAMOS_INVESTIGADOS:
+        oficios_tramo = []
+        for reg in registros:
+            investigados = _entero(reg.get("cantidad_investigados"))
+            if investigados is None or investigados < minimo:
+                continue
+            if maximo is not None and investigados > maximo:
+                continue
+            oficios_tramo.append(reg)
+        dias = []
+        for reg in oficios_tramo:
+            asignacion = _convertir_fecha(reg.get("fecha_asignacion", ""))
+            respuesta = _convertir_fecha(reg.get("fecha_respuesta", ""))
+            if asignacion and respuesta and respuesta >= asignacion:
+                dias.append((respuesta - asignacion).days)
+        resultado.append({
+            "tramo": etiqueta,
+            "oficios": len(oficios_tramo),
+            "mediana_dias": _mediana(dias),
+            "respondidos": len(dias),
+        })
+    return resultado
+
+
+def resumen_investigados(registros: Optional[List[Dict]] = None) -> Dict:
+    """Totales de personas investigadas, para las tarjetas del tablero."""
+    registros = _registros(registros)
+    cantidades = [c for c in (_entero(reg.get("cantidad_investigados"))
+                              for reg in registros) if c]
+    total = sum(cantidades)
+    return {
+        "total_investigados": total,
+        "oficios_con_dato": len(cantidades),
+        "promedio_por_oficio": round(total / len(cantidades), 1) if cantidades else None,
+        "maximo": max(cantidades) if cantidades else 0,
+    }

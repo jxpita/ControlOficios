@@ -2,7 +2,7 @@ import calendar
 import threading
 import time
 import tkinter as tk
-from tkinter import ttk, messagebox, filedialog
+from tkinter import ttk, messagebox, filedialog, simpledialog
 from tkinter import font as tkfont
 from datetime import date, datetime
 from pathlib import Path
@@ -634,9 +634,15 @@ class AplicacionPrincipal(ttk.Frame):
                     pass
 
     def _oficio_por_referencia(self, referencia):
-        """Busca solo entre los oficios visibles para el usuario en sesión."""
+        """Busca solo entre los oficios visibles para el usuario en sesión.
+
+        Incluye los anulados cuando quien mira es un gestor: si no, al
+        seleccionar uno con la casilla «Ver anulados» no se encontraría y no
+        habría forma de reactivarlo.
+        """
         for registro in oficios.listar_oficios_visibles(
-                self.usuario["usuario"], self.usuario.get("rol")):
+                self.usuario["usuario"], self.usuario.get("rol"),
+                incluir_anulados=True):
             if registro["referencia"] == referencia:
                 return registro
         return None
@@ -961,6 +967,16 @@ class AplicacionPrincipal(ttk.Frame):
         fila3.pack(fill="x", pady=(3, 0))
         ttk.Label(fila3, text="Deje \"hasta\" vacío para buscar por fecha única",
                   foreground="#6B7280", font=("Helvetica", 8)).pack(side="left")
+        if self._puede_gestionar_usuarios():
+            # Los anulados están fuera de la operación diaria, pero un gestor
+            # tiene que poder encontrarlos para revisarlos o reactivarlos.
+            self.var_ver_anulados = tk.BooleanVar(value=False)
+            ttk.Checkbutton(fila3, text="Ver anulados",
+                            variable=self.var_ver_anulados,
+                            command=self._refrescar_listado).pack(side="left",
+                                                                  padx=(16, 0))
+        else:
+            self.var_ver_anulados = None
         self.lbl_resultados = ttk.Label(fila3, text="", foreground="#6B7280",
                                         font=("Helvetica", 8))
         self.lbl_resultados.pack(side="right")
@@ -1014,6 +1030,8 @@ class AplicacionPrincipal(ttk.Frame):
         barra_v = ttk.Scrollbar(contenedor, orient="vertical", command=self.tabla.yview)
         barra_h = ttk.Scrollbar(contenedor, orient="horizontal", command=self.tabla.xview)
         self.tabla.configure(yscrollcommand=barra_v.set, xscrollcommand=barra_h.set)
+        # Los oficios anulados se ven apagados, para distinguirlos de un vistazo.
+        self.tabla.tag_configure("anulado", foreground="#94A3B8")
         barra_v.pack(side="right", fill="y")
         barra_h.pack(side="bottom", fill="x")
         self.tabla.pack(fill="both", expand=True, side="left")
@@ -1092,6 +1110,10 @@ class AplicacionPrincipal(ttk.Frame):
                    command=self._ver_respuesta).pack(side="left")
         ttk.Button(barra, text="Eliminar PDF",
                    command=self._eliminar_respuesta).pack(side="left", padx=6)
+        if es_gestor:
+            # Mantenimiento: corregir lo mal tecleado y retirar un oficio.
+            ttk.Button(barra, text="Mantenimiento…",
+                       command=self._abrir_mantenimiento).pack(side="left")
         ttk.Button(barra, text="Exportar…",
                    command=self._exportar_oficios).pack(side="right")
 
@@ -1131,8 +1153,11 @@ class AplicacionPrincipal(ttk.Frame):
         self.tabla.delete(*self.tabla.get_children())
         try:
             # Un usuario regular solo ve sus oficios (registrados o asignados).
+            ver_anulados = bool(getattr(self, "var_ver_anulados", None)
+                                and self.var_ver_anulados.get())
             registros = oficios.listar_oficios_visibles(
-                self.usuario["usuario"], self.usuario.get("rol"))
+                self.usuario["usuario"], self.usuario.get("rol"),
+                incluir_anulados=ver_anulados)
             total_visibles = len(registros)
             # Filtros de búsqueda (si el panel ya está construido).
             if hasattr(self, "entrada_busqueda"):
@@ -1149,7 +1174,9 @@ class AplicacionPrincipal(ttk.Frame):
                 observacion = " ".join(registro.get("observacion", "").split())
                 if len(observacion) > 60:
                     observacion = observacion[:57] + "..."
-                self.tabla.insert("", "end", iid=registro["referencia"], values=(
+                anulado = oficios.esta_anulado(registro)
+                self.tabla.insert("", "end", iid=registro["referencia"],
+                                  tags=("anulado",) if anulado else (), values=(
                     registro["referencia"], registro["codigo_oficio"],
                     registro.get("causal_oficio", ""),
                     registro.get("referencia_sb", ""),
@@ -1157,7 +1184,8 @@ class AplicacionPrincipal(ttk.Frame):
                     registro.get("fecha_asignacion", ""),
                     registro.get("fecha_respuesta", ""),
                     registro.get("cantidad_investigados", ""),
-                    registro.get("empleado", ""), registro["estado"],
+                    registro.get("empleado", ""),
+                    "ANULADO" if anulado else registro["estado"],
                     "Sí" if registro.get("archivo_respuesta") else "",
                     observacion))
         except ValueError as error:
@@ -1367,6 +1395,22 @@ class AplicacionPrincipal(ttk.Frame):
                 "¿Desea abrirlo con el lector de PDF del sistema?"):
             if not visor_pdf.abrir_con_sistema(ruta):
                 messagebox.showerror("Error", "No se pudo abrir el PDF.")
+
+    # ---- Mantenimiento -------------------------------------------------------
+    def _abrir_mantenimiento(self):
+        """Corrige los datos de identificación de un oficio, o lo retira."""
+        seleccion = self.tabla.selection()
+        if not seleccion:
+            messagebox.showwarning("Sin selección", "Seleccione un oficio en la lista.")
+            return
+        registro = self._oficio_por_referencia(seleccion[0])
+        if registro is None:
+            messagebox.showerror("Error", "No se encontró el oficio seleccionado.")
+            return
+        dialogo = DialogoMantenimiento(self, self.usuario, registro)
+        self.wait_window(dialogo)
+        self._referencia_en_edicion = None      # forzar la recarga del panel
+        self._refrescar_listado()
 
     # ---- Exportación ---------------------------------------------------------
     def _exportar_oficios(self):
@@ -1928,6 +1972,13 @@ class AplicacionPrincipal(ttk.Frame):
         self.lienzo_responsables = self._crear_lienzo(fila, 240, lado="left", expandir=True)
         # Gráfico 4: recepciones por mes.
         self.lienzo_meses = self._crear_lienzo(self.tablero, 210)
+        # Gráficos 5 y 6: carga de trabajo según el número de investigados.
+        fila_investigados = ttk.Frame(self.tablero)
+        fila_investigados.pack(fill="x", pady=6)
+        self.lienzo_esfuerzo = self._crear_lienzo(fila_investigados, 250,
+                                                  lado="left", expandir=True)
+        self.lienzo_tramos = self._crear_lienzo(fila_investigados, 250,
+                                                lado="left", expandir=True)
 
     def _crear_lienzo(self, contenedor, alto, lado=None, expandir=False):
         lienzo = tk.Canvas(contenedor, height=alto, background=COLOR_BLANCO,
@@ -1952,6 +2003,7 @@ class AplicacionPrincipal(ttk.Frame):
                 hijo.destroy()
 
         # El tablero refleja únicamente los oficios que el usuario puede ver.
+        # Los anulados quedan fuera de las métricas: no son trabajo real.
         registros = oficios.listar_oficios_visibles(
             self.usuario["usuario"], self.usuario.get("rol"))
         datos = metricas.resumen(registros)
@@ -1982,13 +2034,170 @@ class AplicacionPrincipal(ttk.Frame):
         self._tarjeta(self.marco_tarjetas2, "Con PDF", datos["con_pdf"], "#1d4ed8")
         self._tarjeta(self.marco_tarjetas2, "Sin responsable",
                       datos["sin_responsable"], "#64748b")
+        personas = metricas.resumen_investigados(registros)
+        self._tarjeta(self.marco_tarjetas2, "Investigados",
+                      personas["total_investigados"], "#0f766e")
+        promedio_personas = personas["promedio_por_oficio"]
+        self._tarjeta(self.marco_tarjetas2, "Investigados/oficio",
+                      promedio_personas if promedio_personas is not None else "—",
+                      "#7c3aed")
 
         # Gráficos.
         self._dibujar_barras(metricas.serie_por_dia(14, registros))
         self._dibujar_anillo_estados(metricas.distribucion_estados(registros))
         self._dibujar_barras_horizontales(metricas.por_responsable(registros))
         self._dibujar_barras_meses(metricas.serie_por_mes(6, registros))
+        self._dibujar_esfuerzo(metricas.esfuerzo_por_oficio(registros))
+        self._dibujar_tramos_investigados(
+            metricas.distribucion_investigados(registros))
         self.tablero_lienzo.configure(scrollregion=self.tablero_lienzo.bbox("all"))
+
+    def _sin_datos(self, lienzo, titulo, mensaje):
+        """Deja el lienzo con su título y una explicación de por qué está vacío."""
+        lienzo.create_text(30, 12, text=titulo, anchor="w",
+                           font=("Helvetica", 9, "bold"), fill=COLOR_TEXTO)
+        ancho = lienzo.winfo_width() or 500
+        lienzo.create_text(ancho / 2, 120, text=mensaje, width=ancho - 60,
+                           justify="center", font=("Helvetica", 8),
+                           fill="#6B7280")
+
+    def _dibujar_esfuerzo(self, puntos):
+        """Dispersión: investigados (eje X) frente a días de trabajo (eje Y).
+
+        Cada punto es un oficio ya respondido. La recta de tendencia dice si el
+        número de personas explica el tiempo que costó atenderlo.
+        """
+        lienzo = self.lienzo_esfuerzo
+        lienzo.delete("all")
+        lienzo.update_idletasks()
+        titulo = "Carga por oficio: investigados vs. días de trabajo"
+        if not puntos:
+            self._sin_datos(
+                lienzo, titulo,
+                "Todavía no hay oficios con cantidad de investigados, fecha de "
+                "asignación y fecha de respuesta a la vez.")
+            return
+
+        ancho = lienzo.winfo_width() or 500
+        alto = 250
+        izq, der, arriba, abajo = 44, 16, 34, 40
+        x_max = max(x for x, _ in puntos)
+        y_max = max(y for _, y in puntos)
+        # Un poco de aire para que los puntos no queden pegados al borde.
+        x_tope = max(x_max, 1) * 1.1
+        y_tope = max(y_max, 1) * 1.1
+
+        def a_pantalla(x, y):
+            px = izq + (ancho - izq - der) * (x / x_tope)
+            py = alto - abajo - (alto - arriba - abajo) * (y / y_tope)
+            return px, py
+
+        lienzo.create_text(izq - 14, 12, text=titulo, anchor="w",
+                           font=("Helvetica", 9, "bold"), fill=COLOR_TEXTO)
+        # Ejes.
+        lienzo.create_line(izq, arriba, izq, alto - abajo, fill="#CBD2DE")
+        lienzo.create_line(izq, alto - abajo, ancho - der, alto - abajo,
+                           fill="#CBD2DE")
+        for parte in (0, 0.5, 1):
+            valor = y_tope * parte
+            _, py = a_pantalla(0, valor)
+            lienzo.create_line(izq, py, ancho - der, py, fill="#EEF1F6")
+            lienzo.create_text(izq - 6, py, text=f"{valor:.0f}", anchor="e",
+                               font=("Helvetica", 7), fill="#6B7280")
+            valor_x = x_tope * parte
+            px, _ = a_pantalla(valor_x, 0)
+            lienzo.create_text(px, alto - abajo + 10, text=f"{valor_x:.0f}",
+                               anchor="n", font=("Helvetica", 7), fill="#6B7280")
+        lienzo.create_text((izq + ancho - der) / 2, alto - 10,
+                           text="Investigados en el oficio",
+                           font=("Helvetica", 7), fill="#6B7280")
+        lienzo.create_text(12, (arriba + alto - abajo) / 2, text="Días",
+                           angle=90, font=("Helvetica", 7), fill="#6B7280")
+
+        # Recta de tendencia por debajo de los puntos.
+        tendencia = metricas.tendencia_esfuerzo(puntos)
+        if tendencia:
+            pendiente, corte = tendencia
+            x0, x1 = 0, x_tope
+            p0 = a_pantalla(x0, max(corte, 0))
+            p1 = a_pantalla(x1, max(pendiente * x1 + corte, 0))
+            lienzo.create_line(*p0, *p1, fill="#b45309", width=2, dash=(4, 3))
+
+        # Los puntos repetidos se marcan más grandes en vez de superponerse.
+        from collections import Counter
+        repeticiones = Counter(puntos)
+        for (x, y), veces in repeticiones.items():
+            px, py = a_pantalla(x, y)
+            radio = 3 + min(veces - 1, 4)
+            lienzo.create_oval(px - radio, py - radio, px + radio, py + radio,
+                               fill=COLOR_AZUL, outline="")
+
+        if tendencia:
+            pendiente = tendencia[0]
+            if pendiente >= 0.05:
+                texto = (f"Cada investigado adicional suma "
+                         f"{pendiente:.1f} días de media")
+            elif pendiente <= -0.05:
+                texto = ("El número de investigados no alarga el trámite "
+                         "(tendencia a la baja)")
+            else:
+                texto = "El número de investigados no explica el tiempo empleado"
+            lienzo.create_text(izq, 26, text=texto, anchor="w",
+                               font=("Helvetica", 8), fill="#b45309")
+        else:
+            lienzo.create_text(izq, 26, anchor="w", font=("Helvetica", 8),
+                               fill="#6B7280",
+                               text=f"{len(puntos)} oficio(s): hacen falta más "
+                                    "datos para calcular la tendencia")
+
+    def _dibujar_tramos_investigados(self, tramos):
+        """Barras: cuántos oficios hay en cada tramo de investigados.
+
+        Sobre cada barra va la mediana de días de ese tramo. Se usa la mediana
+        y no el promedio porque un solo oficio muy lento desplazaría el
+        promedio y daría una idea falsa del trabajo habitual.
+        """
+        lienzo = self.lienzo_tramos
+        lienzo.delete("all")
+        lienzo.update_idletasks()
+        titulo = "Oficios por número de investigados"
+        if not any(t["oficios"] for t in tramos):
+            self._sin_datos(
+                lienzo, titulo,
+                "Todavía no hay oficios con la cantidad de investigados "
+                "registrada.")
+            return
+
+        ancho = lienzo.winfo_width() or 500
+        alto = 250
+        izq, abajo, arriba = 40, 42, 46
+        maximo = max(t["oficios"] for t in tramos) or 1
+        ancho_barra = (ancho - izq - 16) / len(tramos)
+        lienzo.create_text(izq - 10, 12, text=titulo, anchor="w",
+                           font=("Helvetica", 9, "bold"), fill=COLOR_TEXTO)
+        lienzo.create_text(izq - 10, 26, anchor="w", font=("Helvetica", 8),
+                           fill="#6B7280",
+                           text="Sobre cada barra, la mediana de días de trabajo")
+        for indice, tramo in enumerate(tramos):
+            x0 = izq + indice * ancho_barra + 8
+            x1 = x0 + ancho_barra - 16
+            altura = (alto - abajo - arriba) * (tramo["oficios"] / maximo)
+            y1 = alto - abajo
+            y0 = y1 - altura
+            lienzo.create_rectangle(x0, y0, x1, y1, fill=COLOR_AZUL, outline="")
+            if tramo["oficios"]:
+                lienzo.create_text((x0 + x1) / 2, y0 - 9,
+                                   text=str(tramo["oficios"]),
+                                   font=("Helvetica", 8, "bold"))
+            mediana = tramo["mediana_dias"]
+            etiqueta = f"{mediana:g} d" if mediana is not None else "—"
+            lienzo.create_text((x0 + x1) / 2, y0 - 22, text=etiqueta,
+                               font=("Helvetica", 8), fill="#b45309")
+            lienzo.create_text((x0 + x1) / 2, y1 + 12, text=tramo["tramo"],
+                               font=("Helvetica", 8))
+        lienzo.create_text((izq + ancho - 16) / 2, alto - 12,
+                           text="Investigados por oficio",
+                           font=("Helvetica", 7), fill="#6B7280")
 
     def _dibujar_barras(self, serie):
         """Barras verticales: oficios recibidos por día."""
@@ -2165,6 +2374,148 @@ class AplicacionPrincipal(ttk.Frame):
             self._refrescar_tablero()
         elif actual is self.pestana_usuarios and self._puede_gestionar_usuarios():
             self._refrescar_usuarios()
+
+
+# ============================================================================
+#  MANTENIMIENTO DE OFICIOS
+# ============================================================================
+class DialogoMantenimiento(tk.Toplevel):
+    """Corrige los datos de identificación de un oficio y permite retirarlo.
+
+    Son los campos que el panel normal no deja tocar porque identifican al
+    oficio; cuando se teclean mal no había forma de arreglarlos. Está reservado
+    a administradores y al superusuario, y todo cambio queda en la bitácora.
+    """
+
+    def __init__(self, aplicacion, usuario, registro):
+        super().__init__(aplicacion)
+        self.aplicacion = aplicacion
+        self.usuario = usuario
+        self.registro = registro
+        self.referencia = registro["referencia"]
+        self.anulado = oficios.esta_anulado(registro)
+        self.title(f"Mantenimiento · {self.referencia}")
+        self.configure(bg=COLOR_BLANCO)
+        self.resizable(False, False)
+        self.transient(aplicacion.winfo_toplevel())
+        self.grab_set()
+
+        marco = tk.Frame(self, bg=COLOR_BLANCO, padx=18, pady=16)
+        marco.pack(fill="both", expand=True)
+        marco.columnconfigure(1, weight=1)
+
+        tk.Label(marco, text=f"Oficio {self.referencia}", bg=COLOR_BLANCO,
+                 fg=COLOR_AZUL, font=("Helvetica", 12, "bold")).grid(
+                     row=0, column=0, columnspan=2, sticky="w")
+        tk.Label(marco, bg=COLOR_BLANCO, fg="#6B7280", font=("Helvetica", 8),
+                 justify="left", wraplength=430,
+                 text="Corrija aquí los datos que identifican al oficio. El "
+                      "resto del trámite se cambia en la pestaña Oficios.").grid(
+                          row=1, column=0, columnspan=2, sticky="w", pady=(2, 12))
+
+        self.campos = {}
+        filas = [
+            ("codigo_oficio", "Referencia oficio *", False),
+            ("causal_oficio", "Causal oficio", False),
+            ("referencia_sb", "Referencia SB", False),
+            ("fecha_oficio", "Fecha de oficio *", True),
+            ("fecha_recepcion", "Fecha de recepción *", True),
+        ]
+        for indice, (campo, etiqueta, es_fecha) in enumerate(filas, start=2):
+            tk.Label(marco, text=etiqueta, bg=COLOR_BLANCO,
+                     fg=COLOR_TEXTO).grid(row=indice, column=0, sticky="w", pady=4)
+            if es_fecha:
+                widget = SelectorFecha(marco)
+                widget.set(registro.get(campo, ""))
+            else:
+                widget = ttk.Entry(marco, width=34)
+                widget.insert(0, registro.get(campo, ""))
+            widget.grid(row=indice, column=1, sticky="w", padx=(10, 0), pady=4)
+            self.campos[campo] = widget
+
+        barra = tk.Frame(marco, bg=COLOR_BLANCO)
+        barra.grid(row=8, column=0, columnspan=2, sticky="ew", pady=(16, 0))
+        ttk.Button(barra, text="Cerrar", command=self.destroy).pack(side="right")
+        btn = ttk.Button(barra, text="Guardar correcciones",
+                         command=self._guardar)
+        btn.pack(side="right", padx=6)
+        btn.config(style="Accent.TButton")
+        if self.anulado:
+            ttk.Button(barra, text="Reactivar oficio",
+                       command=self._reactivar).pack(side="left")
+        else:
+            ttk.Button(barra, text="Anular oficio…",
+                       command=self._anular).pack(side="left")
+
+        estado = tk.Frame(marco, bg=COLOR_BLANCO)
+        estado.grid(row=9, column=0, columnspan=2, sticky="w", pady=(12, 0))
+        if self.anulado:
+            tk.Label(estado, bg=COLOR_BLANCO, fg="#b45309",
+                     font=("Helvetica", 8, "bold"), justify="left", wraplength=430,
+                     text=f"ANULADO por {registro.get('anulado_por', '?')} · "
+                          f"{registro.get('motivo_anulacion', '')}").pack(anchor="w")
+        else:
+            tk.Label(estado, bg=COLOR_BLANCO, fg="#6B7280",
+                     font=("Helvetica", 8), justify="left", wraplength=430,
+                     text="Anular retira el oficio del listado y de las "
+                          "métricas, pero lo conserva: la Referencia UDC no se "
+                          "reutiliza y queda constancia de quién lo anuló y por "
+                          "qué. Se puede reactivar.").pack(anchor="w")
+
+    def _guardar(self):
+        valores = {campo: widget.get().strip()
+                   for campo, widget in self.campos.items()}
+        try:
+            cambios = oficios.corregir_oficio(
+                self.referencia, self.usuario["usuario"],
+                self.usuario.get("rol"), **valores)
+        except ValueError as error:
+            messagebox.showerror("Error", str(error), parent=self)
+            return
+        if not cambios:
+            messagebox.showinfo("Sin cambios", "No se modificó ningún dato.",
+                                parent=self)
+            return
+        messagebox.showinfo("Corregido",
+                            "Cambios aplicados:\n\n" + "\n".join(cambios),
+                            parent=self)
+        self.destroy()
+
+    def _anular(self):
+        motivo = simpledialog.askstring(
+            "Anular oficio",
+            f"Motivo por el que se retira el oficio {self.referencia}:",
+            parent=self)
+        if motivo is None:
+            return
+        try:
+            oficios.anular_oficio(self.referencia, motivo,
+                                  self.usuario["usuario"], self.usuario.get("rol"))
+        except ValueError as error:
+            messagebox.showerror("Error", str(error), parent=self)
+            return
+        messagebox.showinfo(
+            "Anulado",
+            f"El oficio {self.referencia} queda fuera del listado y de las "
+            "métricas.\nPuede volver a verlo con la casilla «Ver anulados».",
+            parent=self)
+        self.destroy()
+
+    def _reactivar(self):
+        if not messagebox.askyesno(
+                "Reactivar",
+                f"¿Devolver el oficio {self.referencia} a la operación?",
+                parent=self):
+            return
+        try:
+            oficios.reactivar_oficio(self.referencia, self.usuario["usuario"],
+                                     self.usuario.get("rol"))
+        except ValueError as error:
+            messagebox.showerror("Error", str(error), parent=self)
+            return
+        messagebox.showinfo("Reactivado", "El oficio vuelve a estar activo.",
+                            parent=self)
+        self.destroy()
 
 
 # ============================================================================
