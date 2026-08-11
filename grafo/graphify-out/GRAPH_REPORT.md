@@ -4,12 +4,12 @@
 - cluster-only mode — file stats not available
 
 ## Summary
-- 408 nodes · 876 edges · 20 communities
-- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 19 edges (avg confidence: 0.8)
+- 414 nodes · 887 edges · 20 communities
+- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 20 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `d1151d93`
+- Built from commit: `1e6a39ae`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -65,27 +65,27 @@
 
 ### Community 0 - "Community 0"
 Cohesion: 0.07
-Nodes (68): actualizar_estado_asignado(), actualizar_oficio(), adjuntar_respuesta(), eliminar_respuesta(), _exigir_datos_para_finalizar(), exportar_csv(), exportar_oficios(), exportar_xlsx() (+60 more)
+Nodes (70): actualizar_estado_asignado(), actualizar_oficio(), adjuntar_respuesta(), eliminar_respuesta(), _exigir_datos_para_finalizar(), exportar_csv(), exportar_oficios(), exportar_xlsx() (+62 more)
 
 ### Community 1 - "Community 1"
 Cohesion: 0.09
-Nodes (43): _buscar(), cambiar_clave_propia(), cerrar_sesion(), _contar_superusuarios(), crear_usuario(), editar_usuario(), eliminar_usuario(), existe_algun_usuario() (+35 more)
+Nodes (34): _cifrador(), cifrar(), descifrar(), obtener_clave(), Devuelve la clave Fernet; la genera la primera vez que se ejecuta., Descifra. Lanza cryptography.fernet.InvalidToken si el archivo     fue alterado, Fernet, analizar_referencia() (+26 more)
 
 ### Community 2 - "Community 2"
 Cohesion: 0.09
 Nodes (14): DialogoCargaMasiva, DialogoExportar, iniciar(), maximizar_ventana(), Exporta a CSV los oficios de una fecha o de un rango de fechas., Muestra qué se va a importar y, si se confirma, lo guarda.      La carga no se h, Resume en pocas líneas lo que conviene saber antes de confirmar., Exporta los oficios a un CSV acotando por fecha.      Siempre hay que elegir un (+6 more)
 
 ### Community 3 - "Community 3"
-Cohesion: 0.10
-Nodes (27): analizar_referencia(), definir_secuencial_inicial(), esta_configurado(), _guardar(), _leer(), obtener_referencia_inicial(), obtener_secuencial_inicial(), Parámetros del sistema (archivo cifrado `datos/parametros.dat`).  Hoy guarda un (+19 more)
+Cohesion: 0.12
+Nodes (34): _buscar(), cambiar_clave_propia(), cerrar_sesion(), _contar_superusuarios(), crear_usuario(), editar_usuario(), eliminar_usuario(), existe_algun_usuario() (+26 more)
 
 ### Community 4 - "Community 4"
-Cohesion: 0.11
-Nodes (23): bloquear(), _esta_abandonado(), Path, Bloqueo entre procesos para la carpeta de datos compartida.  Problema que resuel, True si el bloqueo es tan antiguo que solo puede ser basura., Toma el bloqueo `nombre` mientras dure el bloque `with`.      Lanza ValueError s, _ruta_bloqueo(), _buscar_recurso() (+15 more)
+Cohesion: 0.12
+Nodes (27): _a_fecha(), _a_texto(), agrupar_por_referencia(), coincidencias(), emparejar_responsables(), leer_archivo(), _leer_csv(), _leer_xlsx() (+19 more)
 
 ### Community 5 - "Community 5"
-Cohesion: 0.15
-Nodes (21): _a_fecha(), _a_texto(), agrupar_por_referencia(), emparejar_responsables(), leer_archivo(), _leer_csv(), _leer_xlsx(), _mapear_cabecera() (+13 more)
+Cohesion: 0.13
+Nodes (22): listar_oficios(), _buscar_recurso(), _crear_subcarpeta(), _leer_ruta_configurada(), Path, Configuración central de la aplicación. Define rutas, nombres de archivo y const, Ubica un recurso de la aplicación (ícono o logo).      Se busca primero junto al, Ruta de la carpeta de datos indicada por el usuario, o None.      Se busca en do (+14 more)
 
 ### Community 6 - "Community 6"
 Cohesion: 0.12
@@ -104,8 +104,8 @@ Cohesion: 0.14
 Nodes (7): Tablero con scroll vertical: tarjetas de indicadores y gráficos., Marco superior con logo y título., True si el usuario en sesión puede crear/editar/eliminar usuarios         y reas, Crea la copia del día en segundo plano.          Va en un hilo aparte para que l, Convierte un contenedor en un área con scroll vertical.          Devuelve (lienz, Recuadro con título para agrupar campos afines., Panel de búsqueda: por texto (Referencia UDC / Referencia oficio /         Causa
 
 ### Community 10 - "Community 10"
-Cohesion: 0.23
-Nodes (15): listar_oficios(), _convertir_fecha(), dias_promedio_respuesta(), distribucion_estados(), por_responsable(), Cálculo de métricas para el tablero (dashboard). No depende de la interfaz: solo, Cantidad de oficios por responsable, de mayor a menor.     Los oficios sin respo, Cantidad por estado, en el orden definido en configuracion.ESTADOS. (+7 more)
+Cohesion: 0.17
+Nodes (16): bloquear(), _esta_abandonado(), Path, Bloqueo entre procesos para la carpeta de datos compartida.  Problema que resuel, True si el bloqueo es tan antiguo que solo puede ser basura., Toma el bloqueo `nombre` mientras dure el bloque `with`.      Lanza ValueError s, _ruta_bloqueo(), _cargar() (+8 more)
 
 ### Community 11 - "Community 11"
 Cohesion: 0.18
@@ -143,16 +143,16 @@ Nodes (3): Abre el documento del oficio (PDF dentro de la aplicación; el Word, 
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `AplicacionPrincipal` connect `Community 6` to `Community 2`, `Community 8`, `Community 9`, `Community 13`, `Community 14`, `Community 15`, `Community 16`, `Community 17`, `Community 18`?**
-  _High betweenness centrality (0.420) - this node is a cross-community bridge._
+  _High betweenness centrality (0.416) - this node is a cross-community bridge._
 - **Why does `SelectorFecha` connect `Community 11` to `Community 9`, `Community 2`?**
-  _High betweenness centrality (0.068) - this node is a cross-community bridge._
-- **Are the 18 inferred relationships involving `ValueError` (e.g. with `cambiar_clave_propia()` and `crear_usuario()`) actually correct?**
-  _`ValueError` has 18 INFERRED edges - model-reasoned connections that need verification._
+  _High betweenness centrality (0.067) - this node is a cross-community bridge._
+- **Are the 19 inferred relationships involving `ValueError` (e.g. with `cambiar_clave_propia()` and `crear_usuario()`) actually correct?**
+  _`ValueError` has 19 INFERRED edges - model-reasoned connections that need verification._
 - **Should `Community 0` be split into smaller, more focused modules?**
-  _Cohesion score 0.06820119352088662 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.0676056338028169 - nodes in this community are weakly interconnected._
 - **Should `Community 1` be split into smaller, more focused modules?**
-  _Cohesion score 0.09393939393939393 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.08534850640113797 - nodes in this community are weakly interconnected._
 - **Should `Community 2` be split into smaller, more focused modules?**
   _Cohesion score 0.09309309309309309 - nodes in this community are weakly interconnected._
 - **Should `Community 3` be split into smaller, more focused modules?**
-  _Cohesion score 0.09885057471264368 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.11764705882352941 - nodes in this community are weakly interconnected._

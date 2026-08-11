@@ -4,12 +4,18 @@ Carga masiva de oficios desde la matriz de Excel (.xlsx) o desde un CSV.
 Sirve para volcar de una vez el histórico que la unidad venía llevando en la
 "Matriz-Req-Inf", sin tener que reescribir oficio por oficio.
 
-Cómo está organizada la matriz
-------------------------------
+Formato establecido
+-------------------
 La cabecera ocupa la fila 4, de la columna B a la AA (la fila 3 solo lleva
 rótulos de agrupación y las filas 1-2 están vacías). Los datos empiezan en la
-fila 5. Las columnas se reconocen por su TEXTO, no por su posición, de modo que
-si mañana se inserta o se mueve una columna la carga sigue funcionando.
+fila 5.
+
+El archivo que se cargue debe respetar ese formato: las 26 columnas, completas
+y EN SU ORDEN (ver `CABECERA_MATRIZ`). Antes de leer un solo dato se comprueba
+la cabecera y, si no cuadra, se rechaza el archivo indicando qué columna está
+fuera de sitio, cuál falta o cuál sobra. Solo se toleran diferencias de
+redacción —mayúsculas, tildes, espacios de más y títulos repartidos en varias
+líneas—, nunca de orden ni de contenido.
 
 Correspondencia con los campos de la aplicación
 -----------------------------------------------
@@ -48,23 +54,49 @@ from configuracion import ESTADOS
 FILA_CABECERA = 4
 PRIMERA_FILA_DATOS = FILA_CABECERA + 1
 
-# Encabezado de la matriz -> campo del oficio. La comparación se hace
-# normalizada (sin tildes, sin mayúsculas y sin espacios de más), y basta con
-# que el encabezado del archivo EMPIECE por el texto indicado: así encajan los
-# títulos largos que ocupan varias líneas ("Referencia - Oficio\nFGE; ...").
-COLUMNAS = {
-    "ref prev & cump": "referencia",
-    "referencia - oficio": "codigo_oficio",
-    "referencia - circular": "referencia_sb",
-    "delito": "causal_oficio",
-    "fecha circular": "fecha_oficio",
-    "fecha emision": "fecha_recepcion",
-    "fecha asignacion": "fecha_asignacion",
-    "fecha envio": "fecha_respuesta",
-    "usuario": "empleado",
-    "estado": "estado",
-    "observacion": "observacion",
-}
+# FORMATO ESTABLECIDO de la matriz: las 26 columnas de la B a la AA, EN ESTE
+# ORDEN. El archivo que se cargue tiene que respetarlo; si no, se rechaza
+# indicando qué columna no cuadra.
+#
+# Cada entrada es (nombre que se muestra, texto por el que se reconoce, campo
+# del oficio). El reconocimiento se hace sobre el encabezado normalizado (sin
+# tildes, en minúsculas y con los espacios colapsados) y basta con que EMPIECE
+# por ese texto, para que encajen los títulos largos repartidos en varias
+# líneas ("Referencia - Oficio\nFGE; Juzgado, Tribunal"). Un campo en None es
+# una columna de la matriz que la aplicación no guarda.
+CABECERA_MATRIZ = [
+    ("Mes",                                 "mes",                    None),
+    ("Fecha Asignación",                    "fecha asignacion",       "fecha_asignacion"),
+    ("Ref Prev & Cump",                     "ref prev & cump",        "referencia"),
+    ("Usuario",                             "usuario",                "empleado"),
+    ("Prioridad",                           "prioridad",              None),
+    ("Fecha Emisión",                       "fecha emision",          "fecha_recepcion"),
+    ("Referencia",                          "referencia",             None),
+    ("Medio Repuesta",                      "medio repuesta",         None),
+    ("Fecha Envío",                         "fecha envio",            "fecha_respuesta"),
+    ("Estado",                              "estado",                 "estado"),
+    ("Días",                                "dias",                   None),
+    ("Canal Recepc",                        "canal recepc",           None),
+    ("Fecha Circular",                      "fecha circular",         "fecha_oficio"),
+    ("Apellidos, Nombres - Razón Social",   "apellidos",              None),
+    ("TiPASo Id CED; PAS; RUCUC",           "tipaso id",              None),
+    ("Identificación Ced; Pas; RUC",        "identificacion",         None),
+    ("Referencia - Oficio FGE; Juzgado",    "referencia - oficio",    "codigo_oficio"),
+    ("Número Expediente Fiscal",            "numero expediente",      None),
+    ("Referencia - Circular Superintendencia Bancos",
+                                            "referencia - circular",  "referencia_sb"),
+    ("Delito",                              "delito",                 "causal_oficio"),
+    ("Tipo de Accion",                      "tipo de accion",         None),
+    ("Observación",                         "observacion",            "observacion"),
+    ("Tipo de Implicado",                   "tipo de implicado",      None),
+    ("LCI - SI o NO",                       "lci",                    None),
+    ("Fecha - Solicitud",                   "fecha - solicitud",      None),
+    ("Ref Solic- No. LCI-202X-000",         "ref solic",              None),
+]
+
+# Primera columna de la matriz (la A queda vacía) y última.
+PRIMERA_COLUMNA = "B"
+ULTIMA_COLUMNA = "AA"
 
 # Estados de la matriz -> estados de la aplicación.
 ESTADOS_EQUIVALENTES = {
@@ -126,19 +158,79 @@ def _a_texto(valor) -> str:
     return "" if texto in {"-", "--", "N/A", "n/a"} else texto
 
 
-# --- Lectura del archivo -----------------------------------------------------
-def _mapear_cabecera(celdas: List) -> Dict[int, str]:
-    """Relaciona el índice de cada columna con el campo del oficio."""
-    mapa = {}
-    for indice, celda in enumerate(celdas):
-        titulo = normalizar(celda)
-        if not titulo:
-            continue
-        for prefijo, campo in COLUMNAS.items():
-            if titulo.startswith(prefijo):
-                mapa[indice] = campo
-                break
-    return mapa
+# --- Validación del formato --------------------------------------------------
+def _letra_columna(posicion: int) -> str:
+    """Letra de la columna de Excel para la posición indicada (0 -> 'B')."""
+    numero = posicion + 2                      # la matriz empieza en la B
+    letras = ""
+    while numero:
+        numero, resto = divmod(numero - 1, 26)
+        letras = chr(65 + resto) + letras
+    return letras
+
+
+def _recortar(celdas: List) -> Tuple[List[str], List[str], int]:
+    """Encabezados de la fila sin las columnas vacías de los extremos.
+
+    Devuelve (normalizados, tal como vienen, desplazamiento inicial). Los
+    normalizados sirven para comparar y los originales para los mensajes, que
+    así muestran el texto exacto que tiene el archivo. El desplazamiento
+    recoge la columna A de la matriz, que va vacía.
+    """
+    titulos = [normalizar(c) for c in celdas]
+    originales = [" ".join(str(c).split()) if c is not None else "" for c in celdas]
+    inicio = 0
+    while inicio < len(titulos) and not titulos[inicio]:
+        inicio += 1
+    fin = len(titulos)
+    while fin > inicio and not titulos[fin - 1]:
+        fin -= 1
+    return titulos[inicio:fin], originales[inicio:fin], inicio
+
+
+def coincidencias(celdas: List) -> int:
+    """Cuántas columnas de la fila encajan, en su posición, con el formato."""
+    titulos, _originales, _inicio = _recortar(celdas)
+    return sum(1 for posicion, (_, prefijo, _campo) in enumerate(CABECERA_MATRIZ)
+               if posicion < len(titulos) and titulos[posicion].startswith(prefijo))
+
+
+def validar_cabecera(celdas: List) -> int:
+    """Comprueba que la fila sea la cabecera del formato establecido.
+
+    El orden de las columnas IMPORTA: se exige la secuencia completa de la B a
+    la AA. Devuelve el desplazamiento con el que empiezan las columnas dentro de
+    la fila; si el archivo no cumple, lanza un ValueError explicando qué falla.
+    """
+    titulos, originales, inicio = _recortar(celdas)
+    problemas = []
+    for posicion, (nombre, prefijo, _campo) in enumerate(CABECERA_MATRIZ):
+        letra = _letra_columna(posicion)
+        if posicion >= len(titulos):
+            problemas.append(f"falta la columna {letra} «{nombre}»")
+        elif not titulos[posicion].startswith(prefijo):
+            encontrado = originales[posicion][:40] or "(vacía)"
+            problemas.append(
+                f"la columna {letra} debería ser «{nombre}» y contiene "
+                f"«{encontrado}»")
+    sobran = len(titulos) - len(CABECERA_MATRIZ)
+    if sobran > 0:
+        problemas.append(
+            f"hay {sobran} columna(s) de más después de la {ULTIMA_COLUMNA}")
+
+    if problemas:
+        detalle = "\n".join(f"  · {p}" for p in problemas[:8])
+        if len(problemas) > 8:
+            detalle += f"\n  · … y {len(problemas) - 8} diferencia(s) más"
+        raise ValueError(
+            "El archivo no tiene el formato establecido.\n\n"
+            f"La cabecera debe ocupar la fila {FILA_CABECERA}, de la columna "
+            f"{PRIMERA_COLUMNA} a la {ULTIMA_COLUMNA}, con las "
+            f"{len(CABECERA_MATRIZ)} columnas en su orden.\n\n"
+            f"Diferencias encontradas:\n{detalle}\n\n"
+            "Suba el archivo con el formato establecido."
+        )
+    return inicio
 
 
 def _leer_xlsx(ruta: Path) -> Tuple[List[List], List[str]]:
@@ -155,7 +247,12 @@ def _leer_xlsx(ruta: Path) -> Tuple[List[List], List[str]]:
     filas = [list(f) for f in hoja.iter_rows(values_only=True)]
     libro.close()
     if len(filas) < FILA_CABECERA:
-        raise ValueError("El archivo no tiene la cabecera esperada en la fila 4.")
+        raise ValueError(
+            "El archivo no tiene el formato establecido: se esperaba la "
+            f"cabecera en la fila {FILA_CABECERA} y el archivo solo tiene "
+            f"{len(filas)} fila(s).\n\nSuba el archivo con el formato "
+            "establecido."
+        )
     return filas[FILA_CABECERA - 1:], []
 
 
@@ -163,23 +260,21 @@ def _leer_csv(ruta: Path) -> Tuple[List[List], List[str]]:
     """Lee un CSV detectando el separador (barra vertical, punto y coma o coma).
 
     La cabecera se busca en las primeras filas, porque un CSV exportado desde la
-    matriz puede arrastrar las filas de rótulos de arriba.
+    matriz puede arrastrar las filas de rótulos que van encima. Se elige la fila
+    que MÁS se parezca al formato establecido; si ninguna encaja del todo, la
+    validación posterior explica en qué se diferencia.
     """
     with ruta.open("r", encoding="utf-8-sig", newline="") as archivo:
         muestra = archivo.read(8192)
         archivo.seek(0)
         separador = max("|;,\t", key=muestra.count)
         filas = [f for f in csv.reader(archivo, delimiter=separador)]
+    filas = [f for f in filas if any(_a_texto(c) for c in f)]
     if not filas:
         raise ValueError("El archivo está vacío.")
-    # La cabecera es la primera fila que contenga alguna columna reconocible.
-    for indice, fila in enumerate(filas[:10]):
-        if _mapear_cabecera(fila):
-            return filas[indice:], []
-    raise ValueError(
-        "No se reconoció ninguna columna. Compruebe que el archivo tiene la "
-        "cabecera de la matriz (Ref Prev & Cump, Fecha Asignación, Estado…)."
-    )
+    candidatas = filas[:FILA_CABECERA + 4]
+    mejor = max(range(len(candidatas)), key=lambda i: coincidencias(candidatas[i]))
+    return filas[mejor:], []
 
 
 def leer_archivo(ruta) -> Tuple[List[Dict], List[str], List[str]]:
@@ -198,16 +293,15 @@ def leer_archivo(ruta) -> Tuple[List[Dict], List[str], List[str]]:
     else:
         raise ValueError("El archivo debe ser una hoja de Excel (.xlsx) o un CSV.")
 
+    # El formato es fijo: se comprueba que estén TODAS las columnas y en su
+    # orden antes de leer un solo dato.
     cabecera = crudas[0]
-    mapa = _mapear_cabecera(cabecera)
-    if not mapa:
-        raise ValueError(
-            "No se reconoció ninguna columna de la matriz. Compruebe que la "
-            f"cabecera está en la fila {FILA_CABECERA} (de la columna B a la AA)."
-        )
-    ignoradas = sorted({_a_texto(cabecera[i]).replace("\n", " ")
-                        for i in range(len(cabecera))
-                        if i not in mapa and _a_texto(cabecera[i])})
+    inicio = validar_cabecera(cabecera)
+    # Ya validado el orden, cada campo se toma por su posición.
+    mapa = {inicio + posicion: campo
+            for posicion, (_nombre, _prefijo, campo) in enumerate(CABECERA_MATRIZ)
+            if campo}
+    ignoradas = [nombre for nombre, _prefijo, campo in CABECERA_MATRIZ if not campo]
 
     filas, errores = [], []
     for desplazamiento, cruda in enumerate(crudas[1:], start=1):

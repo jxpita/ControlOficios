@@ -276,10 +276,16 @@ matriz de Excel ("Matriz-Req-Inf"). Está en la pestaña *Configuración*, así 
 solo la usan administradores y el superusuario; la restricción se valida también
 en el almacenamiento (`almacen_oficios.importar_oficios`).
 
-Admite la propia matriz (`.xlsx`) o un CSV con la misma cabecera. **Las columnas
-se reconocen por su texto, no por su posición**, de modo que si se inserta o se
-mueve una columna la carga sigue funcionando. En la matriz la cabecera está en
-la **fila 4** (de la columna **B** a la **AA**) y los datos empiezan en la 5.
+Admite la propia matriz (`.xlsx`) o un CSV con la misma cabecera, y **exige el
+formato establecido**: la cabecera en la **fila 4**, de la columna **B** a la
+**AA**, con las **26 columnas completas y en su orden** (ver `CABECERA_MATRIZ`).
+Los datos empiezan en la fila 5.
+
+Antes de leer un solo dato se valida la cabecera. Si no cuadra, el archivo se
+rechaza con el detalle de qué columna está fuera de sitio, cuál falta o cuál
+sobra, y la indicación de subir el archivo con el formato establecido. Solo se
+toleran diferencias de **redacción** —mayúsculas, tildes, espacios de más y
+títulos repartidos en varias líneas—, nunca de orden ni de contenido.
 
 | Columna de la matriz | Campo del oficio |
 |---|---|
