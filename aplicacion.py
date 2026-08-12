@@ -12,6 +12,7 @@ import configuracion
 import almacen_oficios as oficios
 import carga_masiva
 import parametros
+import tipos_accion
 import respaldo
 import visor_pdf
 import metricas
@@ -19,7 +20,7 @@ from configuracion import (
     ESTADOS, ARCHIVO_LOGO, ARCHIVO_ICONO, PREFIJO_REFERENCIA,
     DIR_RESPALDOS, DIAS_RESPALDO_POR_DEFECTO,
     ROL_SUPERUSUARIO, ROL_ADMINISTRADOR, ROL_USUARIO,
-    ROLES_GESTORES,
+    ROLES_GESTORES, INSTITUCIONES,
     COLOR_AZUL, COLOR_BLANCO, COLOR_GRIS_CLARO, COLOR_TEXTO, COLOR_TEXTO_INV
 )
 
@@ -746,6 +747,29 @@ class AplicacionPrincipal(ttk.Frame):
                 return
             widget = getattr(widget, "master", None)
 
+    def _tipos_accion(self):
+        """Tipos de acción del catálogo, para los desplegables."""
+        try:
+            return tipos_accion.listar()
+        except Exception:
+            return []
+
+    def _mostrar_proxima_referencia(self):
+        """Adelanta la Referencia UDC que se asignará al oficio en curso.
+
+        Depende de la institución elegida, porque cada una lleva su propia
+        numeración."""
+        institucion = self.combo_institucion.get()
+        if not institucion:
+            self.lbl_proxima_referencia.config(text="")
+            return
+        try:
+            self.lbl_proxima_referencia.config(
+                text=f"Referencia UDC que se asignará: "
+                     f"{oficios.proxima_referencia(institucion)}")
+        except ValueError:
+            self.lbl_proxima_referencia.config(text="")
+
     def _campo(self, grupo, fila, etiqueta, widget, ayuda=None, estirar=True):
         """Coloca una etiqueta y su campo en una fila del grupo.
 
@@ -799,17 +823,29 @@ class AplicacionPrincipal(ttk.Frame):
 
         # --- Columna izquierda: identificación del oficio --------------------
         datos = self._grupo(contenido, "Datos del oficio", 1, 0)
+        # La institución no se muestra luego en el listado: solo determina la
+        # nomenclatura de la Referencia UDC (REQ-UDC-SB-… o REQ-UDC-FGE-…).
+        self.combo_institucion = ttk.Combobox(
+            datos, state="readonly", values=list(INSTITUCIONES))
+        self.combo_institucion.bind("<<ComboboxSelected>>",
+                                    lambda e: self._mostrar_proxima_referencia())
+        self._campo(datos, 0, "Institución del Estado *", self.combo_institucion)
+        self.lbl_proxima_referencia = ttk.Label(
+            datos, text="", foreground="#6B7280", font=("Helvetica", 8))
+        self.lbl_proxima_referencia.grid(row=1, column=1, sticky="w", pady=(0, 2))
+
         self.entrada_codigo = self._campo(
-            datos, 0, "Referencia oficio *", ttk.Entry(datos))
+            datos, 2, "Referencia oficio *", ttk.Entry(datos))
+        self.combo_tipo_accion = ttk.Combobox(datos, state="readonly",
+                                              values=self._tipos_accion())
+        self._campo(datos, 3, "Tipo de acción *", self.combo_tipo_accion)
         self.entrada_causal = self._campo(
-            datos, 1, "Causal oficio", ttk.Entry(datos))
-        self.entrada_referencia_sb = self._campo(
-            datos, 2, "Referencia SB", ttk.Entry(datos))
+            datos, 4, "Causal oficio", ttk.Entry(datos))
         # Orden de fechas: oficio -> recepción.
         self.entrada_fecha_oficio = self._campo(
-            datos, 3, "Fecha de oficio *", SelectorFecha(datos), estirar=False)
+            datos, 5, "Fecha de oficio *", SelectorFecha(datos), estirar=False)
         self.entrada_fecha_recepcion = self._campo(
-            datos, 4, "Fecha de recepción *", SelectorFecha(datos), estirar=False)
+            datos, 6, "Fecha de recepción *", SelectorFecha(datos), estirar=False)
 
         # --- Columna derecha: asignación y seguimiento -----------------------
         gestion = self._grupo(contenido, "Asignación y seguimiento", 1, 1)
@@ -897,12 +933,13 @@ class AplicacionPrincipal(ttk.Frame):
                 fecha_respuesta=self.entrada_fecha_respuesta.get(),
                 observacion=self.texto_observacion.get("1.0", "end"),
                 causal_oficio=self.entrada_causal.get(),
-                referencia_sb=self.entrada_referencia_sb.get(),
                 actor_rol=self.usuario.get("rol"),
                 ruta_documento=self.archivo_oficio.get(),
                 fecha_asignacion=self.entrada_fecha_asignacion.get(),
                 cantidad_investigados=self.entrada_investigados.get(),
                 ruta_respuesta=self.archivo_respuesta_registro.get(),
+                institucion=self.combo_institucion.get(),
+                tipo_accion=self.combo_tipo_accion.get(),
             )
         except ValueError as error:
             messagebox.showerror("Error", str(error))
@@ -910,21 +947,25 @@ class AplicacionPrincipal(ttk.Frame):
         messagebox.showinfo("Registrado",
                             f"Oficio registrado.\nReferencia UDC: {referencia}")
         for entrada in (self.entrada_codigo, self.entrada_causal,
-                        self.entrada_referencia_sb, self.entrada_investigados):
+                        self.entrada_investigados):
             entrada.delete(0, "end")
         self.entrada_fecha_asignacion.set("")
         self.entrada_fecha_respuesta.set("")
         self.archivo_oficio.set("")
         self.archivo_respuesta_registro.set("")
         self.texto_observacion.delete("1.0", "end")
+        self.combo_institucion.set("")
+        self.combo_tipo_accion.set("")
+        self._mostrar_proxima_referencia()
         if self.combo_empleado is not None:
             self.combo_empleado.current(0)
         self.combo_estado.current(0)
         self._refrescar_listado()
 
     def _construir_filtros(self, marco):
-        """Panel de búsqueda: por texto (Referencia UDC / Referencia oficio /
-        Causal / Referencia SB) y por fecha única o rango de un mismo tipo."""
+        """Panel de búsqueda: por texto (Referencia UDC / Institución /
+        Referencia oficio / Tipo de acción / Causal) y por fecha única o rango
+        de un mismo tipo."""
         panel = ttk.LabelFrame(marco, text=" Buscar oficios ", padding=(8, 4))
         panel.pack(fill="x", pady=(0, 4))
 
@@ -1008,16 +1049,16 @@ class AplicacionPrincipal(ttk.Frame):
         self._marco_filtros = self._construir_filtros(marco)
 
         # --- 2) Tabla de oficios (orden: oficio -> recepción -> respuesta) --
-        columnas = ("referencia", "codigo", "causal", "sb", "oficio", "recepcion",
-                    "asignacion", "respuesta", "investigados", "empleado",
-                    "estado", "pdf", "observacion")
-        titulos = ("Referencia UDC", "Referencia oficio", "Causal oficio",
-                   "Referencia SB", "F. oficio", "F. recepción", "F. asignación",
-                   "F. respuesta", "Cant. investigados", "Responsable",
-                   "Estado", "PDF", "Observación")
+        columnas = ("referencia", "codigo", "accion", "causal", "oficio",
+                    "recepcion", "asignacion", "respuesta", "investigados",
+                    "empleado", "estado", "pdf", "observacion")
+        titulos = ("Referencia UDC", "Referencia oficio", "Tipo de acción",
+                   "Causal oficio", "F. oficio", "F. recepción",
+                   "F. asignación", "F. respuesta", "Cant. investigados",
+                   "Responsable", "Estado", "PDF", "Observación")
         # Referencia UDC y Referencia oficio con ancho suficiente para verse
-        # completas (p. ej. "REQ-INF-2026-0241").
-        anchos = (150, 150, 150, 120, 90, 95, 100, 95, 135, 150, 90, 40, 200)
+        # completas (p. ej. "REQ-UDC-SB-0001").
+        anchos = (150, 150, 150, 150, 90, 95, 100, 95, 135, 150, 90, 40, 200)
         contenedor = ttk.Frame(marco)
         # Altura fija (no expand): dentro de un área desplazable la tabla debe
         # tener alto propio para que el panel inferior siga siendo alcanzable.
@@ -1063,6 +1104,11 @@ class AplicacionPrincipal(ttk.Frame):
         ttk.Label(fila, text="Cant. investigados").pack(side="left")
         self.edicion_cantidad = ttk.Entry(fila, width=6)
         self.edicion_cantidad.pack(side="left", padx=(6, 16))
+
+        ttk.Label(fila, text="Tipo de acción").pack(side="left")
+        self.combo_tipo_accion_edicion = ttk.Combobox(
+            fila, width=20, state="readonly", values=self._tipos_accion())
+        self.combo_tipo_accion_edicion.pack(side="left", padx=6)
 
         # Segunda fila: responsable y estado (así ninguna queda apretada).
         fila2 = ttk.Frame(panel)
@@ -1178,8 +1224,8 @@ class AplicacionPrincipal(ttk.Frame):
                 self.tabla.insert("", "end", iid=registro["referencia"],
                                   tags=("anulado",) if anulado else (), values=(
                     registro["referencia"], registro["codigo_oficio"],
+                    registro.get("tipo_accion", ""),
                     registro.get("causal_oficio", ""),
-                    registro.get("referencia_sb", ""),
                     registro["fecha_oficio"], registro["fecha_recepcion"],
                     registro.get("fecha_asignacion", ""),
                     registro.get("fecha_respuesta", ""),
@@ -1225,6 +1271,8 @@ class AplicacionPrincipal(ttk.Frame):
         self.edicion_fecha_respuesta.set(registro.get("fecha_respuesta", ""))
         self.edicion_cantidad.delete(0, "end")
         self.edicion_cantidad.insert(0, registro.get("cantidad_investigados", ""))
+        self.combo_tipo_accion_edicion.config(values=self._tipos_accion())
+        self.combo_tipo_accion_edicion.set(registro.get("tipo_accion", ""))
         self.edicion_observacion.delete("1.0", "end")
         self.edicion_observacion.insert("1.0", registro.get("observacion", ""))
 
@@ -1268,12 +1316,14 @@ class AplicacionPrincipal(ttk.Frame):
                     id_empleado, nombre_empleado, self.usuario["usuario"],
                     self.usuario.get("rol"), fecha_respuesta, observacion,
                     fecha_asignacion=self.edicion_fecha_asignacion.get(),
-                    cantidad_investigados=cantidad)
+                    cantidad_investigados=cantidad,
+                    tipo_accion=self.combo_tipo_accion_edicion.get())
             else:
                 estado_final = oficios.actualizar_estado_asignado(
                     seleccion[0], self.usuario["usuario"],
                     self.combo_nuevo_estado.get(), fecha_respuesta, observacion,
-                    cantidad_investigados=cantidad)
+                    cantidad_investigados=cantidad,
+                    tipo_accion=self.combo_tipo_accion_edicion.get())
         except ValueError as error:
             messagebox.showerror("Error", str(error))
             return
@@ -1740,33 +1790,47 @@ class AplicacionPrincipal(ttk.Frame):
                                padding=12)
         panel.pack(fill="x")
 
+        ejemplo_sigla = list(INSTITUCIONES.values())[0]
         self._etiqueta_ajustable(
             panel,
-            "Indique la ÚLTIMA Referencia UDC registrada.\n"
-            f"Formato: {PREFIJO_REFERENCIA}-AAAA-NNNN  "
-            f"(por ejemplo {PREFIJO_REFERENCIA}-{date.today().year}-0241 → "
-            f"el próximo oficio será {PREFIJO_REFERENCIA}-{date.today().year}-0242)."
-        ).grid(row=0, column=0, columnspan=2, sticky="w", pady=(0, 10))
+            "Cada institución lleva su propia numeración. Indique, por "
+            "institución, la ÚLTIMA Referencia UDC utilizada antes del sistema.\n"
+            f"Formato: {PREFIJO_REFERENCIA}-SIGLA-NNNN  "
+            f"(por ejemplo {PREFIJO_REFERENCIA}-{ejemplo_sigla}-0241 → "
+            f"el siguiente será {PREFIJO_REFERENCIA}-{ejemplo_sigla}-0242)."
+        ).grid(row=0, column=0, columnspan=3, sticky="w", pady=(0, 10))
 
-        ttk.Label(panel, text="Última Referencia UDC registrada").grid(
-            row=1, column=0, sticky="w", pady=4)
+        ttk.Label(panel, text="Institución").grid(row=1, column=0, sticky="w", pady=4)
+        self.combo_institucion_secuencial = ttk.Combobox(
+            panel, width=30, state="readonly", values=list(INSTITUCIONES))
+        self.combo_institucion_secuencial.current(0)
+        self.combo_institucion_secuencial.bind(
+            "<<ComboboxSelected>>", lambda e: self._refrescar_configuracion())
+        self.combo_institucion_secuencial.grid(row=1, column=1, sticky="w",
+                                               padx=6, pady=4)
+
+        ttk.Label(panel, text="Última Referencia UDC utilizada").grid(
+            row=2, column=0, sticky="w", pady=4)
         self.entrada_secuencial = ttk.Entry(panel, width=28)
-        self.entrada_secuencial.grid(row=1, column=1, sticky="w", padx=6, pady=4)
+        self.entrada_secuencial.grid(row=2, column=1, sticky="w", padx=6, pady=4)
 
         btn = ttk.Button(panel, text="Guardar", command=self._guardar_secuencial)
-        btn.grid(row=2, column=1, sticky="w", padx=6, pady=(8, 4))
+        btn.grid(row=3, column=1, sticky="w", padx=6, pady=(8, 4))
         btn.config(style="Accent.TButton")
 
         self.lbl_secuencial = ttk.Label(panel, text="", font=("Helvetica", 9))
-        self.lbl_secuencial.grid(row=3, column=0, columnspan=2, sticky="w", pady=(8, 0))
+        self.lbl_secuencial.grid(row=4, column=0, columnspan=3, sticky="w", pady=(8, 0))
 
         self._etiqueta_ajustable(
             panel,
-            "El secuencial es por año: cada año la numeración vuelve a empezar "
-            "en 0001. Solo el superusuario y los administradores pueden "
-            "modificar este valor.",
+            "La numeración de cada institución corre de forma continua: no se "
+            "reinicia por año. Solo el superusuario y los administradores "
+            "pueden modificar este valor.",
             foreground="#6B7280", font=("Helvetica", 8)
-        ).grid(row=4, column=0, columnspan=2, sticky="w", pady=(10, 0))
+        ).grid(row=5, column=0, columnspan=3, sticky="w", pady=(10, 0))
+
+        # --- Catálogo de tipos de acción (gestores) --------------------------
+        self._construir_panel_tipos_accion(marco)
 
         # --- Carga masiva de oficios (gestores) ------------------------------
         self._construir_panel_carga_masiva(marco)
@@ -1802,6 +1866,135 @@ class AplicacionPrincipal(ttk.Frame):
                     etiqueta.config(wraplength=ancho)
             except tk.TclError:
                 pass          # la etiqueta ya no existe
+
+    def _construir_panel_tipos_accion(self, marco):
+        """Catálogo de tipos de acción, mantenible por los gestores."""
+        panel = ttk.LabelFrame(marco, text=" Tipos de acción ", padding=12)
+        panel.pack(fill="x", pady=(14, 0))
+
+        self._etiqueta_ajustable(
+            panel,
+            "Opciones disponibles en el campo «Tipo de acción» del oficio. "
+            "Entre paréntesis, cuántos oficios usan cada una."
+        ).pack(anchor="w", pady=(0, 8))
+
+        cuerpo = ttk.Frame(panel)
+        cuerpo.pack(fill="x")
+        contenedor = ttk.Frame(cuerpo)
+        contenedor.pack(side="left")
+        self.lista_tipos_accion = tk.Listbox(contenedor, height=7, width=42,
+                                             activestyle="none",
+                                             highlightthickness=1,
+                                             highlightbackground="#CBD2DE",
+                                             relief="flat")
+        barra = ttk.Scrollbar(contenedor, orient="vertical",
+                              command=self.lista_tipos_accion.yview)
+        self.lista_tipos_accion.configure(yscrollcommand=barra.set)
+        barra.pack(side="right", fill="y")
+        self.lista_tipos_accion.pack(side="left", fill="both", expand=True)
+
+        botones = ttk.Frame(cuerpo)
+        botones.pack(side="left", padx=12, anchor="n")
+        btn = ttk.Button(botones, text="Agregar", width=14,
+                         command=self._agregar_tipo_accion)
+        btn.pack(pady=(0, 6))
+        btn.config(style="Accent.TButton")
+        ttk.Button(botones, text="Renombrar", width=14,
+                   command=self._renombrar_tipo_accion).pack(pady=(0, 6))
+        ttk.Button(botones, text="Eliminar", width=14,
+                   command=self._eliminar_tipo_accion).pack()
+
+        self._etiqueta_ajustable(
+            panel,
+            "Un tipo en uso no se puede eliminar, pero sí renombrar: el cambio "
+            "se aplica a los oficios que lo tuvieran.",
+            foreground="#6B7280", font=("Helvetica", 8)
+        ).pack(anchor="w", pady=(8, 0))
+
+    def _refrescar_tipos_accion(self):
+        if not hasattr(self, "lista_tipos_accion"):
+            return
+        self.lista_tipos_accion.delete(0, "end")
+        try:
+            uso = tipos_accion.uso_actual()
+        except ValueError as error:
+            self.lista_tipos_accion.insert("end", str(error))
+            return
+        for tipo, cantidad in uso.items():
+            self.lista_tipos_accion.insert("end", f"{tipo}   ({cantidad})")
+        self._refrescar_desplegables_accion()
+
+    def _refrescar_desplegables_accion(self):
+        """Repuebla los desplegables de tipo de acción tras cambiar el catálogo."""
+        valores = self._tipos_accion()
+        for atributo in ("combo_tipo_accion", "combo_tipo_accion_edicion"):
+            combo = getattr(self, atributo, None)
+            if combo is not None:
+                try:
+                    combo.config(values=valores)
+                except tk.TclError:
+                    pass
+
+    def _tipo_accion_seleccionado(self):
+        """Nombre del tipo elegido en la lista, sin el contador."""
+        seleccion = self.lista_tipos_accion.curselection()
+        if not seleccion:
+            messagebox.showwarning("Sin selección",
+                                   "Seleccione un tipo de acción de la lista.")
+            return None
+        texto = self.lista_tipos_accion.get(seleccion[0])
+        return texto.rsplit("   (", 1)[0]
+
+    def _agregar_tipo_accion(self):
+        nuevo = simpledialog.askstring(
+            "Nuevo tipo de acción", "Nombre del tipo de acción:", parent=self)
+        if nuevo is None:
+            return
+        try:
+            tipos_accion.agregar(nuevo, self.usuario["usuario"],
+                                 self.usuario.get("rol"))
+        except ValueError as error:
+            messagebox.showerror("Error", str(error))
+            return
+        self._refrescar_tipos_accion()
+
+    def _renombrar_tipo_accion(self):
+        actual = self._tipo_accion_seleccionado()
+        if actual is None:
+            return
+        nuevo = simpledialog.askstring(
+            "Renombrar tipo de acción",
+            f"Nuevo nombre para «{actual}»:", initialvalue=actual, parent=self)
+        if nuevo is None:
+            return
+        try:
+            afectados = tipos_accion.renombrar(actual, nuevo,
+                                               self.usuario["usuario"],
+                                               self.usuario.get("rol"))
+        except ValueError as error:
+            messagebox.showerror("Error", str(error))
+            return
+        if afectados:
+            messagebox.showinfo(
+                "Renombrado",
+                f"Se actualizaron {afectados} oficio(s) que usaban «{actual}».")
+        self._refrescar_tipos_accion()
+        self._refrescar_listado()
+
+    def _eliminar_tipo_accion(self):
+        tipo = self._tipo_accion_seleccionado()
+        if tipo is None:
+            return
+        if not messagebox.askyesno("Confirmar",
+                                   f"¿Eliminar el tipo de acción «{tipo}»?"):
+            return
+        try:
+            tipos_accion.eliminar(tipo, self.usuario["usuario"],
+                                  self.usuario.get("rol"))
+        except ValueError as error:
+            messagebox.showerror("Error", str(error))
+            return
+        self._refrescar_tipos_accion()
 
     def _construir_panel_carga_masiva(self, marco):
         """Panel para volcar de una vez el histórico de la matriz de Excel."""
@@ -1903,16 +2096,20 @@ class AplicacionPrincipal(ttk.Frame):
 
     def _refrescar_configuracion(self):
         self._refrescar_panel_respaldos()
+        self._refrescar_tipos_accion()
+        institucion = self.combo_institucion_secuencial.get()
         try:
-            actual = parametros.obtener_referencia_inicial()
-            proxima = oficios.proxima_referencia()
+            actual = parametros.obtener_referencia_inicial(institucion)
+            proxima = oficios.proxima_referencia(institucion)
         except ValueError as error:
             self.lbl_secuencial.config(text=str(error), foreground="#a00")
             return
         if actual:
-            texto = f"Configurado: {actual}.    Próxima Referencia UDC: {proxima}"
+            texto = (f"{institucion} · configurado: {actual}.    "
+                     f"Próxima Referencia UDC: {proxima}")
         else:
-            texto = f"Sin configurar. Próxima Referencia UDC: {proxima}"
+            texto = (f"{institucion} · sin configurar.    "
+                     f"Próxima Referencia UDC: {proxima}")
         self.lbl_secuencial.config(text=texto, foreground=COLOR_TEXTO)
 
     def _guardar_secuencial(self):
@@ -1921,15 +2118,17 @@ class AplicacionPrincipal(ttk.Frame):
             messagebox.showwarning("Falta el dato",
                                    "Ingrese la última Referencia UDC registrada.")
             return
-        if parametros.esta_configurado() and not messagebox.askyesno(
+        institucion = self.combo_institucion_secuencial.get()
+        if parametros.esta_configurado(institucion) and not messagebox.askyesno(
                 "Confirmar",
-                f"El secuencial inicial ya está configurado como "
-                f"{parametros.obtener_referencia_inicial()}.\n\n"
+                f"El secuencial de {institucion} ya está configurado como "
+                f"{parametros.obtener_referencia_inicial(institucion)}.\n\n"
                 "¿Desea reemplazarlo?"):
             return
         try:
             normalizada = parametros.definir_secuencial_inicial(
-                valor, self.usuario["usuario"], self.usuario.get("rol"))
+                valor, self.usuario["usuario"], self.usuario.get("rol"),
+                institucion)
         except ValueError as error:
             messagebox.showerror("Error", str(error))
             return
@@ -1937,8 +2136,9 @@ class AplicacionPrincipal(ttk.Frame):
         self._refrescar_configuracion()
         messagebox.showinfo(
             "Listo",
-            f"Secuencial inicial configurado en {normalizada}.\n"
-            f"La próxima Referencia UDC será {oficios.proxima_referencia()}.")
+            f"Secuencial de {institucion} configurado en {normalizada}.\n"
+            f"La próxima Referencia UDC será "
+            f"{oficios.proxima_referencia(institucion)}.")
 
     # ---- Tablero (dashboard) -----------------------------------------------
     # Paleta de los estados, reutilizada en tarjetas y gráficos.
@@ -2253,7 +2453,6 @@ class DialogoMantenimiento(tk.Toplevel):
         filas = [
             ("codigo_oficio", "Referencia oficio *", False),
             ("causal_oficio", "Causal oficio", False),
-            ("referencia_sb", "Referencia SB", False),
             ("fecha_oficio", "Fecha de oficio *", True),
             ("fecha_recepcion", "Fecha de recepción *", True),
         ]
@@ -2395,10 +2594,11 @@ class DialogoCargaMasiva(tk.Toplevel):
         contenedor.grid(row=2, column=0, sticky="nsew")
         contenedor.columnconfigure(0, weight=1)
         contenedor.rowconfigure(0, weight=1)
-        columnas = ("referencia", "codigo", "oficio", "recepcion", "asignacion",
-                    "respuesta", "investigados", "responsable", "estado")
-        titulos = ("Referencia UDC", "Referencia oficio", "F. oficio",
-                   "F. recepción", "F. asignación", "F. respuesta",
+        columnas = ("institucion", "codigo", "accion", "oficio", "recepcion",
+                    "asignacion", "respuesta", "investigados", "responsable",
+                    "estado")
+        titulos = ("Institución", "Referencia oficio", "Tipo de acción",
+                   "F. oficio", "F. recepción", "F. asignación", "F. respuesta",
                    "Investigados", "Responsable", "Estado")
         tabla = ttk.Treeview(contenedor, columns=columnas, show="headings",
                              height=12)
@@ -2407,7 +2607,9 @@ class DialogoCargaMasiva(tk.Toplevel):
             tabla.column(columna, width=110, minwidth=80, stretch=True)
         for fila in filas:
             tabla.insert("", "end", values=(
-                fila.get("referencia", ""), fila.get("codigo_oficio", ""),
+                fila.get("institucion", "") or "(no reconocida)",
+                fila.get("codigo_oficio", ""),
+                fila.get("tipo_accion", "") or "(no reconocido)",
                 fila.get("fecha_oficio", ""), fila.get("fecha_recepcion", ""),
                 fila.get("fecha_asignacion", ""), fila.get("fecha_respuesta", ""),
                 fila.get("cantidad_investigados", ""),
@@ -2452,6 +2654,17 @@ class DialogoCargaMasiva(tk.Toplevel):
                 f"{cantidad} oficio(s) entran como «Por asignar» por no tener "
                 "responsable identificado; se les retira la fecha de respuesta "
                 "hasta que un gestor los asigne.")
+        if resumen.get("instituciones_desconocidas"):
+            nombres = ", ".join(resumen["instituciones_desconocidas"][:6])
+            lineas.append(
+                f"Institución no reconocida en {nombres}. Esas filas no se "
+                "pueden importar: la institución decide la nomenclatura de la "
+                "Referencia UDC.")
+        if resumen.get("tipos_accion_desconocidos"):
+            nombres = ", ".join(resumen["tipos_accion_desconocidos"][:6])
+            lineas.append(
+                f"Tipo de acción no reconocido: {nombres}. Añádalos al "
+                "catálogo de tipos de acción y vuelva a cargar el archivo.")
         if resumen["columnas_ignoradas"]:
             lineas.append(
                 "Columnas de la matriz sin equivalente en la aplicación (se "

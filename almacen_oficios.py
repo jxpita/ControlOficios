@@ -7,10 +7,10 @@ El día que migres a SQLite o a un motor SQL (ver README), reescribes el
 cuerpo de estas funciones y NO tocas la interfaz ni las métricas.
 
 Formato: oficios.dat cifrado con Fernet; internamente una lista JSON.
-La Referencia oficio (campo 'codigo_oficio') se mapea a una Referencia UDC:
-    REQ-INF-AAAA-NNNN   (NNNN = secuencial de 4 dígitos, desde 0001)
-El secuencial es POR AÑO y arranca desde el último valor registrado en el Excel
-anterior, que el superusuario configura una sola vez (ver el módulo parametros).
+Cada oficio recibe una Referencia UDC generada por el sistema:
+    REQ-UDC-<sigla>-NNNN    REQ-UDC-SB-0001, REQ-UDC-FGE-0001, ...
+La sigla la aporta la institución que remite el oficio y el secuencial corre de
+forma continua e independiente para cada una (ver el módulo parametros).
 """
 import csv
 import json
@@ -64,28 +64,30 @@ def _validar_fecha(texto: str, campo: str) -> str:
     return texto
 
 
-def _generar_referencia(registros: List[Dict], anio: int = None) -> str:
-    """Genera la Referencia UDC:  REQ-INF-<año>-<secuencial de 4 dígitos>.
+def _generar_referencia(registros: List[Dict], institucion: str) -> str:
+    """Genera la Referencia UDC:  REQ-UDC-<sigla>-<secuencial de 4 dígitos>.
 
-    El secuencial es **por año** (vuelve a 0001 cada año) y arranca desde el
-    último registrado en el Excel anterior, que el superusuario configura una
-    sola vez (ver `parametros`).
+    El secuencial es **independiente para cada institución** y corre de forma
+    continua: REQ-UDC-SB-0001, REQ-UDC-SB-0002… y en paralelo REQ-UDC-FGE-0001,
+    REQ-UDC-FGE-0002… No se reinicia por año, porque el año no forma parte de
+    la referencia.
 
-    Se usa max(secuencial configurado, mayor secuencial existente) + 1, de modo
-    que nunca se genera una referencia duplicada aunque se reconfigure el valor
-    inicial o queden huecos en la numeración.
+    Arranca desde el último número usado fuera del sistema, que un gestor puede
+    configurar por institución (ver `parametros`). Se usa
+    max(configurado, mayor existente) + 1, de modo que nunca se genera una
+    referencia duplicada aunque se reconfigure el valor inicial o queden huecos.
     """
-    anio = anio or date.today().year
-    prefijo_anio = f"{PREFIJO_REFERENCIA}-{anio:04d}-"
-    secuencial_max = parametros.obtener_secuencial_inicial(anio)
+    sigla = parametros.sigla_de(institucion)
+    prefijo = f"{PREFIJO_REFERENCIA}-{sigla}-"
+    secuencial_max = parametros.obtener_secuencial_inicial(institucion)
     for registro in registros:
-        referencia = registro.get("referencia", "")
-        if referencia.startswith(prefijo_anio):
+        referencia = (registro.get("referencia", "") or "").upper()
+        if referencia.startswith(prefijo.upper()):
             try:
                 secuencial_max = max(secuencial_max, int(referencia.rsplit("-", 1)[1]))
             except ValueError:
                 pass
-    return f"{prefijo_anio}{secuencial_max + 1:04d}"          # primero -> 0001
+    return f"{prefijo}{secuencial_max + 1:04d}"               # primero -> 0001
 
 
 # --- Reglas de negocio: relación responsable / estado -----------------------
@@ -152,6 +154,17 @@ def _validar_asignacion(id_empleado: str, actor_rol: str) -> None:
             "Como administrador no puede asignar oficios a un superusuario. "
             "Esa asignación corresponde a un superusuario."
         )
+
+
+def _validar_tipo_accion(tipo: str) -> str:
+    """Comprueba el tipo de acción contra el catálogo mantenible.
+
+    Import diferido: `tipos_accion` consulta este módulo para saber cuáles
+    están en uso, así que la dependencia se resuelve en el momento de la
+    llamada y no al importar.
+    """
+    import tipos_accion
+    return tipos_accion.validar(tipo)
 
 
 def _validar_cantidad_investigados(valor) -> str:
@@ -269,11 +282,16 @@ def registrar_oficio(codigo_oficio: str, fecha_recepcion: str, fecha_oficio: str
                      id_empleado: str, nombre_empleado: str, estado: str,
                      registrado_por: str, fecha_respuesta: str = "",
                      observacion: str = "", causal_oficio: str = "",
-                     referencia_sb: str = "", actor_rol: str = None,
+                     actor_rol: str = None,
                      ruta_documento: str = "", fecha_asignacion: str = "",
-                     cantidad_investigados="", ruta_respuesta: str = "") -> str:
+                     cantidad_investigados="", ruta_respuesta: str = "",
+                     institucion: str = "", tipo_accion: str = "") -> str:
     """`codigo_oficio` es la **Referencia oficio** (obligatoria).
-    `causal_oficio` y `referencia_sb` son opcionales.
+    `causal_oficio` es opcional.
+
+    `institucion` es la entidad que remite el oficio y decide la nomenclatura
+    de la Referencia UDC (REQ-UDC-SB-… o REQ-UDC-FGE-…); es **obligatoria**.
+    `tipo_accion` es lo que el oficio solicita y debe estar en el catálogo.
 
     `ruta_documento` es el documento del oficio (PDF o Word) y es
     **obligatorio**: no se registra un oficio sin su soporte.
@@ -290,11 +308,14 @@ def registrar_oficio(codigo_oficio: str, fecha_recepcion: str, fecha_oficio: str
     if not codigo_oficio:
         raise ValueError("Debe ingresar la referencia del oficio o circular.")
     causal_oficio = (causal_oficio or "").strip()
-    referencia_sb = (referencia_sb or "").strip()
     if not (ruta_documento or "").strip():
         raise ValueError(
             "Debe adjuntar el documento del oficio en formato PDF o Word (.docx)."
         )
+    # La institución fija la nomenclatura de la referencia, así que se valida
+    # antes que nada.
+    institucion = parametros.validar_institucion(institucion)
+    tipo_accion = _validar_tipo_accion(tipo_accion)
 
     # Auto-asignación obligatoria para los usuarios regulares.
     if actor_rol is not None and actor_rol not in ROLES_GESTORES:
@@ -343,7 +364,7 @@ def registrar_oficio(codigo_oficio: str, fecha_recepcion: str, fecha_oficio: str
                 f"Ya existe un oficio con la referencia \"{codigo_oficio}\". "
                 "La referencia del oficio no puede repetirse."
             )
-    referencia = _generar_referencia(registros)
+    referencia = _generar_referencia(registros, institucion)
     # Los adjuntos se copian una vez conocida la referencia, que da nombre al
     # archivo. Si algo falla, se lanza el error antes de guardar el registro.
     archivo_oficio = _guardar_documento(
@@ -357,9 +378,10 @@ def registrar_oficio(codigo_oficio: str, fecha_recepcion: str, fecha_oficio: str
     ahora = datetime.now().isoformat(timespec="seconds")
     registros.append({
         "referencia": referencia,          # Referencia UDC
+        "institucion": institucion,        # decide la sigla de la referencia
         "codigo_oficio": codigo_oficio,    # Referencia oficio
+        "tipo_accion": tipo_accion,
         "causal_oficio": causal_oficio,
-        "referencia_sb": referencia_sb,
         "fecha_recepcion": fecha_recepcion,
         "fecha_oficio": fecha_oficio,
         "fecha_asignacion": fecha_asignacion,
@@ -455,12 +477,11 @@ def _preparar_importado(fila: Dict, registros: List[Dict], referencias: set,
         raise _FilaRepetida(
             f"el oficio «{codigo_oficio}» ya está registrado.")
 
-    referencia = (fila.get("referencia") or "").strip().upper()
-    if referencia and referencia in referencias:
-        raise _FilaRepetida(f"la referencia «{referencia}» ya está registrada.")
-    if not referencia:
-        # Sin Referencia UDC en el archivo se genera la siguiente disponible.
-        referencia = _generar_referencia(registros)
+    # La Referencia UDC no viene en el archivo: la genera el sistema con la
+    # nomenclatura de la institución que remite el oficio.
+    institucion = parametros.validar_institucion(fila.get("institucion"))
+    tipo_accion = _validar_tipo_accion(fila.get("tipo_accion"))
+    referencia = _generar_referencia(registros, institucion)
 
     fecha_recepcion = (fila.get("fecha_recepcion") or "").strip()
     if not fecha_recepcion:
@@ -493,9 +514,10 @@ def _preparar_importado(fila: Dict, registros: List[Dict], referencias: set,
 
     return {
         "referencia": referencia,
+        "institucion": institucion,
         "codigo_oficio": codigo_oficio,
+        "tipo_accion": tipo_accion,
         "causal_oficio": (fila.get("causal_oficio") or "").strip(),
-        "referencia_sb": (fila.get("referencia_sb") or "").strip(),
         "fecha_recepcion": fecha_recepcion,
         "fecha_oficio": fecha_oficio,
         "fecha_asignacion": fecha_asignacion,
@@ -515,9 +537,35 @@ def _preparar_importado(fila: Dict, registros: List[Dict], referencias: set,
     }
 
 
-def proxima_referencia() -> str:
-    """Referencia UDC que se asignaría al próximo oficio (solo informativa)."""
-    return _generar_referencia(_leer_registros())
+def contar_por_tipo_accion(tipo: str) -> int:
+    """Cuántos oficios usan ese tipo de acción (para el catálogo)."""
+    objetivo = " ".join(str(tipo or "").split()).casefold()
+    return sum(1 for r in _leer_registros()
+               if " ".join((r.get("tipo_accion", "") or "").split()).casefold()
+               == objetivo)
+
+
+@bloqueo.con_bloqueo("oficios")
+def renombrar_tipo_accion(anterior: str, nuevo: str, actor: str) -> int:
+    """Propaga el cambio de nombre de un tipo de acción a los oficios que lo
+    usaban, para que ninguno quede apuntando a un valor inexistente."""
+    objetivo = " ".join(str(anterior or "").split()).casefold()
+    registros = _leer_registros()
+    actualizados = 0
+    for registro in registros:
+        actual = " ".join((registro.get("tipo_accion", "") or "").split())
+        if actual.casefold() == objetivo and actual != nuevo:
+            registro["tipo_accion"] = nuevo
+            actualizados += 1
+    if actualizados:
+        _guardar_registros(registros)
+    return actualizados
+
+
+def proxima_referencia(institucion: str) -> str:
+    """Referencia UDC que se asignaría al próximo oficio de esa institución
+    (solo informativa)."""
+    return _generar_referencia(_leer_registros(), institucion)
 
 
 def listar_oficios() -> List[Dict]:
@@ -559,7 +607,7 @@ def actualizar_oficio(referencia: str, nuevo_estado: str, id_empleado: str,
                      nombre_empleado: str, actualizado_por: str,
                      actor_rol: str = None, fecha_respuesta: str = None,
                      observacion: str = None, fecha_asignacion: str = None,
-                     cantidad_investigados=None) -> str:
+                     cantidad_investigados=None, tipo_accion: str = None) -> str:
     """Actualiza estado, responsable, fecha de respuesta y/o observación de un
     oficio en una sola operación, respetando las reglas de negocio
     (ver `_resolver_estado`).
@@ -619,6 +667,11 @@ def actualizar_oficio(referencia: str, nuevo_estado: str, id_empleado: str,
                     registro["cantidad_investigados"] = nueva_cantidad
                     cambios.append(
                         f"Cant. investigados: {nueva_cantidad or '(sin dato)'}")
+            if tipo_accion is not None:
+                nuevo_tipo = _validar_tipo_accion(tipo_accion)
+                if nuevo_tipo != registro.get("tipo_accion", ""):
+                    registro["tipo_accion"] = nuevo_tipo
+                    cambios.append(f"Tipo de acción: {nuevo_tipo}")
             if fecha_respuesta is not None:
                 if nueva_fecha != registro.get("fecha_respuesta", ""):
                     registro["fecha_respuesta"] = nueva_fecha
@@ -656,7 +709,8 @@ def actualizar_oficio(referencia: str, nuevo_estado: str, id_empleado: str,
 def actualizar_estado_asignado(referencia: str, actor: str, nuevo_estado: str,
                                fecha_respuesta: str = None,
                                observacion: str = None,
-                               cantidad_investigados=None) -> str:
+                               cantidad_investigados=None,
+                               tipo_accion: str = None) -> str:
     """Actualización desde el rol de usuario regular, sobre sus propios oficios.
 
     Puede cambiar la fecha de respuesta, la observación y alternar el estado
@@ -700,6 +754,11 @@ def actualizar_estado_asignado(referencia: str, actor: str, nuevo_estado: str,
                     registro["cantidad_investigados"] = nueva_cantidad
                     cambios.append(
                         f"Cant. investigados: {nueva_cantidad or '(sin dato)'}")
+            if tipo_accion is not None:
+                nuevo_tipo = _validar_tipo_accion(tipo_accion)
+                if nuevo_tipo != registro.get("tipo_accion", ""):
+                    registro["tipo_accion"] = nuevo_tipo
+                    cambios.append(f"Tipo de acción: {nuevo_tipo}")
             if fecha_respuesta is not None:
                 if nueva_fecha != registro.get("fecha_respuesta", ""):
                     registro["fecha_respuesta"] = nueva_fecha
@@ -729,7 +788,7 @@ def actualizar_estado_asignado(referencia: str, actor: str, nuevo_estado: str,
 # --- Mantenimiento: corrección de datos y anulación --------------------------
 # Campos que solo se pueden corregir desde el mantenimiento, porque identifican
 # al oficio y no forman parte de su trámite diario.
-CAMPOS_MANTENIMIENTO = ("codigo_oficio", "causal_oficio", "referencia_sb",
+CAMPOS_MANTENIMIENTO = ("codigo_oficio", "causal_oficio",
                         "fecha_oficio", "fecha_recepcion")
 
 
@@ -790,7 +849,6 @@ def corregir_oficio(referencia: str, actor: str, actor_rol: str,
 
         etiquetas = {"codigo_oficio": "Referencia oficio",
                      "causal_oficio": "Causal oficio",
-                     "referencia_sb": "Referencia SB",
                      "fecha_oficio": "F. oficio",
                      "fecha_recepcion": "F. recepción"}
         cambios = []
@@ -1014,9 +1072,10 @@ def eliminar_respuesta(referencia: str, actor: str, actor_rol: str) -> None:
 # Campos de texto por los que se puede buscar: clave interna -> etiqueta.
 CAMPOS_BUSQUEDA = {
     "referencia": "Referencia UDC",
+    "institucion": "Institución del Estado",
     "codigo_oficio": "Referencia oficio",
+    "tipo_accion": "Tipo de acción",
     "causal_oficio": "Causal oficio",
-    "referencia_sb": "Referencia SB",
 }
 
 # Tipos de fecha por los que se puede filtrar (y exportar).
@@ -1030,9 +1089,10 @@ CAMPOS_FECHA = {
 # Columnas del CSV de exportación: clave interna -> encabezado.
 COLUMNAS_EXPORTACION = {
     "referencia": "Referencia UDC",
+    "institucion": "Institución del Estado",
     "codigo_oficio": "Referencia oficio",
+    "tipo_accion": "Tipo de acción",
     "causal_oficio": "Causal oficio",
-    "referencia_sb": "Referencia SB",
     "fecha_oficio": "F. oficio",
     "fecha_recepcion": "F. recepción",
     "fecha_asignacion": "F. asignación",

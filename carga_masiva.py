@@ -21,9 +21,11 @@ Correspondencia con los campos de la aplicación
 -----------------------------------------------
     Matriz                                  Campo del oficio
     --------------------------------------- ----------------------
-    Ref Prev & Cump                         referencia (Referencia UDC)
+    Institución del Estado                   institucion (fija la sigla de la
+                                             Referencia UDC, que genera el
+                                             sistema)
+    Tipo de Accion                           tipo_accion
     Referencia - Oficio FGE; Juzgado...      codigo_oficio (Referencia oficio)
-    Referencia - Circular Superintendencia   referencia_sb
     Delito                                   causal_oficio
     Fecha Circular                           fecha_oficio
     Fecha Emisión                            fecha_recepcion
@@ -32,15 +34,18 @@ Correspondencia con los campos de la aplicación
     Usuario                                  responsable
     Estado                                   estado
     Observación                              observacion
-    (nº de filas con la misma Referencia UDC) cantidad_investigados
+    (nº de filas con la misma Ref. oficio)   cantidad_investigados
 
 Las columnas restantes de la matriz (Mes, Prioridad, Medio Respuesta, Días,
-Canal Recepción, los datos del investigado, Expediente Fiscal, Tipo de Acción,
-Tipo de Implicado, LCI y el bloque RCSA) no tienen equivalente en la aplicación
-y se ignoran; la carga informa de ello.
+Canal Recepción, los datos del investigado, Expediente Fiscal, la Referencia de
+la circular de la Superintendencia, Tipo de Implicado, LCI y el bloque RCSA) no
+tienen equivalente en la aplicación y se ignoran; la carga informa de ello.
 
-Varias filas con la misma Referencia UDC se entienden como el mismo oficio con
-varios investigados: se agrupan en un solo registro y la cantidad de
+La Referencia UDC NO viene en el archivo: la genera el sistema al importar, con
+la nomenclatura que corresponda a la institución de cada fila.
+
+Varias filas con la misma Referencia oficio se entienden como el mismo oficio
+con varios investigados: se agrupan en un solo registro y la cantidad de
 investigados es el número de filas.
 """
 import csv
@@ -48,7 +53,7 @@ from datetime import date, datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
-from configuracion import ESTADOS
+from configuracion import ESTADOS, INSTITUCIONES
 
 # Fila de la cabecera y primera fila de datos en la matriz de Excel.
 FILA_CABECERA = 4
@@ -65,9 +70,9 @@ PRIMERA_FILA_DATOS = FILA_CABECERA + 1
 # líneas ("Referencia - Oficio\nFGE; Juzgado, Tribunal"). Un campo en None es
 # una columna de la matriz que la aplicación no guarda.
 CABECERA_MATRIZ = [
+    ("Institución del Estado",              "institucion",            "institucion"),
     ("Mes",                                 "mes",                    None),
     ("Fecha Asignación",                    "fecha asignacion",       "fecha_asignacion"),
-    ("Ref Prev & Cump",                     "ref prev & cump",        "referencia"),
     ("Usuario",                             "usuario",                "empleado"),
     ("Prioridad",                           "prioridad",              None),
     ("Fecha Emisión",                       "fecha emision",          "fecha_recepcion"),
@@ -84,9 +89,9 @@ CABECERA_MATRIZ = [
     ("Referencia - Oficio FGE; Juzgado",    "referencia - oficio",    "codigo_oficio"),
     ("Número Expediente Fiscal",            "numero expediente",      None),
     ("Referencia - Circular Superintendencia Bancos",
-                                            "referencia - circular",  "referencia_sb"),
+                                            "referencia - circular",  None),
     ("Delito",                              "delito",                 "causal_oficio"),
-    ("Tipo de Accion",                      "tipo de accion",         None),
+    ("Tipo de Accion",                      "tipo de accion",         "tipo_accion"),
     ("Observación",                         "observacion",            "observacion"),
     ("Tipo de Implicado",                   "tipo de implicado",      None),
     ("LCI - SI o NO",                       "lci",                    None),
@@ -318,8 +323,9 @@ def leer_archivo(ruta) -> Tuple[List[Dict], List[str], List[str]]:
                     datos[campo] = ""
             else:
                 datos[campo] = _a_texto(valor)
-        # Una fila sin ninguna referencia es una fila en blanco del final.
-        if not datos.get("referencia") and not datos.get("codigo_oficio"):
+        # Una fila sin referencia de oficio ni institución es una fila en
+        # blanco del final.
+        if not datos.get("codigo_oficio") and not datos.get("institucion"):
             continue
         if problema:
             errores.append(problema)
@@ -332,16 +338,19 @@ def leer_archivo(ruta) -> Tuple[List[Dict], List[str], List[str]]:
 
 # --- Agrupación y preparación ------------------------------------------------
 def agrupar_por_referencia(filas: List[Dict]) -> List[Dict]:
-    """Une las filas que comparten Referencia UDC en un solo oficio.
+    """Une las filas que comparten Referencia oficio en un solo oficio.
 
     En la matriz cada fila es un investigado, así que un mismo requerimiento
     puede ocupar varias. Se conserva la primera fila y la cantidad de
     investigados pasa a ser el número de filas agrupadas.
+
+    Se agrupa por Referencia oficio porque la Referencia UDC ya no viene en el
+    archivo: la genera el sistema al importar.
     """
     agrupados: Dict[str, Dict] = {}
     orden: List[str] = []
     for fila in filas:
-        clave = (fila.get("referencia") or f"__fila_{fila['_fila']}").strip().upper()
+        clave = (fila.get("codigo_oficio") or f"__fila_{fila['_fila']}").strip().upper()
         if clave not in agrupados:
             copia = dict(fila)
             copia["cantidad_investigados"] = 1
@@ -435,11 +444,75 @@ def emparejar_responsables(filas: List[Dict], usuarios: List[Dict]) -> Dict:
             "ambiguos": sorted(set(ambiguos))}
 
 
+# Formas habituales de nombrar a cada institución en la matriz, además de su
+# nombre completo y su sigla.
+_SINONIMOS_INSTITUCION = {
+    "superintendencia de bancos": "Superintendencia de Bancos",
+    "superintendencia": "Superintendencia de Bancos",
+    "sb": "Superintendencia de Bancos",
+    "sbs": "Superintendencia de Bancos",
+    "fiscalia general del estado": "Fiscalía General del Estado",
+    "fiscalia": "Fiscalía General del Estado",
+    "fge": "Fiscalía General del Estado",
+}
+
+
+def _reconocer_institucion(valor: str) -> str:
+    """Nombre normalizado de la institución, o '' si no se reconoce."""
+    clave = normalizar(valor)
+    if not clave:
+        return ""
+    if clave in _SINONIMOS_INSTITUCION:
+        return _SINONIMOS_INSTITUCION[clave]
+    for nombre in INSTITUCIONES:
+        if clave == normalizar(nombre):
+            return nombre
+    return ""
+
+
+def _reconocer_tipo_accion(valor: str, catalogo: List[str]) -> str:
+    """Tipo de acción del catálogo que corresponde al texto de la matriz.
+
+    La matriz los escribe en mayúsculas y a veces con más palabras
+    ("LEVANTAMIENTO DE MEDIDAS"), así que además de la coincidencia exacta se
+    admite que el texto EMPIECE por un tipo del catálogo. Devuelve '' si no se
+    reconoce.
+    """
+    clave = normalizar(valor)
+    if not clave:
+        return ""
+    for tipo in catalogo:
+        if clave == normalizar(tipo):
+            return tipo
+    # "levantamiento de medidas" -> "Levantamiento"
+    candidatos = [t for t in catalogo if clave.startswith(normalizar(t))]
+    if len(candidatos) == 1:
+        return candidatos[0]
+    return ""
+
+
 def preparar(ruta, usuarios: List[Dict]) -> Dict:
     """Deja las filas listas para importar y resume lo que se va a hacer."""
     filas, ignoradas, errores = leer_archivo(ruta)
     filas = agrupar_por_referencia(filas)
     emparejados = emparejar_responsables(filas, usuarios)
+
+    # La institución decide la nomenclatura de la Referencia UDC y el tipo de
+    # acción es obligatorio, así que ambos se traducen aquí y lo que no se
+    # reconozca se informa: son filas que no se podrán importar.
+    import tipos_accion
+    catalogo = tipos_accion.listar()
+    instituciones_desconocidas, tipos_desconocidos = set(), set()
+    for fila in filas:
+        original = fila.get("institucion", "")
+        fila["institucion"] = _reconocer_institucion(original)
+        if not fila["institucion"]:
+            instituciones_desconocidas.add(original or "(vacía)")
+        original = fila.get("tipo_accion", "")
+        fila["tipo_accion"] = _reconocer_tipo_accion(original, catalogo)
+        if not fila["tipo_accion"]:
+            tipos_desconocidos.add(original or "(vacío)")
+
     sin_estado_original = 0
     for fila in filas:
         if not fila.get("empleado"):
@@ -461,4 +534,6 @@ def preparar(ruta, usuarios: List[Dict]) -> Dict:
         "responsables_sin_identificar": emparejados["sin_identificar"],
         "responsables_ambiguos": emparejados["ambiguos"],
         "puestos_por_asignar": sin_estado_original,
+        "instituciones_desconocidas": sorted(instituciones_desconocidas),
+        "tipos_accion_desconocidos": sorted(tipos_desconocidos),
     }

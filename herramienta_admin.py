@@ -17,8 +17,9 @@ Uso:
 
     python herramienta_admin.py oficios --purgar-formato-anterior
         -> ELIMINA los oficios que aún usan la referencia antigua
-           (UDC-OFICIO-AAAAMMDD-NNNN), previa confirmación. Útil para descartar
-           los registros de prueba anteriores al formato REQ-INF-AAAA-NNNN.
+           (cualquiera que no empiece por REQ-UDC-), previa confirmación. Útil
+           para descartar registros de prueba anteriores al formato vigente
+           REQ-UDC-<SIGLA>-NNNN.
 
 Salvo '--purgar-formato-anterior', la herramienta es de solo lectura.
 """
@@ -53,7 +54,8 @@ def mostrar_json(registros):
 def exportar_csv_oficios(registros, ruta_csv):
     # 'referencia' es la Referencia UDC y 'codigo_oficio' la Referencia oficio.
     # Orden de fechas: oficio -> recepción -> respuesta; la observación al final.
-    columnas = ["referencia", "codigo_oficio", "causal_oficio", "referencia_sb",
+    columnas = ["referencia", "institucion", "codigo_oficio", "tipo_accion",
+                "causal_oficio",
                 "fecha_oficio", "fecha_recepcion", "fecha_asignacion",
                 "fecha_respuesta", "cantidad_investigados",
                 "empleado", "estado", "registrado_por", "fecha_registro",
@@ -68,13 +70,13 @@ def exportar_csv_oficios(registros, ruta_csv):
 
 
 def _es_formato_actual(referencia):
-    """True si la referencia usa el formato vigente REQ-INF-AAAA-NNNN."""
+    """True si la referencia usa el formato vigente REQ-UDC-<SIGLA>-NNNN."""
     return (referencia or "").upper().startswith(f"{PREFIJO_REFERENCIA}-")
 
 
 def purgar_formato_anterior(registros):
-    """Elimina los oficios cuya Referencia UDC usa el formato antiguo
-    (UDC-OFICIO-AAAAMMDD-NNNN). Pide confirmación antes de borrar."""
+    """Elimina los oficios cuya Referencia UDC no usa el formato vigente
+    (REQ-UDC-<SIGLA>-NNNN). Pide confirmación antes de borrar."""
     antiguos = [r for r in registros if not _es_formato_actual(r.get("referencia", ""))]
     if not antiguos:
         print("No hay oficios con el formato de referencia anterior. Nada que purgar.")

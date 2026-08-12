@@ -138,8 +138,33 @@ ARCHIVO_ICONO = _buscar_recurso("bdp_icon_alt.ico")   # ícono de la ventana
 
 # --- Constantes de negocio ---------------------------------------------------
 ESTADOS = ["Por asignar", "En proceso", "Finalizado"]
-# Referencia UDC:  REQ-INF-<año>-<secuencial de 4 dígitos, desde 0001>
-PREFIJO_REFERENCIA = "REQ-INF"
+
+# Referencia UDC:  REQ-UDC-<sigla de la institución>-<secuencial de 4 dígitos>
+# Por ejemplo REQ-UDC-SB-0001 y REQ-UDC-FGE-0001. El secuencial es
+# INDEPENDIENTE para cada institución y corre de forma continua (no se
+# reinicia por año, porque el año no forma parte de la referencia).
+PREFIJO_REFERENCIA = "REQ-UDC"
+
+# Instituciones del Estado que remiten oficios: nombre -> sigla de la
+# referencia. El orden es el que se ve en los desplegables.
+INSTITUCIONES = {
+    "Superintendencia de Bancos": "SB",
+    "Fiscalía General del Estado": "FGE",
+}
+
+# Tipos de acción que se piden en un oficio. Es el catálogo de partida: se
+# puede mantener desde la pestaña Configuración (ver `tipos_accion.py`).
+TIPOS_ACCION_INICIALES = [
+    "Bloqueo y retención",
+    "Certificación",
+    "Información",
+    "Inmovilización",
+    "Levantamiento",
+    "Rectificación",
+    "Retención",
+]
+
+ARCHIVO_TIPOS_ACCION = DIR_DATOS / "tipos_accion.dat"   # catálogo, cifrado
 
 # --- Roles de usuario --------------------------------------------------------
 # El superusuario es el primer usuario que se crea y NO puede eliminarse.

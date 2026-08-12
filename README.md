@@ -200,9 +200,10 @@ el resto son opcionales.
 
 | Campo | Obligatorio | Notas |
 |---|---|---|
+| Institución del Estado | **Sí \*** | Superintendencia de Bancos o Fiscalía General del Estado. Decide la nomenclatura de la Referencia UDC. **No se muestra en el listado de oficios** |
 | Referencia oficio | **Sí \*** | No puede repetirse |
+| Tipo de acción | **Sí \*** | Lo que pide el oficio. Se elige del catálogo (ver 3.4) |
 | Causal oficio | No | Texto libre |
-| Referencia SB | No | Texto libre |
 | Fecha de oficio | **Sí \*** | No puede ser posterior a la de recepción |
 | Fecha de recepción | **Sí \*** | |
 | Fecha de asignación | No | No puede ser anterior a la de recepción |
@@ -214,7 +215,9 @@ el resto son opcionales.
 | Respuesta en PDF | No | Solo hace falta para registrar de entrada un oficio ya finalizado |
 | Observación | No | Texto libre, editable después |
 
-La **Referencia UDC** no se ingresa: la genera el sistema (ver más abajo).
+La **Referencia UDC** no se ingresa: la genera el sistema a partir de la
+institución elegida (ver 3.2). El formulario muestra cuál será la próxima en
+cuanto se selecciona la institución.
 
 **Ninguna fecha puede ser posterior a hoy** (no se registra lo que aún no ha
 ocurrido): el calendario muestra los días futuros deshabilitados y el
@@ -249,8 +252,7 @@ reabrirlo primero (borrando su fecha de respuesta).
 ### Mantenimiento de oficios
 
 El panel normal de *Oficios* no deja tocar los campos que **identifican** al
-oficio (Referencia oficio, Causal, Referencia SB y las fechas de oficio y
-recepción), así que un error de tecleo en ellos no tenía arreglo. El botón
+oficio (Referencia oficio, Causal y las fechas de oficio y recepción), así que un error de tecleo en ellos no tenía arreglo. El botón
 **Mantenimiento…** abre un diálogo que los corrige, y permite además retirar un
 oficio. Está reservado a **administradores y superusuario** —los dos con el
 mismo alcance— y todo queda en la bitácora (`CORREGIR_OFICIO`, `ANULAR_OFICIO`,
@@ -317,11 +319,15 @@ sobra, y la indicación de subir el archivo con el formato establecido. Solo se
 toleran diferencias de **redacción** —mayúsculas, tildes, espacios de más y
 títulos repartidos en varias líneas—, nunca de orden ni de contenido.
 
+La **primera columna es «Institución del Estado»** y la Referencia UDC **no
+viene en el archivo**: la genera el sistema al importar, con la nomenclatura que
+corresponda a la institución de cada fila.
+
 | Columna de la matriz | Campo del oficio |
 |---|---|
-| Ref Prev & Cump | `referencia` (Referencia UDC) |
+| Institución del Estado | `institucion` (fija la sigla de la Referencia UDC) |
 | Referencia - Oficio FGE; Juzgado, Tribunal | `codigo_oficio` (Referencia oficio) |
-| Referencia - Circular Superintendencia Bancos | `referencia_sb` |
+| Tipo de Accion | `tipo_accion` |
 | Delito | `causal_oficio` |
 | Fecha Circular | `fecha_oficio` |
 | Fecha Emisión | `fecha_recepcion` |
@@ -330,17 +336,24 @@ títulos repartidos en varias líneas—, nunca de orden ni de contenido.
 | Usuario | responsable |
 | Estado | `estado` |
 | Observación | `observacion` |
-| (nº de filas con la misma Referencia UDC) | `cantidad_investigados` |
+| (nº de filas con la misma Referencia oficio) | `cantidad_investigados` |
 
 Las demás columnas (Mes, Prioridad, Medio Respuesta, Días, Canal Recepción, los
-datos del investigado, Expediente Fiscal, Tipo de Acción, Tipo de Implicado, LCI
-y el bloque RCSA) no tienen equivalente y se ignoran; el resumen previo las
-enumera.
+datos del investigado, Expediente Fiscal, la Referencia de la circular de la
+Superintendencia, Tipo de Implicado, LCI y el bloque RCSA) no tienen equivalente
+y se ignoran; el resumen previo las enumera.
+
+La **Institución del Estado** y el **Tipo de Accion** se reconocen con
+tolerancia: se admiten la sigla (`SB`, `FGE`), los nombres habituales de cada
+entidad y las variantes de redacción del tipo de acción (mayúsculas, tildes y
+textos más largos que empiezan igual, como «LEVANTAMIENTO DE MEDIDAS» →
+*Levantamiento*). Lo que no se reconoce se informa en la vista previa y esas
+filas no se importan.
 
 **Decisiones a tener en cuenta:**
 
-- **Varias filas con la misma Referencia UDC** se entienden como un mismo oficio
-  con varios investigados: se agrupan en un registro y la cantidad de
+- **Varias filas con la misma Referencia oficio** se entienden como un mismo
+  oficio con varios investigados: se agrupan en un registro y la cantidad de
   investigados es el número de filas.
 - La columna *Usuario* trae la persona en formato `C. Roman`, que no es un
   nombre de cuenta. Se encaja por nombre de cuenta, por nombre completo y por la
@@ -367,10 +380,10 @@ enumera.
 - **Se respeta el estado del archivo, incluido "Finalizado"**, porque es el
   estado real de un expediente cerrado. Las exigencias para *finalizar* siguen
   vigentes para cualquier cambio posterior hecho desde la aplicación.
-- No se duplican oficios: las filas cuya Referencia UDC o Referencia oficio ya
-  estén registradas se omiten y se informa de ellas. Las Referencias UDC del
-  archivo se conservan, de modo que la numeración automática continúa a partir
-  de la mayor.
+- No se duplican oficios: las filas cuya Referencia oficio ya esté registrada se
+  omiten y se informa de ellas. Las Referencias UDC se generan siguiendo la
+  numeración de cada institución, así que la carga masiva continúa la serie en
+  vez de crear huecos.
 
 Antes de guardar nada se muestra una **vista previa** con lo que se va a
 importar y los avisos anteriores. La carga entera se guarda en una sola
@@ -446,7 +459,8 @@ oficios_tracker/
 ├── registro_actividad.py # Bitácora de auditoría (log en texto plano)
 ├── permisos.py           # Endurece permisos y escritura atómica de archivos
 ├── bloqueo.py            # Bloqueo entre procesos (uso compartido en red)
-├── parametros.py         # Parámetros del sistema (secuencial inicial UDC)
+├── parametros.py         # Parámetros del sistema (secuencial por institución)
+├── tipos_accion.py       # Catálogo mantenible de tipos de acción
 ├── almacen_oficios.py    # CRUD de oficios + referencia secuencial
 ├── visor_pdf.py          # Visor de PDF integrado (requiere PyMuPDF)
 ├── metricas.py           # Cálculo de métricas del tablero
@@ -455,11 +469,13 @@ oficios_tracker/
 ├── carga_masiva.py       # Lectura y mapeo de la matriz de Excel/CSV
 ├── respaldo.py           # Copia de seguridad automática (una por día)
 ├── respaldo_datos.ps1    # Copia de seguridad programable de datos/ (Windows)
+├── datos_de_prueba/      # Matriz de ejemplo para probar la carga (ver 3.5)
 └── datos/                # Se crea sola; contiene:
     ├── clave_maestra.key   (clave de cifrado — PROTEGER / RESPALDAR)
     ├── credenciales.dat    (usuarios del sistema, cifrado)
     ├── oficios.dat         (registros, cifrado; con copia .bak)
-    ├── parametros.dat      (secuencial inicial de la Referencia UDC, cifrado)
+    ├── parametros.dat      (secuencial inicial por institución, cifrado)
+    ├── tipos_accion.dat    (catálogo de tipos de acción, cifrado)
     ├── actividad.log       (bitácora de auditoría, texto plano)
     ├── documentos/         (documento del oficio, uno por oficio: PDF o Word)
     ├── respuestas/         (PDF de respuesta, uno por oficio)
@@ -497,31 +513,44 @@ herramienta imprime su propia ayuda.
 ## 3.2 Referencia UDC y secuencial inicial
 
 La **Referencia UDC** la genera el sistema con el formato
-**`REQ-INF-<año>-<NNNN>`** (por ejemplo `REQ-INF-2026-0242`). El secuencial
-`NNNN` es de 4 dígitos y **se reinicia cada año** empezando en `0001`.
+**`REQ-UDC-<SIGLA>-<NNNN>`**, donde la sigla depende de la **institución que
+remite el oficio**:
 
-**Continuidad con el Excel anterior:** los oficios que se llevaban en Excel no
-se migran; el sistema continúa desde el último registrado allí. Para eso, el
-**superusuario o un administrador** abre la pestaña **Configuración** (visible
-solo para ellos) e ingresa **una sola vez** la última Referencia UDC usada, por ejemplo
-`REQ-INF-2026-0241`. A partir de ahí el sistema numera `REQ-INF-2026-0242`,
-`REQ-INF-2026-0243`, …
+| Institución del Estado | Sigla | Referencia |
+|---|---|---|
+| Superintendencia de Bancos | `SB` | `REQ-UDC-SB-0001` |
+| Fiscalía General del Estado | `FGE` | `REQ-UDC-FGE-0001` |
+
+Por eso la institución es un **campo obligatorio** del formulario de registro y
+de la carga masiva. **No se muestra en el listado de oficios**: su única función
+es decidir la nomenclatura de la referencia.
+
+Cada institución lleva su **propia numeración**, independiente de la otra: el
+tercer oficio de la Superintendencia es `REQ-UDC-SB-0003` aunque entre medias se
+hayan registrado veinte de la Fiscalía. El secuencial `NNNN` es de 4 dígitos y
+**no se reinicia por año**: es correlativo por entidad.
+
+**Continuidad con el Excel anterior:** el **superusuario o un administrador**
+abre la pestaña **Configuración**, elige la institución e ingresa **una sola
+vez** la última Referencia UDC usada en ella (por ejemplo `REQ-UDC-SB-0240`). A
+partir de ahí el sistema numera `REQ-UDC-SB-0241`, `REQ-UDC-SB-0242`, … sin
+tocar la serie de la otra institución.
 
 Detalles:
 
-- Se acepta la referencia completa (`REQ-INF-2026-0241`) o solo el número
-  (`241`, que asume el año en curso).
-- La pestaña muestra siempre cuál será la **próxima** Referencia UDC.
-- El valor se guarda cifrado en `datos/parametros.dat` y el cambio queda en la
-  bitácora de auditoría, con el usuario que lo definió.
-- Reconfigurarlo **nunca genera duplicados**: la numeración usa
-  `max(valor configurado, mayor secuencial ya existente) + 1`.
-- Si nunca se configura, la numeración arranca en `REQ-INF-<año>-0001`.
+- Se acepta la referencia completa (`REQ-UDC-SB-0240`) o solo el número (`240`).
+  Si se escribe una sigla que **no corresponde** a la institución elegida, se
+  rechaza indicándolo, para no configurar sin querer la serie equivocada.
+- La pestaña muestra siempre cuál será la **próxima** referencia de cada
+  institución, y el formulario de registro la anticipa al elegirla.
+- Los valores se guardan cifrados en `datos/parametros.dat` y cada cambio queda
+  en la bitácora de auditoría, con el usuario que lo definió.
+- Reconfigurar **nunca genera duplicados**: la numeración usa
+  `max(valor configurado, mayor secuencial ya existente de esa entidad) + 1`.
+- Si nunca se configura, cada institución arranca en `0001`.
 
-**El formato anterior (`UDC-OFICIO-AAAAMMDD-NNNN`) quedó descartado:** el
-sistema no lo genera nunca, lo rechaza si se intenta usar como secuencial
-inicial, y los registros antiguos que pudieran existir **no influyen en la
-numeración** (aunque tuvieran un secuencial más alto). Para eliminarlos, use
+Las referencias con **cualquier otro formato** (las de versiones anteriores del
+sistema) no influyen en la numeración. Para eliminarlas, use
 `herramienta_admin.py oficios --purgar-formato-anterior` (ver 3.1).
 
 Además de la Referencia UDC (siempre única), la **Referencia oficio** que
@@ -533,9 +562,9 @@ referencia ya existente (sin distinguir mayúsculas/minúsculas ni espacios).
 La pestaña *Oficios* incluye un panel **Buscar oficios** con dos filtros
 combinables:
 
-- **Por texto**, eligiendo el campo: Referencia UDC, Referencia oficio,
-  Causal oficio o Referencia SB. La coincidencia es **parcial** y no distingue
-  mayúsculas/minúsculas.
+- **Por texto**, eligiendo el campo: Referencia UDC, Institución del Estado,
+  Referencia oficio, Tipo de acción o Causal oficio. La coincidencia es
+  **parcial** y no distingue mayúsculas/minúsculas.
 - **Por fecha**, eligiendo el tipo (fecha de oficio, de recepción o de
   respuesta) y un rango *desde* / *hasta*. Ambos extremos aplican **siempre al
   mismo tipo de fecha**, por lo que no es posible mezclar (p. ej. desde = fecha
@@ -550,6 +579,50 @@ secciones (*Buscar oficios*, el listado y *Modificar oficio seleccionado*), de
 modo que en pantallas pequeñas ninguna quede fuera de la vista. La rueda del
 ratón desplaza la tabla cuando el puntero está sobre ella, y la pestaña
 completa en cualquier otro punto.
+
+## 3.4 Catálogo de tipos de acción
+
+El **tipo de acción** dice qué pide el oficio y es **obligatorio**. No es texto
+libre: se elige de un catálogo que se siembra con estos siete valores y luego se
+mantiene desde la aplicación.
+
+    Bloqueo y retención · Certificación · Información · Inmovilización
+    Levantamiento · Rectificación · Retención
+
+El mantenimiento está en la pestaña **Configuración**, sección *Tipos de acción*,
+y lo usan **solo superusuarios y administradores** (la restricción se valida
+también en `tipos_accion.py`, no únicamente en la interfaz):
+
+- **Agregar** — añade uno nuevo. No se admiten duplicados: se comparan sin
+  distinguir mayúsculas, tildes ni espacios de más, así que «RETENCION» y
+  «Retención» son el mismo.
+- **Renombrar** — corrige el nombre y **propaga el cambio a los oficios** que lo
+  usaban, para que ninguno quede apuntando a algo que ya no existe. El panel
+  informa a cuántos afectó.
+- **Eliminar** — solo si **no está en uso**. Si algún oficio lo usa, el mensaje
+  dice cuántos y sugiere renombrarlo. Tampoco se puede vaciar el catálogo:
+  siempre debe quedar al menos uno, porque el campo es obligatorio.
+
+El catálogo se guarda cifrado en `datos/tipos_accion.dat` y cada cambio queda en
+la bitácora (`AGREGAR_TIPO_ACCION`, `RENOMBRAR_TIPO_ACCION`,
+`ELIMINAR_TIPO_ACCION`). La lista muestra en cuántos oficios se usa cada tipo.
+
+## 3.5 Datos de prueba
+
+`datos_de_prueba/` contiene un archivo listo para probar la carga masiva sin
+tocar información real:
+
+- `Matriz de prueba - 55 oficios.xlsx` — **55 oficios** repartidos entre las dos
+  instituciones (115 filas, porque algunos oficios tienen varios investigados),
+  con casos variados: finalizados, en proceso, sin responsable y con distintos
+  tipos de acción.
+- `generar_datos_prueba.py` — lo vuelve a generar (`python
+  datos_de_prueba/generar_datos_prueba.py`). Usa una semilla fija, así que
+  produce siempre el mismo archivo.
+
+Se carga como cualquier otra matriz: **Configuración → Carga masiva de oficios →
+Cargar archivo**. El archivo puede estar en cualquier carpeta a la que se llegue
+desde el explorador; la aplicación no lo lee de una ruta fija.
 
 ## 4. Compilar a ejecutable (lo más ligero posible)
 
@@ -841,7 +914,8 @@ creó, no se repite.
 - Se guardan en **`datos/respaldos/datos_AAAA-MM-DD.zip`**.
 - Se conservan los últimos **30 días**; las más antiguas se eliminan solas.
 - Incluyen los archivos pequeños y críticos: `oficios.dat`,
-  `credenciales.dat`, `parametros.dat`, `clave_maestra.key` y `actividad.log`.
+  `credenciales.dat`, `parametros.dat`, `tipos_accion.dat`, `clave_maestra.key`
+  y `actividad.log`.
 - **No incluyen los documentos de los oficios ni los PDF de respuesta** (van
   en subcarpetas, que el respaldo no recorre) ni los archivos temporales, de
   bloqueo o `.bak`.

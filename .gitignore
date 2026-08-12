@@ -221,6 +221,7 @@ __marimo__/
 # Se versionan graph.json, graph.html, GRAPH_REPORT.md, manifest.json y
 # .graphify_analysis.json. Se ignoran los artefactos locales/regenerables:
 grafo/graphify-out/cache/
+grafo/graphify-out/converted/
 grafo/graphify-out/.graphify_root
 grafo/graphify-out/cost.json
 
