@@ -270,7 +270,7 @@ class SelectorArchivo(ttk.Frame):
         self._tipos = tipos
         self._titulo = titulo
         self._ruta = ""
-        ttk.Button(self, text="Examinar…", command=self._elegir).pack(side="left")
+        ttk.Button(self, text="Examinar", command=self._elegir).pack(side="left")
         self.etiqueta = ttk.Label(self, text="(ningún archivo)", width=ancho,
                                   foreground="#6B7280", font=("Helvetica", 8))
         self.etiqueta.pack(side="left", padx=6)
@@ -803,7 +803,7 @@ class AplicacionPrincipal(ttk.Frame):
         pie.pack(side="bottom", fill="x", pady=(8, 0))
         ttk.Label(pie, text="* Campos obligatorios", foreground="#6B7280",
                   font=("Helvetica", 8)).pack(side="left")
-        btn = ttk.Button(pie, text="Registrar oficio", command=self._guardar_oficio)
+        btn = ttk.Button(pie, text="Registrar", command=self._guardar_oficio)
         btn.pack(side="right")
         # Estilo especial para el botón principal
         estilo = ttk.Style()
@@ -846,6 +846,10 @@ class AplicacionPrincipal(ttk.Frame):
             datos, 5, "Fecha de oficio *", SelectorFecha(datos), estirar=False)
         self.entrada_fecha_recepcion = self._campo(
             datos, 6, "Fecha de recepción *", SelectorFecha(datos), estirar=False)
+        # La cantidad de investigados describe al oficio, no a su asignación.
+        self.entrada_investigados = self._campo(
+            datos, 7, "Cant. investigados", ttk.Entry(datos, width=10),
+            estirar=False)
 
         # --- Columna derecha: asignación y seguimiento -----------------------
         gestion = self._grupo(contenido, "Asignación y seguimiento", 1, 1)
@@ -879,9 +883,6 @@ class AplicacionPrincipal(ttk.Frame):
         self.entrada_fecha_respuesta = self._campo(
             gestion, 3, "Fecha de respuesta",
             SelectorFecha(gestion, permitir_vacio=True), estirar=False)
-        self.entrada_investigados = self._campo(
-            gestion, 4, "Cant. investigados", ttk.Entry(gestion, width=10),
-            estirar=False)
 
         # --- Documentos (ancho completo) -------------------------------------
         documentos = self._grupo(contenido, "Documentos", 2, 0, columnspan=2)
@@ -1058,7 +1059,7 @@ class AplicacionPrincipal(ttk.Frame):
                    "Responsable", "Estado", "PDF", "Observación")
         # Referencia UDC y Referencia oficio con ancho suficiente para verse
         # completas (p. ej. "REQ-UDC-SB-0001").
-        anchos = (150, 150, 150, 150, 90, 95, 100, 95, 135, 150, 90, 40, 200)
+        anchos = (150, 150, 150, 150, 90, 95, 100, 95, 135, 110, 90, 40, 200)
         contenedor = ttk.Frame(marco)
         # Altura fija (no expand): dentro de un área desplazable la tabla debe
         # tener alto propio para que el panel inferior siga siendo alcanzable.
@@ -1230,7 +1231,9 @@ class AplicacionPrincipal(ttk.Frame):
                     registro.get("fecha_asignacion", ""),
                     registro.get("fecha_respuesta", ""),
                     registro.get("cantidad_investigados", ""),
-                    registro.get("empleado", ""),
+                    # El usuario en vez del nombre completo: la tabla queda
+                    # más compacta y sigue identificando sin ambigüedad.
+                    registro.get("id_empleado", ""),
                     "ANULADO" if anulado else registro["estado"],
                     "Sí" if registro.get("archivo_respuesta") else "",
                     observacion))
@@ -2008,7 +2011,7 @@ class AplicacionPrincipal(ttk.Frame):
             "(.xlsx) o un CSV con la misma cabecera."
         ).pack(anchor="w", pady=(0, 8))
 
-        btn = ttk.Button(panel, text="Cargar archivo…",
+        btn = ttk.Button(panel, text="Cargar archivo",
                          command=self._abrir_carga_masiva)
         btn.pack(anchor="w")
         btn.config(style="Accent.TButton")
@@ -2479,7 +2482,7 @@ class DialogoMantenimiento(tk.Toplevel):
             ttk.Button(barra, text="Reactivar oficio",
                        command=self._reactivar).pack(side="left")
         else:
-            ttk.Button(barra, text="Anular oficio…",
+            ttk.Button(barra, text="Anular oficio",
                        command=self._anular).pack(side="left")
 
         estado = tk.Frame(marco, bg=COLOR_BLANCO)

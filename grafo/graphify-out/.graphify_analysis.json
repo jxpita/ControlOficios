@@ -106,14 +106,14 @@
       "aplicacion_iniciar",
       "aplicacion_maximizar_ventana",
       "aplicacion_rationale_118",
-      "aplicacion_rationale_1467",
+      "aplicacion_rationale_1470",
       "aplicacion_rationale_151",
-      "aplicacion_rationale_2419",
-      "aplicacion_rationale_2560",
+      "aplicacion_rationale_2422",
+      "aplicacion_rationale_2563",
       "aplicacion_rationale_262",
-      "aplicacion_rationale_2634",
-      "aplicacion_rationale_2704",
-      "aplicacion_rationale_2884",
+      "aplicacion_rationale_2637",
+      "aplicacion_rationale_2707",
+      "aplicacion_rationale_2887",
       "aplicacion_rationale_45",
       "aplicacion_rationale_580",
       "aplicacion_rationale_71",
@@ -150,29 +150,6 @@
       "aplicacion_ventanaingreso_limpiar"
     ],
     "2": [
-      "cifrado",
-      "cifrado_cifrador",
-      "cifrado_cifrar",
-      "cifrado_obtener_clave",
-      "cifrado_rationale_15",
-      "fernet",
-      "permisos",
-      "permisos_anexar_texto",
-      "permisos_chmod",
-      "permisos_escribir_bytes_protegido",
-      "permisos_hacer_escribible",
-      "permisos_proteger",
-      "permisos_proteger_directorio",
-      "permisos_rationale_1",
-      "permisos_rationale_44",
-      "permisos_rationale_50",
-      "permisos_rationale_55",
-      "permisos_rationale_60",
-      "permisos_rationale_97",
-      "registro_actividad",
-      "registro_actividad_rationale_1",
-      "registro_actividad_rationale_31",
-      "registro_actividad_respaldar",
       "tipos_accion",
       "tipos_accion_agregar",
       "tipos_accion_eliminar",
@@ -267,9 +244,17 @@
       "autenticacion_validar_alcance",
       "autenticacion_validar_gestion_de_superusuario",
       "autenticacion_validar_rol_asignable",
+      "cifrado",
+      "cifrado_cifrador",
+      "cifrado_cifrar",
+      "cifrado_descifrar",
       "cifrado_generar_hash_clave",
+      "cifrado_obtener_clave",
+      "cifrado_rationale_15",
+      "cifrado_rationale_33",
       "cifrado_rationale_40",
-      "cifrado_verificar_clave"
+      "cifrado_verificar_clave",
+      "fernet"
     ],
     "5": [
       "aplicacion_aplicacionprincipal_al_seleccionar_oficio",
@@ -287,8 +272,8 @@
       "aplicacion_aplicacionprincipal_puede_gestionar_usuarios",
       "aplicacion_aplicacionprincipal_tipos_accion",
       "aplicacion_aplicacionprincipal_valores_responsables",
-      "aplicacion_rationale_1253",
-      "aplicacion_rationale_2150",
+      "aplicacion_rationale_1256",
+      "aplicacion_rationale_2153",
       "aplicacion_rationale_415",
       "aplicacion_rationale_596",
       "aplicacion_rationale_604",
@@ -297,7 +282,7 @@
       "aplicacion_rationale_700",
       "aplicacion_rationale_751",
       "aplicacion_rationale_789",
-      "aplicacion_rationale_966"
+      "aplicacion_rationale_967"
     ],
     "6": [
       "almacen_oficios_listar_oficios",
@@ -333,17 +318,22 @@
       "aplicacion_aplicacionprincipal_ajustar_titulo_cabecera",
       "aplicacion_aplicacionprincipal_al_girar_rueda",
       "aplicacion_aplicacionprincipal_al_seleccionar_usuario",
+      "aplicacion_aplicacionprincipal_alcanza_a",
+      "aplicacion_aplicacionprincipal_aviso_sin_alcance",
       "aplicacion_aplicacionprincipal_cambiar_clave_propia",
       "aplicacion_aplicacionprincipal_campo",
       "aplicacion_aplicacionprincipal_configurar_estilos",
       "aplicacion_aplicacionprincipal_crear_respaldo_manual",
+      "aplicacion_aplicacionprincipal_editar_usuario_seleccionado",
       "aplicacion_aplicacionprincipal_pedir_nueva_clave",
       "aplicacion_aplicacionprincipal_refrescar_panel_respaldos",
       "aplicacion_aplicacionprincipal_restablecer_clave_seleccionado",
-      "aplicacion_rationale_1173",
-      "aplicacion_rationale_1688",
+      "aplicacion_rationale_1174",
+      "aplicacion_rationale_1691",
       "aplicacion_rationale_483",
       "aplicacion_rationale_505",
+      "aplicacion_rationale_675",
+      "aplicacion_rationale_682",
       "aplicacion_rationale_728",
       "aplicacion_rationale_774"
     ],
@@ -356,8 +346,7 @@
       "bloqueo_rationale_48",
       "bloqueo_rationale_58",
       "bloqueo_ruta_bloqueo",
-      "cifrado_descifrar",
-      "cifrado_rationale_33",
+      "date",
       "herramienta_admin",
       "herramienta_admin_cargar",
       "herramienta_admin_es_formato_actual",
@@ -367,7 +356,26 @@
       "herramienta_admin_purgar_formato_anterior",
       "herramienta_admin_rationale_1",
       "herramienta_admin_rationale_73",
-      "herramienta_admin_rationale_78"
+      "herramienta_admin_rationale_78",
+      "registro_actividad",
+      "registro_actividad_rationale_1",
+      "registro_actividad_rationale_31",
+      "registro_actividad_respaldar",
+      "respaldo",
+      "respaldo_archivos_a_respaldar",
+      "respaldo_crear_respaldo",
+      "respaldo_crear_respaldo_silencioso",
+      "respaldo_existe_del_dia",
+      "respaldo_listar_respaldos",
+      "respaldo_purgar_antiguos",
+      "respaldo_py_path",
+      "respaldo_rationale_1",
+      "respaldo_rationale_132",
+      "respaldo_rationale_48",
+      "respaldo_rationale_60",
+      "respaldo_rationale_67",
+      "respaldo_rationale_90",
+      "respaldo_ruta_del_dia"
     ],
     "9": [
       "parametros",
@@ -416,70 +424,76 @@
       "aplicacion_aplicacionprincipal_abrir_carga_masiva",
       "aplicacion_aplicacionprincipal_abrir_mantenimiento",
       "aplicacion_aplicacionprincipal_adjuntar_respuesta",
+      "aplicacion_aplicacionprincipal_agregar_tipo_accion",
       "aplicacion_aplicacionprincipal_cambiar_documento",
       "aplicacion_aplicacionprincipal_clave_por_etiqueta",
       "aplicacion_aplicacionprincipal_eliminar_respuesta",
+      "aplicacion_aplicacionprincipal_eliminar_tipo_accion",
+      "aplicacion_aplicacionprincipal_guardar_secuencial",
       "aplicacion_aplicacionprincipal_limpiar_filtros",
       "aplicacion_aplicacionprincipal_oficio_por_referencia",
+      "aplicacion_aplicacionprincipal_refrescar_configuracion",
+      "aplicacion_aplicacionprincipal_refrescar_desplegables_accion",
       "aplicacion_aplicacionprincipal_refrescar_listado",
+      "aplicacion_aplicacionprincipal_refrescar_tipos_accion",
+      "aplicacion_aplicacionprincipal_renombrar_tipo_accion",
+      "aplicacion_aplicacionprincipal_tipo_accion_seleccionado",
       "aplicacion_dialogoexportar_exportar",
-      "aplicacion_rationale_1035",
-      "aplicacion_rationale_1360",
-      "aplicacion_rationale_1383",
-      "aplicacion_rationale_1403",
-      "aplicacion_rationale_1451",
-      "aplicacion_rationale_638"
+      "aplicacion_rationale_1036",
+      "aplicacion_rationale_1363",
+      "aplicacion_rationale_1386",
+      "aplicacion_rationale_1406",
+      "aplicacion_rationale_1454",
+      "aplicacion_rationale_1931",
+      "aplicacion_rationale_1942",
+      "aplicacion_rationale_638",
+      "aplicacion_selectorarchivo_get"
     ],
     "12": [
       "aplicacion_aplicacionprincipal_al_cambiar_pestana",
       "aplicacion_aplicacionprincipal_al_recuperar_foco",
-      "aplicacion_aplicacionprincipal_aviso_sin_alcance",
       "aplicacion_aplicacionprincipal_construir_usuarios",
-      "aplicacion_aplicacionprincipal_editar_usuario_seleccionado",
       "aplicacion_aplicacionprincipal_eliminar_usuario_seleccionado",
       "aplicacion_aplicacionprincipal_guardar_usuario",
       "aplicacion_aplicacionprincipal_nuevo_usuario",
       "aplicacion_aplicacionprincipal_refrescar_responsables",
       "aplicacion_aplicacionprincipal_refrescar_usuarios",
       "aplicacion_aplicacionprincipal_roles_asignables",
-      "aplicacion_rationale_1568",
-      "aplicacion_rationale_2388",
+      "aplicacion_rationale_1571",
+      "aplicacion_rationale_2391",
       "aplicacion_rationale_627",
-      "aplicacion_rationale_682",
       "aplicacion_rationale_694"
     ],
     "13": [
-      "date",
-      "respaldo",
-      "respaldo_archivos_a_respaldar",
-      "respaldo_crear_respaldo",
-      "respaldo_crear_respaldo_silencioso",
-      "respaldo_existe_del_dia",
-      "respaldo_listar_respaldos",
-      "respaldo_purgar_antiguos",
-      "respaldo_py_path",
-      "respaldo_rationale_1",
-      "respaldo_rationale_132",
-      "respaldo_rationale_48",
-      "respaldo_rationale_60",
-      "respaldo_rationale_67",
-      "respaldo_rationale_90",
-      "respaldo_ruta_del_dia"
+      "readme",
+      "readme_2_2_bitácora_de_auditoría",
+      "readme_2_3_tablero_dashboard",
+      "readme_3_1_herramienta_admin_py_utilidad_de_consola",
+      "readme_3_2_referencia_udc_y_secuencial_inicial",
+      "readme_3_3_búsqueda_de_oficios",
+      "readme_3_4_catálogo_de_tipos_de_acción",
+      "readme_3_5_datos_de_prueba",
+      "readme_3_estructura",
+      "readme_4_1_uso_compartido_por_varias_personas",
+      "readme_4_2_copias_de_seguridad_automáticas_dentro_de_la_aplicación",
+      "readme_5_notas_de_seguridad_léelas",
+      "readme_6_alternativa_recomendada_a_mediano_plazo",
+      "readme_control_de_oficios_unidad_de_cumplimiento"
     ],
     "14": [
-      "aplicacion_aplicacionprincipal_agregar_tipo_accion",
-      "aplicacion_aplicacionprincipal_alcanza_a",
-      "aplicacion_aplicacionprincipal_eliminar_tipo_accion",
-      "aplicacion_aplicacionprincipal_guardar_secuencial",
-      "aplicacion_aplicacionprincipal_refrescar_configuracion",
-      "aplicacion_aplicacionprincipal_refrescar_desplegables_accion",
-      "aplicacion_aplicacionprincipal_refrescar_tipos_accion",
-      "aplicacion_aplicacionprincipal_renombrar_tipo_accion",
-      "aplicacion_aplicacionprincipal_tipo_accion_seleccionado",
-      "aplicacion_rationale_1928",
-      "aplicacion_rationale_1939",
-      "aplicacion_rationale_675",
-      "aplicacion_selectorarchivo_get"
+      "permisos",
+      "permisos_anexar_texto",
+      "permisos_chmod",
+      "permisos_escribir_bytes_protegido",
+      "permisos_hacer_escribible",
+      "permisos_proteger",
+      "permisos_proteger_directorio",
+      "permisos_rationale_1",
+      "permisos_rationale_44",
+      "permisos_rationale_50",
+      "permisos_rationale_55",
+      "permisos_rationale_60",
+      "permisos_rationale_97"
     ],
     "15": [
       "aplicacion_aplicacionprincipal_construir_configuracion",
@@ -488,11 +502,11 @@
       "aplicacion_aplicacionprincipal_construir_panel_tipos_accion",
       "aplicacion_aplicacionprincipal_es_superusuario",
       "aplicacion_aplicacionprincipal_etiqueta_ajustable",
-      "aplicacion_rationale_1757",
-      "aplicacion_rationale_1848",
-      "aplicacion_rationale_1871",
-      "aplicacion_rationale_2000",
-      "aplicacion_rationale_2046"
+      "aplicacion_rationale_1760",
+      "aplicacion_rationale_1851",
+      "aplicacion_rationale_1874",
+      "aplicacion_rationale_2003",
+      "aplicacion_rationale_2049"
     ],
     "16": [
       "aplicacion_aplicacionprincipal_dibujar_anillo_estados",
@@ -501,10 +515,10 @@
       "aplicacion_aplicacionprincipal_dibujar_barras_meses",
       "aplicacion_aplicacionprincipal_refrescar_tablero",
       "aplicacion_aplicacionprincipal_tarjeta",
-      "aplicacion_rationale_2239",
-      "aplicacion_rationale_2265",
-      "aplicacion_rationale_2289",
-      "aplicacion_rationale_2340"
+      "aplicacion_rationale_2242",
+      "aplicacion_rationale_2268",
+      "aplicacion_rationale_2292",
+      "aplicacion_rationale_2343"
     ],
     "17": [
       "aplicacion_aplicacionprincipal_aplicar_cambios",
@@ -512,7 +526,7 @@
       "aplicacion_aplicacionprincipal_mostrar_proxima_referencia",
       "aplicacion_aplicacionprincipal_responsable_por_display",
       "aplicacion_aplicacionprincipal_usuarios_sistema",
-      "aplicacion_rationale_1300",
+      "aplicacion_rationale_1303",
       "aplicacion_rationale_617",
       "aplicacion_rationale_758"
     ],
@@ -520,36 +534,100 @@
       "aplicacion_aplicacionprincipal_mostrar_pdf",
       "aplicacion_aplicacionprincipal_ver_documento",
       "aplicacion_aplicacionprincipal_ver_respuesta",
-      "aplicacion_rationale_1338",
-      "aplicacion_rationale_1423",
-      "aplicacion_rationale_1436"
+      "aplicacion_rationale_1341",
+      "aplicacion_rationale_1426",
+      "aplicacion_rationale_1439"
     ],
     "19": [
       "respaldo_datos",
       "respaldo_datos_escribir_registro"
+    ],
+    "20": [
+      "readme_4_compilar_a_ejecutable_lo_más_ligero_posible",
+      "readme_consejos_para_que_pese_lo_menos_posible",
+      "readme_dónde_queda_todo_la_carpeta_bin",
+      "readme_importante_la_carpeta_datos_va_junto_al_ejecutable",
+      "readme_opción_a_con_dependencias_un_solo_ejecutable_onefile",
+      "readme_opción_b_sin_dependencias_dependencias_aparte_onedir",
+      "readme_paso_previo_descomprimir_upx",
+      "readme_qué_hace_cada_opción",
+      "readme_si_algo_falla_con_upx",
+      "readme_ícono_del_ejecutable_detalles"
+    ],
+    "21": [
+      "readme_2_1_roles_de_usuario",
+      "readme_campos_del_oficio",
+      "readme_carga_masiva_de_oficios",
+      "readme_documento_del_oficio",
+      "readme_exportar_oficios",
+      "readme_mantenimiento_de_oficios",
+      "readme_responsables_de_oficios",
+      "readme_respuesta_en_pdf",
+      "readme_visibilidad_de_los_oficios"
+    ],
+    "22": [
+      "claude",
+      "claude_consultar_el_grafo",
+      "claude_dependencias",
+      "claude_grafo_de_conocimiento_graphify",
+      "claude_importante_actualizar_el_grafo_tras_cada_cambio_de_código",
+      "claude_notas_para_claude_code_controloficios",
+      "claude_qué_se_versiona_y_qué_no"
+    ],
+    "23": [
+      "readme_4_2_despliegue_en_una_carpeta_compartida_varias_personas",
+      "readme_arranque_desde_el_compartido",
+      "readme_cómo_publicar_una_versión_nueva",
+      "readme_dónde_viven_los_datos",
+      "readme_estructura_recomendada_en_el_recurso_compartido",
+      "readme_los_íconos",
+      "readme_si_la_carpeta_de_datos_no_responde"
+    ],
+    "24": [
+      "readme_4_3_copia_de_seguridad_programada_opcional_en_otro_disco",
+      "readme_programarlo_a_diario",
+      "readme_prueba_manual",
+      "readme_recomendaciones"
+    ],
+    "25": [
+      "readme_1_requisitos",
+      "readme_dependencias_externas",
+      "readme_módulos_de_la_biblioteca_estándar"
+    ],
+    "26": [
+      "readme_2_ejecutar_en_desarrollo",
+      "readme_cómo_se_adaptan_las_pantallas",
+      "readme_tamaño_de_la_ventana"
     ]
   },
   "cohesion": {
     "0": 0.059370725034199726,
     "1": 0.056107539450613676,
-    "2": 0.0859465737514518,
+    "2": 0.21637426900584794,
     "3": 0.08367071524966262,
-    "4": 0.11764705882352941,
+    "4": 0.09634551495016612,
     "5": 0.1076923076923077,
     "6": 0.13405797101449277,
-    "7": 0.11052631578947368,
-    "8": 0.15263157894736842,
+    "7": 0.09666666666666666,
+    "8": 0.08392603129445235,
     "9": 0.18947368421052632,
     "10": 0.18128654970760233,
-    "11": 0.125,
-    "12": 0.175,
-    "13": 0.21666666666666667,
+    "11": 0.10826210826210826,
+    "12": 0.21794871794871795,
+    "13": 0.14285714285714285,
     "14": 0.23076923076923078,
     "15": 0.23636363636363636,
     "16": 0.2,
     "17": 0.25,
     "18": 0.3333333333333333,
-    "19": 1.0
+    "19": 1.0,
+    "20": 0.2,
+    "21": 0.2222222222222222,
+    "22": 0.2857142857142857,
+    "23": 0.2857142857142857,
+    "24": 0.5,
+    "25": 0.6666666666666666,
+    "26": 0.6666666666666666
   },
   "gods": [
     {
@@ -578,6 +656,11 @@
       "degree": 19
     },
     {
+      "id": "readme_control_de_oficios_unidad_de_cumplimiento",
+      "label": "Control de Oficios — Unidad de Cumplimiento",
+      "degree": 18
+    },
+    {
       "id": "aplicacion_selectorfecha",
       "label": "SelectorFecha",
       "degree": 17
@@ -596,11 +679,6 @@
       "id": "almacen_oficios_actualizar_oficio",
       "label": "actualizar_oficio()",
       "degree": 15
-    },
-    {
-      "id": "almacen_oficios_preparar_importado",
-      "label": "_preparar_importado()",
-      "degree": 13
     }
   ],
   "surprises": [
@@ -663,13 +741,13 @@
   "questions": [
     {
       "type": "bridge_node",
-      "question": "Why does `AplicacionPrincipal` connect `Community 7` to `Community 1`, `Community 5`, `Community 11`, `Community 12`, `Community 14`, `Community 15`, `Community 16`, `Community 17`, `Community 18`?",
-      "why": "High betweenness centrality (0.403) - this node is a cross-community bridge."
+      "question": "Why does `AplicacionPrincipal` connect `AplicacionPrincipal` to `aplicacion.py`, `.__init__`, `.get`, `._al_recuperar_foco`, `._construir_configuracion`, `._refrescar_tablero`, `._aplicar_cambios`, `._mostrar_pdf`?",
+      "why": "High betweenness centrality (0.323) - this node is a cross-community bridge."
     },
     {
       "type": "bridge_node",
-      "question": "Why does `SelectorFecha` connect `Community 1` to `Community 5`?",
-      "why": "High betweenness centrality (0.059) - this node is a cross-community bridge."
+      "question": "Why does `SelectorFecha` connect `aplicacion.py` to `.__init__`?",
+      "why": "High betweenness centrality (0.047) - this node is a cross-community bridge."
     },
     {
       "type": "verify_inferred",
@@ -677,23 +755,23 @@
       "why": "`ValueError` has 26 INFERRED edges - model-reasoned connections that need verification."
     },
     {
+      "type": "isolated_nodes",
+      "question": "What connects `Dependencias`, `IMPORTANTE: actualizar el grafo tras CADA cambio de código`, `Qué se versiona y qué no` to the rest of the system?",
+      "why": "45 weakly-connected nodes found - possible documentation gaps or missing edges."
+    },
+    {
       "type": "low_cohesion",
-      "question": "Should `Community 0` be split into smaller, more focused modules?",
+      "question": "Should `almacen_oficios.py` be split into smaller, more focused modules?",
       "why": "Cohesion score 0.059370725034199726 - nodes in this community are weakly interconnected."
     },
     {
       "type": "low_cohesion",
-      "question": "Should `Community 1` be split into smaller, more focused modules?",
+      "question": "Should `aplicacion.py` be split into smaller, more focused modules?",
       "why": "Cohesion score 0.056107539450613676 - nodes in this community are weakly interconnected."
     },
     {
       "type": "low_cohesion",
-      "question": "Should `Community 2` be split into smaller, more focused modules?",
-      "why": "Cohesion score 0.0859465737514518 - nodes in this community are weakly interconnected."
-    },
-    {
-      "type": "low_cohesion",
-      "question": "Should `Community 3` be split into smaller, more focused modules?",
+      "question": "Should `carga_masiva.py` be split into smaller, more focused modules?",
       "why": "Cohesion score 0.08367071524966262 - nodes in this community are weakly interconnected."
     }
   ]

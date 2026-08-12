@@ -92,7 +92,7 @@ completas.
 | Pantalla | Comportamiento al cambiar el tamaño |
 |---|---|
 | **Ingreso** | La tarjeta se queda en `ANCHO_TARJETA_INGRESO` (430 px) y se centra. Un formulario de una sola columna estirado de lado a lado de un monitor es incómodo de leer |
-| **Registrar oficio** | Dos columnas que se reparten el ancho; el botón *Registrar oficio* va anclado abajo, fuera del área desplazable, así que nunca queda fuera de la vista |
+| **Registrar oficio** | Dos columnas que se reparten el ancho; el botón *Registrar* va anclado abajo, fuera del área desplazable, así que nunca queda fuera de la vista |
 | **Oficios** | La tabla **crece con la ventana** (`_ajustar_alto_tabla`): al maximizar se ven muchas más filas. La columna *Observación* absorbe el ancho sobrante |
 | **Usuarios** | El formulario mantiene su ancho a la izquierda y la lista se queda con todo el espacio restante, a lo ancho y a lo alto |
 | **Cabecera** | El título se acorta cuando no cabe, para no solaparse con el nombre del banco |
@@ -233,6 +233,8 @@ del campo, y se ajusta para no salirse de la pantalla.
 | Superusuario | ✅ | ✅ | ✅ | ✅ (cualquiera) | ✅ (cualquiera) | ✅ |
 | Administrador | ✅ | ✅ | ✅ | ✅ (salvo superusuarios) | ✅ (cualquiera) | ✅ |
 | Usuario (en sus oficios) | ❌ | ✅ | ✅ | ❌ | ✅ (En proceso ↔ Finalizado) | ✅ |
+
+En el listado, la columna **Responsable** muestra el **usuario** (`ana`), no el nombre completo: identifica igual y deja la tabla más compacta. El nombre completo sigue apareciendo en el desplegable de asignación y en la exportación.
 
 Un **administrador no puede asignar oficios a un superusuario**: esas cuentas no
 aparecen en su desplegable de responsables y el almacén rechaza la asignación

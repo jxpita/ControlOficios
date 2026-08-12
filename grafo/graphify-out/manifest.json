@@ -5,9 +5,9 @@
     "semantic_hash": "1bb4a138c2b92c95770e06f9f44a200a"
   },
   "aplicacion.py": {
-    "mtime": 1786556315.5656362,
-    "ast_hash": "f9237ba2bb381f97e3373402fab36861",
-    "semantic_hash": "f9237ba2bb381f97e3373402fab36861"
+    "mtime": 1786566773.5477562,
+    "ast_hash": "21123edbf98f26f22ed07969120015f3",
+    "semantic_hash": ""
   },
   "autenticacion.py": {
     "mtime": 1786040970.9106526,
@@ -83,5 +83,30 @@
     "mtime": 1785165331.0816433,
     "ast_hash": "741bf50d7a0512c8655d199ecb347252",
     "semantic_hash": "741bf50d7a0512c8655d199ecb347252"
+  },
+  "CLAUDE.md": {
+    "mtime": 1785169166.0355647,
+    "ast_hash": "3bc8c0181266fbd5c5a0f014b30222f8",
+    "semantic_hash": ""
+  },
+  "README.md": {
+    "mtime": 1786566882.9053264,
+    "ast_hash": "082e54070248d954fa7249cd71ec23ca",
+    "semantic_hash": ""
+  },
+  "requirements.txt": {
+    "mtime": 1786123201.6330783,
+    "ast_hash": "53e38ff7e7fe3d8d4dd1e3de3e9e9bfd",
+    "semantic_hash": ""
+  },
+  "Manual Banco del Paci\u0301fico y PacifiCard.pdf": {
+    "mtime": 1784736350.788731,
+    "ast_hash": "ae80555368ea4d77365d70a116304dbf",
+    "semantic_hash": ""
+  },
+  "datos/bdp_icon_alt.png": {
+    "mtime": 1784736350.8007312,
+    "ast_hash": "6e3972bf0fc64c89f2d8c55f47e97a5c",
+    "semantic_hash": ""
   }
 }

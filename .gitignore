@@ -222,6 +222,8 @@ __marimo__/
 # .graphify_analysis.json. Se ignoran los artefactos locales/regenerables:
 grafo/graphify-out/cache/
 grafo/graphify-out/converted/
+grafo/graphify-out/[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]/
+grafo/graphify-out/.graphify_labels.json*
 grafo/graphify-out/.graphify_root
 grafo/graphify-out/cost.json
 
