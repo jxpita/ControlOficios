@@ -14,6 +14,10 @@ personas que la usan a diario está el archivo
 técnico y organizado por roles (usuario, administrador y superusuario), pensado
 para repartirse dentro del área.
 
+El manual **no se escribe a mano en Word**: se compone desde `manual_fuente/`,
+de modo que al cambiar la aplicación baste con actualizar el texto y volver a
+compilarlo (ver `manual_fuente/README.md`).
+
 ## 1. Requisitos
 
 - Python 3.9 o superior (recomendado 3.11+).

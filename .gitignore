@@ -240,3 +240,11 @@ bin/
 
 # Copias de seguridad generadas por la aplicación (datos de ejecución)
 datos/respaldos/
+
+# Dependencias del generador del manual (se instalan con npm install)
+manual_fuente/node_modules/
+manual_fuente/manual.docx
+manual_fuente/manual.pdf
+manual_fuente/page-*.jpg
+manual_fuente/paginas.json
+manual_fuente/logo_portada.png

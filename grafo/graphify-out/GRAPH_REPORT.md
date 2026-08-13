@@ -4,12 +4,12 @@
 - cluster-only mode — file stats not available
 
 ## Summary
-- 610 nodes · 1302 edges · 39 communities
-- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 29 edges (avg confidence: 0.79)
+- 649 nodes · 1337 edges · 39 communities (35 shown, 4 thin omitted)
+- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 30 edges (avg confidence: 0.78)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `bde4e6d9`
+- Built from commit: `1bb7e573`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -20,19 +20,19 @@
 - carga_masiva.py
 - autenticacion.py
 - ._valores_responsables
-- metricas.py
+- configuracion.py
 - AplicacionPrincipal
 - DialogoImplicados
 - parametros.py
 - VisorPDF
 - .get
-- ._refrescar_tablero
+- ._puede_gestionar_usuarios
 - Control de Oficios — Unidad de Cumplimiento
 - respaldo.py
 - ._construir_configuracion
-- con_bloqueo
+- registrar
 - .__init__
-- ._mostrar_pdf
+- manual.js
 - 4. Compilar a ejecutable (lo más ligero posible)
 - 2.1 Roles de usuario
 - Grafo de conocimiento (graphify)
@@ -41,16 +41,16 @@
 - 1. Requisitos
 - 2. Ejecutar en desarrollo
 - almacen_oficios.py
-- permisos.py
+- ._guardar_oficio
 - _leer_registros
+- Fuente del manual de usuario
 - ._aviso_sin_alcance
-- ._al_recuperar_foco
-- configuracion.py
-- herramienta_admin.py
-- registrar
-- cifrado.py
+- dependencies
+- descifrar
+- compilar.sh
+- logo.py
 - ._oficio_por_referencia
-- _generar_referencia
+- paginas.py
 - _validar_asignacion
 
 ## God Nodes (most connected - your core abstractions)
@@ -80,7 +80,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (39 total, 0 thin omitted)
+## Communities (39 total, 4 thin omitted)
 
 ### Community 0 - "ValueError"
 Cohesion: 0.12
@@ -99,28 +99,28 @@ Cohesion: 0.10
 Nodes (35): _a_fecha(), _a_texto(), agrupar_por_referencia(), _claves_de(), coincidencias(), emparejar_responsables(), _implicado_de(), leer_archivo() (+27 more)
 
 ### Community 4 - "autenticacion.py"
-Cohesion: 0.13
-Nodes (32): _buscar(), cambiar_clave_propia(), _contar_superusuarios(), crear_usuario(), editar_usuario(), eliminar_usuario(), existe_algun_usuario(), _guardar_usuarios() (+24 more)
+Cohesion: 0.10
+Nodes (39): _buscar(), cambiar_clave_propia(), cerrar_sesion(), _contar_superusuarios(), crear_usuario(), editar_usuario(), eliminar_usuario(), existe_algun_usuario() (+31 more)
 
 ### Community 5 - "._valores_responsables"
-Cohesion: 0.17
-Nodes (7): Repuebla los desplegables de filtro conservando lo elegido.          El tipo de, Precarga el panel de edición con los datos del oficio seleccionado.          Sol, Repuebla los desplegables de tipo de acción tras cambiar el catálogo., Texto que se muestra en los desplegables para un responsable.         Incluye el, Personas a las que se les puede asignar un oficio.          Un administrador no, A partir del texto del desplegable devuelve (usuario, nombre).         Para "(Si, Tipos de acción del catálogo, para los desplegables.
+Cohesion: 0.19
+Nodes (6): Repuebla los desplegables de filtro conservando lo elegido.          El tipo de, Precarga el panel de edición con los datos del oficio seleccionado.          Sol, Guarda los cambios del panel según el rol: el gestor puede cambiar         respo, Texto que se muestra en los desplegables para un responsable.         Incluye el, Personas a las que se les puede asignar un oficio.          Un administrador no, A partir del texto del desplegable devuelve (usuario, nombre).         Para "(Si
 
-### Community 6 - "metricas.py"
-Cohesion: 0.23
-Nodes (15): listar_oficios(), _convertir_fecha(), dias_promedio_respuesta(), distribucion_estados(), por_responsable(), Cálculo de métricas para el tablero (dashboard). No depende de la interfaz: solo, Cantidad de oficios por responsable, de mayor a menor.     Los oficios sin respo, Cantidad por estado, en el orden definido en configuracion.ESTADOS. (+7 more)
+### Community 6 - "configuracion.py"
+Cohesion: 0.13
+Nodes (22): listar_oficios(), _buscar_recurso(), _crear_subcarpeta(), _leer_ruta_configurada(), Path, Configuración central de la aplicación. Define rutas, nombres de archivo y const, Ubica un recurso de la aplicación (ícono o logo).      Se busca primero junto al, Ruta de la carpeta de datos indicada por el usuario, o None.      Se busca en do (+14 more)
 
 ### Community 7 - "AplicacionPrincipal"
-Cohesion: 0.10
-Nodes (8): AplicacionPrincipal, Suma una persona a la lista del oficio que se está registrando., Ajusta cuántas filas muestra la tabla de oficios al alto disponible.          De, Acorta el título de la cabecera cuando la ventana es estrecha.          `pack` n, Diálogo para que el usuario en sesión cambie su propia contraseña.         Dispo, Desplaza el área que está bajo el puntero.          Si el cursor está sobre una, Adelanta la Referencia UDC que se asignará al oficio en curso.          Depende, Coloca una etiqueta y su campo en una fila del grupo.          Con `estirar` el
+Cohesion: 0.09
+Nodes (10): AplicacionPrincipal, Ajusta cuántas filas muestra la tabla de oficios al alto disponible.          De, Abre el documento del oficio (PDF dentro de la aplicación; el Word,         con, Muestra el PDF de respuesta dentro de la aplicación., Abre un PDF en el visor integrado y, si no está disponible, ofrece         el le, Diálogo modal para escribir y confirmar una nueva contraseña.         Devuelve l, Acorta el título de la cabecera cuando la ventana es estrecha.          `pack` n, Diálogo para que el usuario en sesión cambie su propia contraseña.         Dispo (+2 more)
 
 ### Community 8 - "DialogoImplicados"
 Cohesion: 0.33
 Nodes (3): DialogoImplicados, Personas investigadas en un oficio: verlas, añadirlas y corregirlas.      Se abr, Deja el formulario en blanco para añadir a otra persona.
 
 ### Community 9 - "parametros.py"
-Cohesion: 0.18
-Nodes (23): analizar_referencia(), anio_vigente(), _clave(), definir_secuencial_inicial(), esta_configurado(), formatear_referencia(), _guardar(), institucion_de() (+15 more)
+Cohesion: 0.09
+Nodes (40): _generar_referencia(), Genera la Referencia UDC:  REQ-UDC-<sigla>-<año>-<secuencial de 4 dígitos>., analizar_referencia(), anio_vigente(), _clave(), definir_secuencial_inicial(), esta_configurado(), formatear_referencia() (+32 more)
 
 ### Community 10 - "VisorPDF"
 Cohesion: 0.18
@@ -128,11 +128,11 @@ Nodes (8): abrir_con_sistema(), abrir_visor(), Visor de PDF integrado en la apli
 
 ### Community 11 - ".get"
 Cohesion: 0.12
-Nodes (7): Valor elegido en un desplegable de filtro, o '' si es "(Todos)"., Devuelve la clave interna a partir de la etiqueta mostrada., Guarda los cambios del panel según el rol: el gestor puede cambiar         respo, Sustituye el documento del oficio por si se cargó el equivocado., Carga un PDF con la respuesta del oficio seleccionado., Elimina el PDF adjunto (por si se cargó el archivo equivocado)., Nombre del tipo elegido en la lista, sin el contador.
+Nodes (7): Panel de búsqueda. Tres bloques que se acumulan entre sí:          - por texto,, Valor elegido en un desplegable de filtro, o '' si es "(Todos)"., Devuelve la clave interna a partir de la etiqueta mostrada., Sustituye el documento del oficio por si se cargó el equivocado., Carga un PDF con la respuesta del oficio seleccionado., Elimina el PDF adjunto (por si se cargó el archivo equivocado)., Nombre del tipo elegido en la lista, sin el contador.
 
-### Community 12 - "._refrescar_tablero"
-Cohesion: 0.18
-Nodes (5): (y del título, margen superior) medidos con las fuentes de verdad.          La b, Barras verticales: oficios recibidos por día., Barras verticales: oficios recibidos por mes., Gráfico de anillo con la distribución por estado., Barras horizontales: cantidad de oficios por responsable.
+### Community 12 - "._puede_gestionar_usuarios"
+Cohesion: 0.13
+Nodes (8): (y del título, margen superior) medidos con las fuentes de verdad.          La b, Barras verticales: oficios recibidos por día., Barras verticales: oficios recibidos por mes., Gráfico de anillo con la distribución por estado., Barras horizontales: cantidad de oficios por responsable., Refresca la vista al volver a la ventana.          Con varias personas usando la, Repuebla los desplegables de responsable con los usuarios actuales., True si el usuario en sesión puede crear/editar/eliminar usuarios         y reas
 
 ### Community 13 - "Control de Oficios — Unidad de Cumplimiento"
 Cohesion: 0.14
@@ -146,17 +146,21 @@ Nodes (24): date, _fechas_recepcion(), generar_filas(), _mes_atras(), Genera el 
 Cohesion: 0.24
 Nodes (5): Permite al superusuario o a un administrador indicar la última         Referenci, Etiqueta de texto largo cuyo ancho de corte sigue al de la ventana.          Con, Catálogo de tipos de acción, mantenible por los gestores., Panel para volcar de una vez el histórico de la matriz de Excel., Panel de copias de seguridad. Solo lo ve el superusuario.
 
-### Community 16 - "con_bloqueo"
-Cohesion: 0.11
-Nodes (27): actualizar_implicado(), adjuntar_respuesta(), agregar_implicado(), eliminar_implicado(), eliminar_respuesta(), _guardar_documento(), _guardar_registros(), importar_oficios() (+19 more)
+### Community 16 - "registrar"
+Cohesion: 0.13
+Nodes (27): actualizar_implicado(), adjuntar_respuesta(), agregar_implicado(), eliminar_implicado(), eliminar_respuesta(), _guardar_registros(), importar_oficios(), _oficio_editable() (+19 more)
 
 ### Community 17 - ".__init__"
-Cohesion: 0.11
-Nodes (10): Panel de búsqueda. Tres bloques que se acumulan entre sí:          - por texto,, Ancho de corte de las etiquetas de los formularios.          El corte es el 45 %, Tablero con scroll vertical: tarjetas de indicadores y gráficos., Marco superior con logo y título., True si el usuario en sesión puede crear/editar/eliminar usuarios         y reas, Crea la copia del día en segundo plano.          Va en un hilo aparte para que l, Convierte un contenedor en un área con scroll vertical.          Devuelve (lienz, Ancho de una columna de tabla: el mayor entre lo que pide el dato y         lo q (+2 more)
+Cohesion: 0.10
+Nodes (10): Ancho de corte de las etiquetas de los formularios.          El corte es el 45 %, Repuebla los desplegables de tipo de acción tras cambiar el catálogo., Tablero con scroll vertical: tarjetas de indicadores y gráficos., Marco superior con logo y título., Crea la copia del día en segundo plano.          Va en un hilo aparte para que l, Convierte un contenedor en un área con scroll vertical.          Devuelve (lienz, Tipos de acción del catálogo, para los desplegables., Ancho de una columna de tabla: el mayor entre lo que pide el dato y         lo q (+2 more)
 
-### Community 18 - "._mostrar_pdf"
-Cohesion: 0.33
-Nodes (3): Abre el documento del oficio (PDF dentro de la aplicación; el Word,         con, Muestra el PDF de respuesta dentro de la aplicación., Abre un PDF en el visor integrado y, si no está disponible, ofrece         el le
+### Community 18 - "manual.js"
+Cohesion: 0.09
+Nodes (12): bandaAzul, contenido, doc, {
+  Document, Packer, Paragraph, TextRun, ImageRun, HeadingLevel, AlignmentType,
+  PageBreak, Table, TableRow, TableCell, WidthType, ShadingType, BorderStyle,
+  LevelFormat, Footer, PageNumber, Tab, TabStopType, LeaderType,
+}, ENTRADAS, fs, h1(), h2() (+4 more)
 
 ### Community 20 - "4. Compilar a ejecutable (lo más ligero posible)"
 Cohesion: 0.20
@@ -187,68 +191,61 @@ Cohesion: 0.50
 Nodes (4): 2. Ejecutar en desarrollo, Cómo se adaptan las pantallas, Etiquetas y encabezados, Tamaño de la ventana
 
 ### Community 27 - "almacen_oficios.py"
-Cohesion: 0.14
-Nodes (22): causales_registradas(), _encabezados_exportacion(), exportar_csv(), exportar_oficios(), exportar_xlsx(), _fila_exportacion(), filas_exportacion(), hay_soporte_xlsx() (+14 more)
-
-### Community 28 - "permisos.py"
-Cohesion: 0.23
-Nodes (12): anexar_texto(), _chmod(), escribir_bytes_protegido(), hacer_escribible(), proteger(), proteger_directorio(), Endurecimiento de permisos de los archivos que crea la aplicación.  Objetivo: qu, Devuelve el permiso de escritura al propietario si el archivo existe. (+4 more)
+Cohesion: 0.13
+Nodes (24): causales_registradas(), _encabezados_exportacion(), exportar_csv(), exportar_oficios(), exportar_xlsx(), _fila_exportacion(), filas_exportacion(), _guardar_documento() (+16 more)
 
 ### Community 29 - "_leer_registros"
-Cohesion: 0.20
-Nodes (12): anular_oficio(), contar_por_tipo_accion(), esta_anulado(), _leer_registros(), listar_implicados(), listar_oficios_visibles(), Implicados anotados en un oficio, en el orden en que se registraron., Cuántos oficios usan ese tipo de acción (para el catálogo). (+4 more)
+Cohesion: 0.16
+Nodes (14): anular_oficio(), contar_por_tipo_accion(), esta_anulado(), _leer_registros(), listar_implicados(), listar_oficios_visibles(), proxima_referencia(), Implicados anotados en un oficio, en el orden en que se registraron. (+6 more)
 
-### Community 30 - "._aviso_sin_alcance"
-Cohesion: 0.25
-Nodes (3): Diálogo modal para escribir y confirmar una nueva contraseña.         Devuelve l, ¿El usuario en sesión puede gestionar a ese usuario? Se consulta         antes d, Muestra el motivo si no se puede gestionar. True = sin permisos.
+### Community 30 - "Fuente del manual de usuario"
+Cohesion: 0.33
+Nodes (5): Al actualizar el manual, Archivos, Compilar, Dependencias, Fuente del manual de usuario
 
-### Community 31 - "._al_recuperar_foco"
-Cohesion: 0.24
-Nodes (4): Restablece el formulario para crear un usuario nuevo., Refresca la vista al volver a la ventana.          Con varias personas usando la, Repuebla los desplegables de responsable con los usuarios actuales., Roles que puede otorgar quien está en sesión (solo el superusuario         puede
+### Community 31 - "._aviso_sin_alcance"
+Cohesion: 0.21
+Nodes (4): Restablece el formulario para crear un usuario nuevo., ¿El usuario en sesión puede gestionar a ese usuario? Se consulta         antes d, Muestra el motivo si no se puede gestionar. True = sin permisos., Roles que puede otorgar quien está en sesión (solo el superusuario         puede
 
-### Community 32 - "configuracion.py"
-Cohesion: 0.24
-Nodes (8): Bloqueo entre procesos para la carpeta de datos compartida.  Problema que resuel, _buscar_recurso(), _crear_subcarpeta(), _leer_ruta_configurada(), Path, Configuración central de la aplicación. Define rutas, nombres de archivo y const, Ubica un recurso de la aplicación (ícono o logo).      Se busca primero junto al, Ruta de la carpeta de datos indicada por el usuario, o None.      Se busca en do
+### Community 32 - "dependencies"
+Cohesion: 0.50
+Nodes (3): docx, dependencies, docx
 
-### Community 33 - "herramienta_admin.py"
-Cohesion: 0.17
-Nodes (15): bloquear(), _esta_abandonado(), Path, True si el bloqueo es tan antiguo que solo puede ser basura., Toma el bloqueo `nombre` mientras dure el bloque `with`.      Lanza ValueError s, _ruta_bloqueo(), _cargar(), _es_formato_actual() (+7 more)
-
-### Community 34 - "registrar"
-Cohesion: 0.29
-Nodes (7): cerrar_sesion(), Registra en la bitácora el cierre de sesión del usuario., Registro de actividad (auditoría) en un archivo de texto plano.  Guarda TODA acc, Último recurso: dejar la línea en un archivo local para no perderla., Añade una línea a la bitácora de auditoría.      Si la escritura falla, la línea, registrar(), _respaldar()
-
-### Community 35 - "cifrado.py"
-Cohesion: 0.36
-Nodes (7): _cifrador(), cifrar(), descifrar(), obtener_clave(), Devuelve la clave Fernet; la genera la primera vez que se ejecuta., Descifra. Lanza cryptography.fernet.InvalidToken si el archivo     fue alterado, Fernet
+### Community 33 - "descifrar"
+Cohesion: 0.15
+Nodes (18): bloquear(), _esta_abandonado(), Path, Bloqueo entre procesos para la carpeta de datos compartida.  Problema que resuel, True si el bloqueo es tan antiguo que solo puede ser basura., Toma el bloqueo `nombre` mientras dure el bloque `with`.      Lanza ValueError s, _ruta_bloqueo(), descifrar() (+10 more)
 
 ### Community 36 - "._oficio_por_referencia"
 Cohesion: 0.33
 Nodes (3): Corrige los datos de identificación de un oficio, o lo retira., Abre los implicados del oficio sobre el que se hizo doble clic., Busca solo entre los oficios visibles para el usuario en sesión.          Incluy
-
-### Community 37 - "_generar_referencia"
-Cohesion: 0.50
-Nodes (4): _generar_referencia(), proxima_referencia(), Referencia UDC que se asignaría al próximo oficio de esa institución     (solo i, Genera la Referencia UDC:  REQ-UDC-<sigla>-<año>-<secuencial de 4 dígitos>.
 
 ### Community 38 - "_validar_asignacion"
 Cohesion: 0.50
 Nodes (4): Rol del usuario indicado, o '' si no existe., Un ADMINISTRADOR no puede asignar oficios a un superusuario.      El superusuari, _rol_de(), _validar_asignacion()
 
 ## Knowledge Gaps
-- **47 isolated node(s):** `Dependencias`, `IMPORTANTE: actualizar el grafo tras CADA cambio de código`, `Qué se versiona y qué no`, `Consultar el grafo`, `Dependencias externas` (+42 more)
+- **62 isolated node(s):** `compilar.sh script`, `fs`, `{
+  Document, Packer, Paragraph, TextRun, ImageRun, HeadingLevel, AlignmentType,
+  PageBreak, Table, TableRow, TableCell, WidthType, ShadingType, BorderStyle,
+  LevelFormat, Footer, PageNumber, Tab, TabStopType, LeaderType,
+}`, `bandaAzul`, `portada` (+57 more)
   These have ≤1 connection - possible missing edges or undocumented components.
+- **4 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `AplicacionPrincipal` connect `AplicacionPrincipal` to `aplicacion.py`, `._oficio_por_referencia`, `._valores_responsables`, `.get`, `._refrescar_tablero`, `._construir_configuracion`, `.__init__`, `._mostrar_pdf`, `._aviso_sin_alcance`, `._al_recuperar_foco`?**
-  _High betweenness centrality (0.329) - this node is a cross-community bridge._
-- **Why does `SelectorFecha` connect `aplicacion.py` to `.__init__`?**
-  _High betweenness centrality (0.042) - this node is a cross-community bridge._
+- **Why does `AplicacionPrincipal` connect `AplicacionPrincipal` to `aplicacion.py`, `._oficio_por_referencia`, `._valores_responsables`, `.get`, `._puede_gestionar_usuarios`, `._construir_configuracion`, `.__init__`, `._guardar_oficio`, `._aviso_sin_alcance`?**
+  _High betweenness centrality (0.290) - this node is a cross-community bridge._
+- **Why does `SelectorFecha` connect `aplicacion.py` to `.__init__`, `.get`?**
+  _High betweenness centrality (0.037) - this node is a cross-community bridge._
 - **Are the 26 inferred relationships involving `ValueError` (e.g. with `cambiar_clave_propia()` and `crear_usuario()`) actually correct?**
   _`ValueError` has 26 INFERRED edges - model-reasoned connections that need verification._
-- **What connects `Dependencias`, `IMPORTANTE: actualizar el grafo tras CADA cambio de código`, `Qué se versiona y qué no` to the rest of the system?**
-  _47 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **What connects `compilar.sh script`, `fs`, `{
+  Document, Packer, Paragraph, TextRun, ImageRun, HeadingLevel, AlignmentType,
+  PageBreak, Table, TableRow, TableCell, WidthType, ShadingType, BorderStyle,
+  LevelFormat, Footer, PageNumber, Tab, TabStopType, LeaderType,
+}` to the rest of the system?**
+  _62 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `ValueError` be split into smaller, more focused modules?**
   _Cohesion score 0.11561561561561562 - nodes in this community are weakly interconnected._
 - **Should `aplicacion.py` be split into smaller, more focused modules?**

@@ -90,8 +90,8 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1786634261.1405275,
-    "ast_hash": "72eb84f7c3dde37c3d4b5b2de1655755",
+    "mtime": 1786636660.3179429,
+    "ast_hash": "040163ccb7a520b4b29675d255a0784c",
     "semantic_hash": ""
   },
   "requirements.txt": {
@@ -107,6 +107,41 @@
   "datos/bdp_icon_alt.png": {
     "mtime": 1784736350.8007312,
     "ast_hash": "6e3972bf0fc64c89f2d8c55f47e97a5c",
+    "semantic_hash": ""
+  },
+  "manual_fuente/compilar.sh": {
+    "mtime": 1786636604.9613938,
+    "ast_hash": "8cde581566764567af5595bae7cf50df",
+    "semantic_hash": ""
+  },
+  "manual_fuente/logo.py": {
+    "mtime": 1786636604.9612784,
+    "ast_hash": "502e106434f22944c910361737b8fdaf",
+    "semantic_hash": ""
+  },
+  "manual_fuente/manual.js": {
+    "mtime": 1786636604.9386523,
+    "ast_hash": "0fda52edeaf2a9fc68ddf925d825c10e",
+    "semantic_hash": ""
+  },
+  "manual_fuente/package.json": {
+    "mtime": 1786636629.9658842,
+    "ast_hash": "a0c0b0752c7b3027a301e04f72785e03",
+    "semantic_hash": ""
+  },
+  "manual_fuente/paginas.py": {
+    "mtime": 1786636604.9388933,
+    "ast_hash": "023f251f58719b312874d94a5c790401",
+    "semantic_hash": ""
+  },
+  "manual_fuente/README.md": {
+    "mtime": 1786636604.9664328,
+    "ast_hash": "8abc406ea8c8cb629aaef7e2df653efe",
+    "semantic_hash": ""
+  },
+  "manual_fuente/logo_banco.jpeg": {
+    "mtime": 1786636604.940831,
+    "ast_hash": "0d3a6e326d9cf474b06d8b15104c1786",
     "semantic_hash": ""
   }
 }
