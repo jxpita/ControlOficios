@@ -114,33 +114,26 @@ duro para que no se quede solo en la segunda línea. El ajuste se dispara con el
 redimensionarse antes que sus hijos, y atender solo a la ventana dejaría anchos
 de corte antiguos.
 
-Los **encabezados de las tablas** llevan siempre la palabra completa, sin
-abreviar, y se **parten en dos líneas** para no ensanchar la tabla: partirlos
-ahorra unos 300 px en la de oficios («Fecha de recepción» ocupa 95 px en dos
-líneas y 140 en una). El ancho de cada columna es el mayor entre lo que pide el
-dato y lo que **mide** su título —ya partido— con la fuente real
-(`_ancho_columna`), así que el nombre del campo se lee entero en cualquier
-equipo y con cualquier tamaño de fuente.
+Los **encabezados de las tablas** van **en una sola línea**, sin abreviaturas, y
+el ancho de cada columna es el mayor entre lo que pide el dato y lo que **mide**
+su título con la fuente real (`_ancho_columna`), así que el nombre del campo se
+lee entero en cualquier equipo.
 
-Dos detalles que no son evidentes:
+**Por qué no se parten en dos líneas.** Ahorraría ancho, y se intentó de las dos
+formas posibles —un salto de línea dentro del texto y `wraplength` en el estilo,
+ampliando a mano el alto del encabezado—, pero **hay versiones de Tk que dibujan
+solo la primera línea** del encabezado de un `Treeview`. Donde eso pasa, el
+encabezado queda truncado («Fecha de», «Cantidad de») y el usuario no sabe qué
+columna está mirando. Tampoco sirve detectarlo a tiempo de ejecución: una
+`ttk.Label` de prueba sí parte el texto en esos mismos equipos, así que la sonda
+da un falso positivo.
 
-- El encabezado **no crece solo** al partirse: hay que ampliarlo a mano con el
-  `padding` del estilo `Treeview.Heading`, sumándole el alto de una línea. Si
-  no, Tk dibuja las dos líneas pero recorta la segunda.
-- **No todas las versiones de Tk parten el texto del encabezado.** Donde no lo
-  hacen, la segunda línea desaparece y quedan encabezados truncados («F.»,
-  «Cant.»). Por eso se **sondea** el comportamiento al arrancar
-  (`_cabecera_se_parte`, con una etiqueta que usa el mismo motor de texto): si
-  el equipo parte, se usan columnas estrechas con el título en dos líneas; si
-  no, el título va de una sola línea y la columna se ensancha lo necesario.
-  Nunca se recorta un nombre de campo.
-
-En *Usuarios*, el mismo formulario sirve para **crear** y para **editar**: al
-pulsar *Editar* se carga la cuenta seleccionada y el botón principal pasa a
-*Guardar cambios*. El botón **Nuevo**, a su lado, devuelve el formulario en
-blanco al modo de creación **sin guardar nada**, para no tener que confirmar una
-edición que no se quería hacer solo para poder dar de alta a otra persona.
-
+Para no ensanchar la tabla, la solución es otra: **titular con una palabra
+completa** en vez de con una frase. Las cuatro fechas y la cantidad se llaman
+*Oficio*, *Recepción*, *Asignación*, *Respuesta* e *Investigados*; todas esas
+columnas muestran fechas o números, así que se entienden igual y la tabla mide
+1755 px en lugar de 2048. Donde no aprieta el ancho —el diálogo de implicados—
+los títulos van completos.
 
 ## 2.1 Roles de usuario
 
