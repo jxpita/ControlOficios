@@ -91,6 +91,21 @@ PATRON_INVESTIGADOS = [1, 1, 2, 1, 3, 1, 1, 4, 2, 1, 5, 1, 2, 1, 6,
                        3, 1, 2, 1, 8, 1, 1, 2, 7, 1, 3, 1, 1, 2, 1]
 
 TIPOS_IDENTIFICACION = ["CED", "PAS", "RUC"]
+
+
+def _identificacion(tipo, aleatorio):
+    """Documento con el formato que exige cada tipo.
+
+    La aplicación valida la cédula con 10 dígitos, el RUC con 13 y el pasaporte
+    con letras y números, así que el archivo de prueba los genera ya válidos.
+    """
+    if tipo == "CED":
+        return str(aleatorio.randint(10 ** 9, 10 ** 10 - 1))
+    if tipo == "RUC":
+        # Los RUC de persona natural son la cédula seguida de "001".
+        return f"{aleatorio.randint(10 ** 9, 10 ** 10 - 1)}001"
+    letras = "".join(aleatorio.choice("ABCDEFGHJKLMNPRSTUVWXYZ") for _ in range(2))
+    return f"{letras}{aleatorio.randint(100000, 999999)}"
 TIPOS_IMPLICADO = ["CLIENTE", "EX CLIENTE", "NO CLIENTE", "SIN IDENTIFICACION"]
 
 MESES = ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN",
@@ -178,6 +193,10 @@ def generar_filas():
         # Sin repetir persona dentro del mismo oficio.
         personas = random.sample(INVESTIGADOS, cuantos)
         for persona in personas:
+            # Las empresas se identifican con RUC; las personas, con cualquiera
+            # de los tres documentos.
+            tipo_id = ("RUC" if persona.endswith(("S.A.", "LTDA."))
+                       else random.choice(TIPOS_IDENTIFICACION))
             filas.append({
                 "Institución del Estado": institucion,
                 "Mes": MESES[recepcion.month - 1],
@@ -195,10 +214,8 @@ def generar_filas():
                                                "Correo"]),
                 "Fecha Circular": oficio,
                 "Apellidos, Nombres - Razón Social": persona,
-                "TiPASo Id CED; PAS; RUCUC": ("RUC" if persona.endswith((
-                    "S.A.", "LTDA.")) else random.choice(TIPOS_IDENTIFICACION)),
-                "Identificación Ced; Pas; RUC": str(random.randint(10 ** 9,
-                                                                  10 ** 10 - 1)),
+                "TiPASo Id CED; PAS; RUCUC": tipo_id,
+                "Identificación Ced; Pas; RUC": _identificacion(tipo_id, random),
                 "Referencia - Oficio FGE; Juzgado": referencia_oficio,
                 "Número Expediente Fiscal": "-",
                 "Referencia - Circular Superintendencia Bancos":

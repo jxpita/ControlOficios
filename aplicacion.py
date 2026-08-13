@@ -3296,6 +3296,14 @@ class DialogoCargaMasiva(tk.Toplevel):
             lineas.append(
                 f"Tipo de acción no reconocido: {nombres}. Añádalos al "
                 "catálogo de tipos de acción y vuelva a cargar el archivo.")
+        no_validas = resumen.get("identificaciones_no_validas") or []
+        if no_validas:
+            muestra = ", ".join(no_validas[:5])
+            lineas.append(
+                f"{len(no_validas)} identificación(es) no cumplen su formato "
+                f"(cédula de 10 dígitos, RUC de 13, pasaporte alfanumérico): "
+                f"{muestra}. Esas personas entran sin identificación; puede "
+                "completarla después en el detalle del oficio.")
         if resumen["columnas_ignoradas"]:
             lineas.append(
                 "Columnas de la matriz sin equivalente en la aplicación (se "

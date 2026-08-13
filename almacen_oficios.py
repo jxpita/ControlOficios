@@ -1480,6 +1480,50 @@ def causales_registradas(registros: List[Dict]) -> List[str]:
 # Cada implicado lleva un `id` propio (correlativo dentro del oficio) en vez de
 # identificarse por su posición: así, si alguien elimina uno mientras otra
 # persona edita, no se modifica al que no era.
+# Separadores que se admiten al teclear una identificación y que no forman
+# parte de ella: "1400.349.096" y "1400349096" son el mismo documento.
+_SEPARADORES_IDENTIFICACION = str.maketrans("", "", " .-/")
+
+# Cuántos dígitos tiene cada documento numérico.
+DIGITOS_IDENTIFICACION = {"Cédula": 10, "RUC": 13}
+
+
+def validar_identificacion(tipo_identificacion: str, identificacion: str) -> str:
+    """Comprueba la identificación según su tipo y la devuelve normalizada.
+
+    - **Cédula**: 10 dígitos.
+    - **RUC**: 13 dígitos.
+    - **Pasaporte**: letras y números, sin más restricciones (cada país usa su
+      propio formato).
+
+    Los puntos, guiones y espacios se retiran antes de comprobar: son formas de
+    escribir el mismo documento. Lo que se guarda es el valor ya limpio.
+    """
+    identificacion = "".join(str(identificacion or "").split())
+    if not identificacion:
+        return ""
+    limpia = identificacion.translate(_SEPARADORES_IDENTIFICACION)
+
+    digitos = DIGITOS_IDENTIFICACION.get(tipo_identificacion)
+    if digitos:
+        if not limpia.isdigit():
+            raise ValueError(
+                f"{tipo_identificacion}: «{identificacion}» debe contener solo "
+                f"números."
+            )
+        if len(limpia) != digitos:
+            raise ValueError(
+                f"{tipo_identificacion}: debe tener {digitos} dígitos "
+                f"(se ingresaron {len(limpia)})."
+            )
+    elif tipo_identificacion == "Pasaporte":
+        if not limpia.isalnum():
+            raise ValueError(
+                f"Pasaporte: «{identificacion}» solo admite letras y números."
+            )
+    return limpia
+
+
 def validar_implicado(nombre: str, tipo_identificacion: str = "",
                       identificacion: str = "", tipo_implicado: str = "",
                       lci: str = "No") -> Dict:
@@ -1501,6 +1545,7 @@ def validar_implicado(nombre: str, tipo_identificacion: str = "",
         raise ValueError(
             "Indique el tipo de identificación (cédula, pasaporte o RUC)."
         )
+    identificacion = validar_identificacion(tipo_identificacion, identificacion)
 
     tipo_implicado = " ".join(str(tipo_implicado or "").split())
     if tipo_implicado not in TIPOS_IMPLICADO:

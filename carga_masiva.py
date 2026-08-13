@@ -356,25 +356,41 @@ _TIPOS_IMPLICADO = {
 }
 
 
-def _implicado_de(fila: Dict) -> Optional[Dict]:
+def _implicado_de(fila: Dict, no_validas: Optional[set] = None) -> Optional[Dict]:
     """Construye el implicado de una fila de la matriz, o None si no trae uno.
 
     Lo que no se reconoce no tumba la carga: es un histórico, y perder el
     oficio entero por un «Tipo de Implicado» mal escrito sería peor que
     anotarlo como «Sin identificación». Los valores que no encajen se informan
     en la vista previa para que alguien los revise después.
+
+    Lo mismo vale para la identificación: si no cumple lo que exige su tipo
+    —10 dígitos la cédula, 13 el RUC, letras y números el pasaporte— la
+    persona entra SIN identificación en lugar de rechazar el oficio, y el
+    documento se anota en `no_validas` para poder corregirlo luego.
     """
     nombre = (fila.get("implicado_nombre") or "").strip()
     if len(nombre) < 3:
         return None
     tipo_id = _TIPOS_IDENTIFICACION.get(normalizar(fila.get("implicado_tipo_id")), "")
-    identificacion = (fila.get("implicado_identificacion") or "").strip()
+    # Sin tipo reconocido no se puede guardar la identificación: el alta exige
+    # decir de qué documento se trata.
+    identificacion = (fila.get("implicado_identificacion") or "").strip() \
+        if tipo_id else ""
+    if identificacion:
+        # Import diferido: la regla vive donde se validan los oficios.
+        import almacen_oficios
+        try:
+            identificacion = almacen_oficios.validar_identificacion(
+                tipo_id, identificacion)
+        except ValueError:
+            if no_validas is not None:
+                no_validas.add(f"{tipo_id} {identificacion}")
+            tipo_id, identificacion = "", ""
     return {
         "nombre": nombre,
         "tipo_identificacion": tipo_id,
-        # Sin tipo reconocido no se puede guardar la identificación: el alta
-        # exige decir de qué documento se trata.
-        "identificacion": identificacion if tipo_id else "",
+        "identificacion": identificacion,
         "tipo_implicado": _TIPOS_IMPLICADO.get(
             normalizar(fila.get("implicado_tipo")), "Sin identificación"),
         "lci": "Sí" if normalizar(fila.get("implicado_lci")) in ("si", "s", "x")
@@ -382,7 +398,8 @@ def _implicado_de(fila: Dict) -> Optional[Dict]:
     }
 
 
-def agrupar_por_referencia(filas: List[Dict]) -> List[Dict]:
+def agrupar_por_referencia(filas: List[Dict],
+                           no_validas: Optional[set] = None) -> List[Dict]:
     """Une las filas que comparten Referencia oficio en un solo oficio.
 
     En la matriz cada fila es un investigado, así que un mismo requerimiento
@@ -396,7 +413,7 @@ def agrupar_por_referencia(filas: List[Dict]) -> List[Dict]:
     orden: List[str] = []
     for fila in filas:
         clave = (fila.get("codigo_oficio") or f"__fila_{fila['_fila']}").strip().upper()
-        implicado = _implicado_de(fila)
+        implicado = _implicado_de(fila, no_validas)
         if clave not in agrupados:
             copia = dict(fila)
             copia["cantidad_investigados"] = 1
@@ -548,7 +565,8 @@ def _reconocer_tipo_accion(valor: str, catalogo: List[str]) -> str:
 def preparar(ruta, usuarios: List[Dict]) -> Dict:
     """Deja las filas listas para importar y resume lo que se va a hacer."""
     filas, ignoradas, errores = leer_archivo(ruta)
-    filas = agrupar_por_referencia(filas)
+    identificaciones_no_validas = set()
+    filas = agrupar_por_referencia(filas, identificaciones_no_validas)
     emparejados = emparejar_responsables(filas, usuarios)
 
     # La institución decide la nomenclatura de la Referencia UDC y el tipo de
@@ -590,4 +608,5 @@ def preparar(ruta, usuarios: List[Dict]) -> Dict:
         "puestos_por_asignar": sin_estado_original,
         "instituciones_desconocidas": sorted(instituciones_desconocidas),
         "tipos_accion_desconocidos": sorted(tipos_desconocidos),
+        "identificaciones_no_validas": sorted(identificaciones_no_validas),
     }

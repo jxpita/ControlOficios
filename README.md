@@ -327,13 +327,29 @@ añadirlas, corregirlas y quitarlas. De cada una se anota:
 |---|---|---|
 | Nombre o razón social | **Sí** | Persona natural o empresa |
 | Tipo de identificación | No | Cédula, pasaporte o RUC |
-| Identificación | No | Si se indica, hay que decir de qué tipo es |
+| Identificación | No | Si se indica, hay que decir de qué tipo es, y debe cumplir su formato |
 | Tipo de implicado | **Sí** | Cliente, No cliente, Ex cliente o Sin identificación |
 | LCI | **Sí** | Lista de Control Interno: Sí o No (por defecto, No) |
 
 La identificación es opcional a propósito: hay requerimientos sobre personas de
 las que la institución no aporta documento, que es justamente lo que significa
-el tipo *Sin identificación*.
+el tipo *Sin identificación*. Ahora bien, si se indica, **se valida contra su
+tipo** (`validar_identificacion`):
+
+| Tipo | Formato |
+|---|---|
+| Cédula | 10 dígitos |
+| RUC | 13 dígitos |
+| Pasaporte | letras y números, sin más restricción (cada país usa el suyo) |
+
+Los puntos, guiones, barras y espacios se retiran antes de comprobar y **no se
+guardan**: `1400.349-096` y `1400349096` son el mismo documento, y almacenarlo
+siempre limpio evita que el mismo número figure de dos formas distintas.
+
+En la **carga masiva** la regla se aplica con la misma tolerancia que el resto
+del histórico: una identificación que no cumpla su formato no tumba el oficio,
+sino que esa persona entra **sin identificación** y el documento se enumera en
+la vista previa para poder completarlo después.
 
 **La cantidad de investigados NO se teclea: la cuenta esta lista.** Se
 recalcula sola al añadir o quitar personas, en el momento, y el listado y el
