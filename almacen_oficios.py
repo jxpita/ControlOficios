@@ -303,7 +303,8 @@ def registrar_oficio(codigo_oficio: str, fecha_recepcion: str, fecha_oficio: str
                      actor_rol: str = None,
                      ruta_documento: str = "", fecha_asignacion: str = "",
                      cantidad_investigados="", ruta_respuesta: str = "",
-                     institucion: str = "", tipo_accion: str = "") -> str:
+                     institucion: str = "", tipo_accion: str = "",
+                     implicados: Optional[List[Dict]] = None) -> str:
     """`codigo_oficio` es la **Referencia oficio** (obligatoria).
     `causal_oficio` es opcional.
 
@@ -356,6 +357,18 @@ def registrar_oficio(codigo_oficio: str, fecha_recepcion: str, fecha_oficio: str
     fecha_respuesta = _validar_fecha_respuesta(fecha_respuesta, fecha_recepcion)
     fecha_asignacion = _validar_fecha_asignacion(fecha_asignacion, fecha_recepcion)
     cantidad_investigados = _validar_cantidad_investigados(cantidad_investigados)
+    # Personas investigadas anotadas en el propio alta. Si vienen, son ellas
+    # las que fijan la cantidad de investigados.
+    detalle = []
+    for numero, datos in enumerate(implicados or [], start=1):
+        persona = validar_implicado(
+            datos.get("nombre", ""), datos.get("tipo_identificacion", ""),
+            datos.get("identificacion", ""), datos.get("tipo_implicado", ""),
+            datos.get("lci", "No"))
+        persona["id"] = numero
+        detalle.append(persona)
+    if detalle:
+        cantidad_investigados = str(len(detalle))
     observacion = (observacion or "").strip()
     if estado not in ESTADOS:
         raise ValueError("Estado no válido.")
@@ -405,6 +418,7 @@ def registrar_oficio(codigo_oficio: str, fecha_recepcion: str, fecha_oficio: str
         "fecha_asignacion": fecha_asignacion,
         "fecha_respuesta": fecha_respuesta,
         "cantidad_investigados": cantidad_investigados,
+        "implicados": detalle,
         "id_empleado": id_empleado,
         "empleado": nombre_empleado,
         "estado": estado,
@@ -527,7 +541,7 @@ def _preparar_importado(fila: Dict, registros: List[Dict], referencias: set,
     # detalle de las personas. Si viene, es quien manda sobre la cantidad.
     implicados = []
     for numero, datos in enumerate(fila.get("implicados") or [], start=1):
-        implicado = _validar_implicado(
+        implicado = validar_implicado(
             datos.get("nombre", ""), datos.get("tipo_identificacion", ""),
             datos.get("identificacion", ""), datos.get("tipo_implicado", ""),
             datos.get("lci", "No"))
@@ -1428,9 +1442,9 @@ def causales_registradas(registros: List[Dict]) -> List[str]:
 # Cada implicado lleva un `id` propio (correlativo dentro del oficio) en vez de
 # identificarse por su posición: así, si alguien elimina uno mientras otra
 # persona edita, no se modifica al que no era.
-def _validar_implicado(nombre: str, tipo_identificacion: str,
-                       identificacion: str, tipo_implicado: str,
-                       lci: str) -> Dict:
+def validar_implicado(nombre: str, tipo_identificacion: str = "",
+                      identificacion: str = "", tipo_implicado: str = "",
+                      lci: str = "No") -> Dict:
     """Comprueba y normaliza los datos de un implicado."""
     nombre = " ".join(str(nombre or "").split())
     if len(nombre) < 3:
@@ -1513,8 +1527,8 @@ def agregar_implicado(referencia: str, actor: str, actor_rol: str,
     """Añade una persona investigada al oficio. Devuelve el implicado guardado."""
     registros = _leer_registros()
     registro = _oficio_editable(registros, referencia, actor, actor_rol)
-    implicado = _validar_implicado(nombre, tipo_identificacion, identificacion,
-                                   tipo_implicado, lci)
+    implicado = validar_implicado(nombre, tipo_identificacion, identificacion,
+                                  tipo_implicado, lci)
     implicados = registro.setdefault("implicados", [])
     implicado["id"] = max((int(i.get("id", 0)) for i in implicados), default=0) + 1
     implicados.append(implicado)
@@ -1539,8 +1553,8 @@ def actualizar_implicado(referencia: str, id_implicado: int, actor: str,
     """Corrige los datos de un implicado ya anotado."""
     registros = _leer_registros()
     registro = _oficio_editable(registros, referencia, actor, actor_rol)
-    nuevos = _validar_implicado(nombre, tipo_identificacion, identificacion,
-                                tipo_implicado, lci)
+    nuevos = validar_implicado(nombre, tipo_identificacion, identificacion,
+                               tipo_implicado, lci)
     for implicado in registro.get("implicados") or []:
         if int(implicado.get("id", 0)) == int(id_implicado):
             anterior = implicado.get("nombre", "")

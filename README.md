@@ -242,7 +242,7 @@ el resto son opcionales.
 | Documento del oficio | **Sí \*** | Archivo `.pdf` o `.docx`; se guarda en `datos/documentos/` |
 | Respuesta en PDF | No | Solo hace falta para registrar de entrada un oficio ya finalizado |
 | Observación | No | Texto libre, editable después |
-| Cantidad de investigados | — | **No se teclea**: la cuenta la lista de implicados (ver más abajo) |
+| Personas investigadas | No | Se anotan en el propio formulario; de ellas sale la *Cantidad de investigados*, que no se teclea |
 
 La **Referencia UDC** no se ingresa: la genera el sistema a partir de la
 institución elegida (ver 3.2). El formulario muestra cuál será la próxima en
@@ -335,12 +335,13 @@ recalcula sola al añadir o quitar personas, en el momento, y el listado y el
 panel de *Oficios* la muestran al día. No tendría sentido que el oficio dijera
 «3 investigados» y la lista mostrara cuatro.
 
-Por eso el campo aparece **solo de lectura**:
+Por eso el número no se teclea en ninguna parte:
 
-- en el formulario de *Registrar oficio* se ve el aviso «La calcula la lista de
-  implicados» en vez de una caja de texto; al guardar, la aplicación ofrece
-  abrir el detalle para anotar a las personas en ese momento;
-- en el panel de *Oficios* es una etiqueta con el número, que se refresca en
+- el formulario de *Registrar oficio* trae el recuadro **Personas
+  investigadas**, con su propia lista y su formulario (*Añadir persona* /
+  *Quitar*). Las personas viajan con el alta, así que el oficio nace ya con su
+  detalle y con la cantidad calculada;
+- en el panel de *Oficios* la cantidad es una etiqueta, que se refresca en
   cuanto se cierra el detalle;
 - el almacenamiento **rechaza** un número que contradiga a la lista, venga de
   donde venga la llamada (`_exigir_cantidad_coherente`).

@@ -902,13 +902,6 @@ class AplicacionPrincipal(ttk.Frame):
             datos, 5, "Fecha de oficio *", SelectorFecha(datos), estirar=False)
         self.entrada_fecha_recepcion = self._campo(
             datos, 6, "Fecha de recepción *", SelectorFecha(datos), estirar=False)
-        # La cantidad de investigados NO se teclea: la cuenta la lista de
-        # implicados, que se registra después con doble clic sobre el oficio.
-        self._campo(datos, 7, "Cantidad de investigados",
-                    ttk.Label(datos,
-                              text="La calcula la lista de implicados",
-                              foreground="#6B7280", font=("Helvetica", 9)),
-                    estirar=False)
 
         # --- Columna derecha: asignación y seguimiento -----------------------
         gestion = self._grupo(contenido, "Asignación y seguimiento", 1, 1)
@@ -943,8 +936,11 @@ class AplicacionPrincipal(ttk.Frame):
             gestion, 3, "Fecha de respuesta",
             SelectorFecha(gestion, permitir_vacio=True), estirar=False)
 
+        # --- Personas investigadas (ancho completo) --------------------------
+        self._construir_implicados_registro(contenido, 2)
+
         # --- Documentos (ancho completo) -------------------------------------
-        documentos = self._grupo(contenido, "Documentos", 2, 0, columnspan=2)
+        documentos = self._grupo(contenido, "Documentos", 3, 0, columnspan=2)
         # El documento del oficio es obligatorio: no se registra un oficio sin
         # su soporte digital.
         self.archivo_oficio = self._campo(
@@ -961,7 +957,7 @@ class AplicacionPrincipal(ttk.Frame):
             estirar=False)
 
         # --- Observación (ancho completo y elástica) -------------------------
-        observacion = self._grupo(contenido, "Observación", 3, 0, columnspan=2)
+        observacion = self._grupo(contenido, "Observación", 4, 0, columnspan=2)
         # Aquí no hay columna de etiqueta: la caja ocupa todo el recuadro. Se
         # anula el peso que _grupo() da a la columna 1 para que no se quede con
         # el espacio sobrante.
@@ -973,6 +969,111 @@ class AplicacionPrincipal(ttk.Frame):
                                          highlightbackground="#CBD2DE",
                                          relief="flat")
         self.texto_observacion.grid(row=0, column=0, columnspan=2, sticky="ew")
+
+    def _construir_implicados_registro(self, contenido, fila):
+        """Personas investigadas que se anotan junto con el oficio.
+
+        Se guardan en memoria y viajan con el alta, de modo que el oficio nace
+        ya con su detalle y con la cantidad de investigados calculada.
+        """
+        self.implicados_registro = []
+        grupo = self._grupo(contenido, "Personas investigadas", fila, 0,
+                            columnspan=2)
+        grupo.columnconfigure(0, weight=1)
+        grupo.columnconfigure(1, weight=0)
+
+        columnas = ("nombre", "tipo_id", "identificacion", "implicado", "lci")
+        titulos = ("Nombre o razón social", "Tipo de identificación",
+                   "Identificación", "Tipo de implicado", "LCI")
+        anchos = (240, 120, 120, 130, 50)
+        self.tabla_implicados_registro = ttk.Treeview(
+            grupo, columns=columnas, show="headings", height=4)
+        for columna, titulo, ancho in zip(columnas, titulos, anchos):
+            self.tabla_implicados_registro.heading(columna, text=titulo)
+            self.tabla_implicados_registro.column(
+                columna, width=self._ancho_columna(titulo, ancho),
+                minwidth=self._ancho_columna(titulo, ancho), anchor="w",
+                stretch=columna == "nombre")
+        self.tabla_implicados_registro.grid(row=0, column=0, columnspan=2,
+                                            sticky="ew")
+
+        formulario = ttk.Frame(grupo)
+        formulario.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(8, 0))
+        formulario.columnconfigure(1, weight=1)
+        formulario.columnconfigure(3, weight=1)
+
+        def celda(fila_, columna, etiqueta, widget, columnspan=1, estirar=False):
+            ttk.Label(formulario, text=etiqueta).grid(
+                row=fila_, column=columna, sticky="w",
+                padx=(0 if columna == 0 else 12, 6), pady=3)
+            # Solo el nombre se estira: un desplegable de tres opciones tan
+            # ancho como la ventana se ve raro.
+            widget.grid(row=fila_, column=columna + 1, columnspan=columnspan,
+                        sticky="ew" if estirar else "w", pady=3)
+
+        self.implicado_nombre = ttk.Entry(formulario)
+        celda(0, 0, "Nombre o razón social", self.implicado_nombre,
+              columnspan=3, estirar=True)
+        self.implicado_tipo_id = ttk.Combobox(
+            formulario, state="readonly", width=16,
+            values=[""] + TIPOS_IDENTIFICACION)
+        celda(1, 0, "Tipo de identificación", self.implicado_tipo_id)
+        self.implicado_identificacion = ttk.Entry(formulario, width=20)
+        celda(1, 2, "Identificación", self.implicado_identificacion)
+        self.implicado_tipo = ttk.Combobox(formulario, state="readonly",
+                                           width=20, values=TIPOS_IMPLICADO)
+        celda(2, 0, "Tipo de implicado", self.implicado_tipo)
+        self.implicado_lci = ttk.Combobox(formulario, state="readonly", width=8,
+                                          values=VALORES_LCI)
+        self.implicado_lci.set("No")
+        celda(2, 2, "LCI", self.implicado_lci)
+
+        barra = ttk.Frame(grupo)
+        barra.grid(row=2, column=0, columnspan=2, sticky="w", pady=(8, 0))
+        ttk.Button(barra, text="Añadir persona",
+                   command=self._anadir_implicado_registro).pack(side="left")
+        ttk.Button(barra, text="Quitar",
+                   command=self._quitar_implicado_registro).pack(side="left",
+                                                                 padx=6)
+
+    def _anadir_implicado_registro(self):
+        """Suma una persona a la lista del oficio que se está registrando."""
+        try:
+            implicado = oficios.validar_implicado(
+                self.implicado_nombre.get(), self.implicado_tipo_id.get(),
+                self.implicado_identificacion.get(), self.implicado_tipo.get(),
+                self.implicado_lci.get())
+        except ValueError as error:
+            messagebox.showerror("Error", str(error))
+            return
+        self.implicados_registro.append(implicado)
+        self._refrescar_implicados_registro()
+        self.implicado_nombre.delete(0, "end")
+        self.implicado_identificacion.delete(0, "end")
+        self.implicado_tipo_id.set("")
+        self.implicado_tipo.set("")
+        self.implicado_lci.set("No")
+        self.implicado_nombre.focus_set()
+
+    def _quitar_implicado_registro(self):
+        seleccion = self.tabla_implicados_registro.selection()
+        if not seleccion:
+            messagebox.showwarning("Sin selección",
+                                   "Seleccione una persona de la lista.")
+            return
+        del self.implicados_registro[int(seleccion[0])]
+        self._refrescar_implicados_registro()
+
+    def _refrescar_implicados_registro(self):
+        tabla = self.tabla_implicados_registro
+        tabla.delete(*tabla.get_children())
+        for indice, implicado in enumerate(self.implicados_registro):
+            tabla.insert("", "end", iid=str(indice),
+                         values=(implicado["nombre"],
+                                 implicado["tipo_identificacion"],
+                                 implicado["identificacion"],
+                                 implicado["tipo_implicado"],
+                                 implicado["lci"]))
 
     def _guardar_oficio(self):
         # Solo la referencia del oficio y las fechas de oficio/recepción son
@@ -999,14 +1100,13 @@ class AplicacionPrincipal(ttk.Frame):
                 ruta_respuesta=self.archivo_respuesta_registro.get(),
                 institucion=self.combo_institucion.get(),
                 tipo_accion=self.combo_tipo_accion.get(),
+                implicados=self.implicados_registro,
             )
         except ValueError as error:
             messagebox.showerror("Error", str(error))
             return
-        registrar_implicados = messagebox.askyesno(
-            "Registrado",
-            f"Oficio registrado.\nReferencia UDC: {referencia}\n\n"
-            "¿Desea anotar ahora a las personas investigadas?")
+        messagebox.showinfo("Registrado",
+                            f"Oficio registrado.\nReferencia UDC: {referencia}")
         for entrada in (self.entrada_codigo, self.entrada_causal):
             entrada.delete(0, "end")
         self.entrada_fecha_asignacion.set("")
@@ -1020,12 +1120,9 @@ class AplicacionPrincipal(ttk.Frame):
         if self.combo_empleado is not None:
             self.combo_empleado.current(0)
         self.combo_estado.current(0)
+        self.implicados_registro = []
+        self._refrescar_implicados_registro()
         self._refrescar_listado()
-        if registrar_implicados:
-            registro = self._oficio_por_referencia(referencia)
-            if registro is not None:
-                self.cuaderno.select(self.pestana_listado)
-                DialogoImplicados(self, self.usuario, registro)
 
     # Primera opción de los desplegables de filtro: no filtra por ese campo.
     TODOS = "(Todos)"
@@ -2473,7 +2570,9 @@ class AplicacionPrincipal(ttk.Frame):
         lienzo.update_idletasks()
         ancho_lienzo = lienzo.winfo_width() or 800
         alto_lienzo = 210
-        margen_izq, margen_inf, margen_sup = 30, 30, 26
+        # El margen superior deja sitio al título Y a la cifra que se dibuja
+        # encima de la barra más alta: con menos, se solapan.
+        margen_izq, margen_inf, margen_sup = 30, 30, 38
         valor_max = max([valor for _, valor in serie] + [1])
         cantidad = len(serie)
         ancho_barra = (ancho_lienzo - margen_izq - 10) / cantidad
@@ -2499,7 +2598,7 @@ class AplicacionPrincipal(ttk.Frame):
         lienzo.update_idletasks()
         ancho_lienzo = lienzo.winfo_width() or 800
         alto_lienzo = 210
-        margen_izq, margen_inf, margen_sup = 30, 30, 26
+        margen_izq, margen_inf, margen_sup = 30, 30, 38
         valor_max = max([valor for _, valor in serie] + [1])
         ancho_barra = (ancho_lienzo - margen_izq - 10) / max(len(serie), 1)
         lienzo.create_text(margen_izq, 12, text="Oficios recibidos por mes (6 meses)",
