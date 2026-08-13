@@ -2,6 +2,7 @@ import calendar
 import threading
 import time
 import tkinter as tk
+import tkinter.font as tkfont
 from tkinter import ttk, messagebox, filedialog, simpledialog
 from tkinter import font as tkfont
 from datetime import date, datetime
@@ -408,12 +409,9 @@ class AplicacionPrincipal(ttk.Frame):
         estilo.configure("TEntry", fieldbackground=COLOR_BLANCO, foreground=COLOR_TEXTO)
         estilo.configure("TCombobox", fieldbackground=COLOR_BLANCO, foreground=COLOR_TEXTO)
         estilo.configure("Treeview", background=COLOR_BLANCO, foreground=COLOR_TEXTO, rowheight=25)
-        # `padding` vertical para que quepan DOS líneas: los títulos largos de
-        # la tabla de oficios llevan un salto de línea y, con la altura de una
-        # sola, la segunda quedaría cortada.
         estilo.configure("Treeview.Heading", background=COLOR_AZUL,
                          foreground=COLOR_BLANCO, font=("Helvetica", 10, "bold"),
-                         padding=(4, 4, 4, 16))
+                         padding=(6, 5))
         estilo.map("Treeview.Heading", background=[("active", "#1A2E5A")])
         # Los marcos con título (LabelFrame) deben compartir el fondo blanco de
         # las etiquetas; si no, se ven franjas grises alrededor de los textos.
@@ -794,6 +792,23 @@ class AplicacionPrincipal(ttk.Frame):
         except ValueError:
             self.lbl_proxima_referencia.config(text="")
 
+    @staticmethod
+    def _ancho_columna(titulo, ancho_dato):
+        """Ancho de una columna de tabla: el mayor entre lo que pide el dato y
+        lo que ocupa su encabezado.
+
+        Los encabezados se miden con la fuente real, no a ojo: así el nombre
+        del campo se lee entero en cualquier equipo, con cualquier tamaño de
+        fuente. (Repartir el título en dos líneas no sirve: Tk no dibuja el
+        salto de línea en el encabezado de un Treeview en todas las
+        plataformas, y la segunda línea desaparece.)
+        """
+        try:
+            fuente = tkfont.Font(font=("Helvetica", 10, "bold"))
+            return max(ancho_dato, fuente.measure(titulo) + 22)
+        except tk.TclError:
+            return ancho_dato
+
     def _campo(self, grupo, fila, etiqueta, widget, ayuda=None, estirar=True):
         """Coloca una etiqueta y su campo en una fila del grupo.
 
@@ -805,7 +820,10 @@ class AplicacionPrincipal(ttk.Frame):
         recuadro: en una ventana estrecha se parte en dos líneas en vez de
         empujar al campo fuera de la vista.
         """
-        rotulo = ttk.Label(grupo, text=etiqueta, justify="left")
+        # Espacio duro antes del asterisco: al partir la etiqueta en dos
+        # líneas, el * de "obligatorio" no debe quedarse solo en la segunda.
+        rotulo = ttk.Label(grupo, text=etiqueta.replace(" *", "\u00a0*"),
+                           justify="left")
         rotulo.grid(row=fila, column=0, sticky="w", padx=(0, 8), pady=4)
         self._etiquetas_campo.append(rotulo)
         # El aviso de cambio de tamaño tiene que venir del propio recuadro: la
@@ -884,7 +902,7 @@ class AplicacionPrincipal(ttk.Frame):
             datos, 6, "Fecha de recepción *", SelectorFecha(datos), estirar=False)
         # La cantidad de investigados describe al oficio, no a su asignación.
         self.entrada_investigados = self._campo(
-            datos, 7, "Cant. investigados", ttk.Entry(datos, width=10),
+            datos, 7, "Cantidad de investigados", ttk.Entry(datos, width=10),
             estirar=False)
 
         # --- Columna derecha: asignación y seguimiento -----------------------
@@ -1001,6 +1019,9 @@ class AplicacionPrincipal(ttk.Frame):
 
     # Primera opción de los desplegables de filtro: no filtra por ese campo.
     TODOS = "(Todos)"
+
+    # Ancho máximo de la etiqueta de un campo antes de partirla en dos líneas.
+    ANCHO_MAXIMO_ETIQUETA = 140
 
     def _construir_filtros(self, marco):
         """Panel de búsqueda. Tres bloques que se acumulan entre sí:
@@ -1184,17 +1205,19 @@ class AplicacionPrincipal(ttk.Frame):
         columnas = ("referencia", "institucion", "codigo", "accion", "causal",
                     "oficio", "recepcion", "asignacion", "respuesta",
                     "investigados", "empleado", "estado", "pdf", "observacion")
-        # Los títulos largos van en dos líneas (ver el `padding` del estilo
-        # "Treeview.Heading"), para que la columna la fije el ancho del DATO y
-        # no el del encabezado.
-        titulos = ("Referencia\nUDC", "Institución del\nEstado",
-                   "Referencia\noficio", "Tipo de\nacción",
-                   "Causal\noficio", "F. oficio", "F. recepción",
-                   "F.\nasignación", "F.\nrespuesta", "Cant.\ninvestigados",
+        # Los encabezados van con la palabra completa, sin abreviar. El ancho de
+        # cada columna es el mayor entre lo que necesita el DATO y lo que mide
+        # su título, así que el nombre del campo siempre se lee entero (ver
+        # `_ancho_columna`).
+        titulos = ("Referencia UDC", "Institución del Estado",
+                   "Referencia oficio", "Tipo de acción",
+                   "Causal oficio", "Fecha de oficio", "Fecha de recepción",
+                   "Fecha de asignación", "Fecha de respuesta",
+                   "Cantidad de investigados",
                    "Responsable", "Estado", "PDF", "Observación")
-        # Referencia UDC e Institución con ancho suficiente para verse completas
-        # (p. ej. "REQ-UDC-FGE-2026-0001", "Superintendencia de Bancos").
-        anchos = (190, 215, 150, 120, 150, 90, 95, 90, 90, 110, 110, 90, 40, 200)
+        # Ancho que pide el DATO (p. ej. "REQ-UDC-FGE-2026-0001" o
+        # "Superintendencia de Bancos"); si el título es más largo, manda él.
+        anchos = (190, 215, 150, 120, 150, 90, 95, 90, 90, 60, 110, 90, 40, 200)
         contenedor = ttk.Frame(marco)
         # Altura fija (no expand): dentro de un área desplazable la tabla debe
         # tener alto propio para que el panel inferior siga siendo alcanzable.
@@ -1202,7 +1225,9 @@ class AplicacionPrincipal(ttk.Frame):
         self.tabla = ttk.Treeview(contenedor, columns=columnas, show="headings", height=10)
         for columna, titulo, ancho in zip(columnas, titulos, anchos):
             self.tabla.heading(columna, text=titulo)
-            self.tabla.column(columna, width=ancho, minwidth=ancho, anchor="w", stretch=False)
+            ancho = self._ancho_columna(titulo, ancho)
+            self.tabla.column(columna, width=ancho, minwidth=ancho, anchor="w",
+                              stretch=False)
         self.tabla.column("observacion", stretch=True)
         barra_v = ttk.Scrollbar(contenedor, orient="vertical", command=self.tabla.yview)
         barra_h = ttk.Scrollbar(contenedor, orient="horizontal", command=self.tabla.xview)
@@ -1227,17 +1252,17 @@ class AplicacionPrincipal(ttk.Frame):
         if es_gestor:
             # La fecha de asignación acompaña al responsable, así que solo la
             # manejan quienes pueden reasignar.
-            ttk.Label(fila, text="F. asignación").pack(side="left")
+            ttk.Label(fila, text="Fecha de asignación").pack(side="left")
             self.edicion_fecha_asignacion = SelectorFecha(fila, permitir_vacio=True)
             self.edicion_fecha_asignacion.pack(side="left", padx=(6, 16))
         else:
             self.edicion_fecha_asignacion = None
 
-        ttk.Label(fila, text="F. respuesta").pack(side="left")
+        ttk.Label(fila, text="Fecha de respuesta").pack(side="left")
         self.edicion_fecha_respuesta = SelectorFecha(fila, permitir_vacio=True)
         self.edicion_fecha_respuesta.pack(side="left", padx=(6, 16))
 
-        ttk.Label(fila, text="Cant. investigados").pack(side="left")
+        ttk.Label(fila, text="Cantidad de investigados").pack(side="left")
         self.edicion_cantidad = ttk.Entry(fila, width=6)
         self.edicion_cantidad.pack(side="left", padx=(6, 16))
 
@@ -2025,15 +2050,16 @@ class AplicacionPrincipal(ttk.Frame):
     def _ajustar_etiquetas_campo(self, evento=None):
         """Ancho de corte de las etiquetas de los formularios.
 
-        El corte se fija en el 45 % del recuadro que las contiene, de modo que
-        la columna de etiquetas nunca se coma la del campo: con la ventana
-        ancha ninguna se parte, y al estrechar (o con una fuente grande) las
-        largas —«Institución del Estado», «Confirmar contraseña»— pasan a dos
-        líneas en vez de empujar al campo fuera de la vista.
+        El corte es el 45 % del recuadro que las contiene, con un TOPE de
+        `ANCHO_MAXIMO_ETIQUETA`: la columna de etiquetas nunca se come la del
+        campo y las etiquetas largas —«Institución del Estado», «Confirmar
+        contraseña»— se reparten en dos líneas también con la ventana ancha,
+        que es donde antes se estiraban a lo largo.
         """
         for etiqueta in self._etiquetas_campo:
             try:
-                ancho = max(90, int(etiqueta.master.winfo_width() * 0.45) - 16)
+                ancho = min(self.ANCHO_MAXIMO_ETIQUETA,
+                            max(90, int(etiqueta.master.winfo_width() * 0.45) - 16))
                 if str(etiqueta.cget("wraplength")).strip() != str(ancho):
                     etiqueta.config(wraplength=ancho)
             except tk.TclError:
@@ -2748,8 +2774,9 @@ class DialogoImplicados(tk.Toplevel):
     de arriba muestra a los implicados y el formulario de abajo sirve tanto
     para añadir uno nuevo como para modificar el que esté seleccionado.
 
-    Mientras el oficio tenga implicados anotados, la *Cant. investigados* la
-    cuenta esta lista: no tendría sentido que dijeran cosas distintas.
+    Mientras el oficio tenga implicados anotados, la *Cantidad de
+    investigados* la cuenta esta lista: no tendría sentido que dijeran cosas
+    distintas.
     """
 
     def __init__(self, aplicacion, usuario, registro):
@@ -2799,13 +2826,14 @@ class DialogoImplicados(tk.Toplevel):
         lista.rowconfigure(0, weight=1)
 
         columnas = ("nombre", "tipo_id", "identificacion", "implicado", "lci")
-        titulos = ("Nombre o razón social", "Tipo de\nidentificación",
-                   "Identificación", "Tipo de\nimplicado", "LCI")
+        titulos = ("Nombre o razón social", "Tipo de identificación",
+                   "Identificación", "Tipo de implicado", "LCI")
         anchos = (250, 120, 120, 130, 50)
         self.tabla = ttk.Treeview(lista, columns=columnas, show="headings",
                                   height=8)
         for columna, titulo, ancho in zip(columnas, titulos, anchos):
             self.tabla.heading(columna, text=titulo)
+            ancho = AplicacionPrincipal._ancho_columna(titulo, ancho)
             self.tabla.column(columna, width=ancho, minwidth=ancho, anchor="w",
                               stretch=columna == "nombre")
         barra = ttk.Scrollbar(lista, orient="vertical", command=self.tabla.yview)
@@ -2894,8 +2922,8 @@ class DialogoImplicados(tk.Toplevel):
                                       implicado.get("tipo_implicado", ""),
                                       implicado.get("lci", "")))
         self.lbl_total.config(
-            text=f"{len(implicados)} implicado(s) · la Cant. investigados del "
-                 f"oficio sigue a esta lista" if implicados
+            text=f"{len(implicados)} implicado(s) · la cantidad de "
+                 f"investigados del oficio sigue a esta lista" if implicados
                  else "Sin implicados anotados")
         if seleccion is not None and self.tabla.exists(str(seleccion)):
             self.tabla.selection_set(str(seleccion))
@@ -3025,7 +3053,8 @@ class DialogoCargaMasiva(tk.Toplevel):
                     "asignacion", "respuesta", "investigados", "responsable",
                     "estado")
         titulos = ("Institución", "Referencia oficio", "Tipo de acción",
-                   "F. oficio", "F. recepción", "F. asignación", "F. respuesta",
+                   "Fecha de oficio", "Fecha de recepción",
+                   "Fecha de asignación", "Fecha de respuesta",
                    "Investigados", "Responsable", "Estado")
         tabla = ttk.Treeview(contenedor, columns=columnas, show="headings",
                              height=12)

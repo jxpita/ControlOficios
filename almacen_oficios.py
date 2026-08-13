@@ -676,13 +676,13 @@ def actualizar_oficio(referencia: str, nuevo_estado: str, id_empleado: str,
                 if nueva_asignacion != registro.get("fecha_asignacion", ""):
                     registro["fecha_asignacion"] = nueva_asignacion
                     cambios.append(
-                        f"F. asignación: {nueva_asignacion or '(sin fecha)'}")
+                        f"Fecha de asignación: {nueva_asignacion or '(sin fecha)'}")
             if cantidad_investigados is not None:
                 nueva_cantidad = _validar_cantidad_investigados(cantidad_investigados)
                 if nueva_cantidad != registro.get("cantidad_investigados", ""):
                     registro["cantidad_investigados"] = nueva_cantidad
                     cambios.append(
-                        f"Cant. investigados: {nueva_cantidad or '(sin dato)'}")
+                        f"Cantidad de investigados: {nueva_cantidad or '(sin dato)'}")
             if tipo_accion is not None:
                 nuevo_tipo = _validar_tipo_accion(tipo_accion)
                 if nuevo_tipo != registro.get("tipo_accion", ""):
@@ -691,7 +691,7 @@ def actualizar_oficio(referencia: str, nuevo_estado: str, id_empleado: str,
             if fecha_respuesta is not None:
                 if nueva_fecha != registro.get("fecha_respuesta", ""):
                     registro["fecha_respuesta"] = nueva_fecha
-                    cambios.append(f"F. respuesta: {nueva_fecha or '(sin fecha)'}")
+                    cambios.append(f"Fecha de respuesta: {nueva_fecha or '(sin fecha)'}")
             if observacion is not None:
                 nueva_obs = observacion.strip()
                 if nueva_obs != registro.get("observacion", ""):
@@ -769,7 +769,7 @@ def actualizar_estado_asignado(referencia: str, actor: str, nuevo_estado: str,
                 if nueva_cantidad != registro.get("cantidad_investigados", ""):
                     registro["cantidad_investigados"] = nueva_cantidad
                     cambios.append(
-                        f"Cant. investigados: {nueva_cantidad or '(sin dato)'}")
+                        f"Cantidad de investigados: {nueva_cantidad or '(sin dato)'}")
             if tipo_accion is not None:
                 nuevo_tipo = _validar_tipo_accion(tipo_accion)
                 if nuevo_tipo != registro.get("tipo_accion", ""):
@@ -778,7 +778,7 @@ def actualizar_estado_asignado(referencia: str, actor: str, nuevo_estado: str,
             if fecha_respuesta is not None:
                 if nueva_fecha != registro.get("fecha_respuesta", ""):
                     registro["fecha_respuesta"] = nueva_fecha
-                    cambios.append(f"F. respuesta: {nueva_fecha or '(sin fecha)'}")
+                    cambios.append(f"Fecha de respuesta: {nueva_fecha or '(sin fecha)'}")
             if observacion is not None:
                 nueva_obs = observacion.strip()
                 if nueva_obs != registro.get("observacion", ""):
@@ -865,8 +865,8 @@ def corregir_oficio(referencia: str, actor: str, actor_rol: str,
 
         etiquetas = {"codigo_oficio": "Referencia oficio",
                      "causal_oficio": "Causal oficio",
-                     "fecha_oficio": "F. oficio",
-                     "fecha_recepcion": "F. recepción"}
+                     "fecha_oficio": "Fecha de oficio",
+                     "fecha_recepcion": "Fecha de recepción"}
         cambios = []
         for campo in CAMPOS_MANTENIMIENTO:
             valor = (nuevo[campo] or "").strip()
@@ -1111,11 +1111,11 @@ COLUMNAS_EXPORTACION = {
     "codigo_oficio": "Referencia oficio",
     "tipo_accion": "Tipo de acción",
     "causal_oficio": "Causal oficio",
-    "fecha_oficio": "F. oficio",
-    "fecha_recepcion": "F. recepción",
-    "fecha_asignacion": "F. asignación",
-    "fecha_respuesta": "F. respuesta",
-    "cantidad_investigados": "Cant. investigados",
+    "fecha_oficio": "Fecha de oficio",
+    "fecha_recepcion": "Fecha de recepción",
+    "fecha_asignacion": "Fecha de asignación",
+    "fecha_respuesta": "Fecha de respuesta",
+    "cantidad_investigados": "Cantidad de investigados",
     "id_empleado": "Usuario responsable",
     "empleado": "Responsable",
     "estado": "Estado",

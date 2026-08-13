@@ -93,7 +93,7 @@ completas.
 |---|---|
 | **Ingreso** | La tarjeta se queda en `ANCHO_TARJETA_INGRESO` (430 px) y se centra. Un formulario de una sola columna estirado de lado a lado de un monitor es incómodo de leer |
 | **Registrar oficio** | Dos columnas que se reparten el ancho; el botón *Registrar* va anclado abajo, fuera del área desplazable, así que nunca queda fuera de la vista |
-| **Oficios** | La tabla **crece con la ventana** (`_ajustar_alto_tabla`): al maximizar se ven muchas más filas. La columna *Observación* absorbe el ancho sobrante. Los títulos largos van **en dos líneas**, para que la columna la fije el ancho del dato y no el del encabezado (el estilo `Treeview.Heading` lleva el `padding` vertical necesario) |
+| **Oficios** | La tabla **crece con la ventana** (`_ajustar_alto_tabla`): al maximizar se ven muchas más filas. La columna *Observación* absorbe el ancho sobrante |
 | **Usuarios** | El formulario mantiene su ancho a la izquierda y la lista se queda con todo el espacio restante, a lo ancho y a lo alto |
 | **Cabecera** | El título se acorta cuando no cabe, para no solaparse con el nombre del banco |
 
@@ -101,15 +101,27 @@ Dentro de un área desplazable una tabla no puede "expandirse" sola, porque el
 lienzo mide el contenido y no al revés. Por eso en *Oficios* se calcula cuántas
 filas caben entre el panel de filtros y el de edición y se le fija ese alto.
 
+### Etiquetas y encabezados
+
 Las **etiquetas de los campos** de los formularios (`_campo`) llevan un ancho de
-corte que sigue al de su recuadro: el 45 % de este, para que la columna de
-etiquetas nunca se coma la del campo. Con la ventana ancha ninguna se parte; al
-estrecharla —o en un equipo con una fuente grande o DPI alto— las largas
-(«Institución del Estado», «Confirmar contraseña») pasan a dos líneas en vez de
-quedar cortadas o empujar el campo fuera de la vista. El ajuste se dispara con
-el `<Configure>` de **cada recuadro**, no con el de la ventana: la ventana deja
-de redimensionarse antes que sus hijos, y atender solo a la ventana dejaría
-anchos de corte antiguos.
+corte igual al 45 % de su recuadro, **con un tope de `ANCHO_MAXIMO_ETIQUETA`**
+(140 px). Así la columna de etiquetas nunca se come la del campo y las largas
+—«Institución del Estado», «Cantidad de investigados», «Confirmar contraseña»—
+se reparten en dos líneas también con la ventana ancha, que es donde antes se
+estiraban a lo largo. El asterisco de *obligatorio* va precedido de un espacio
+duro para que no se quede solo en la segunda línea. El ajuste se dispara con el
+`<Configure>` de **cada recuadro**, no con el de la ventana: la ventana deja de
+redimensionarse antes que sus hijos, y atender solo a la ventana dejaría anchos
+de corte antiguos.
+
+Los **encabezados de las tablas** siguen otro camino: llevan la palabra
+completa, sin abreviar, **en una sola línea**, y el ancho de cada columna es el
+mayor entre lo que pide el dato y lo que **mide** su título con la fuente real
+(`_ancho_columna`). Repartir el título en dos líneas no sirve: Tk **no dibuja el
+salto de línea** en el encabezado de un `Treeview` en todas las plataformas, y
+donde no lo hace la segunda línea desaparece, dejando encabezados como «F.» o
+«Cant.». Medir es lo único que se comporta igual en cualquier equipo, con
+cualquier tamaño de fuente.
 
 En *Usuarios*, el mismo formulario sirve para **crear** y para **editar**: al
 pulsar *Editar* se carga la cuenta seleccionada y el botón principal pasa a
