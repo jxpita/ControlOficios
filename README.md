@@ -574,17 +574,35 @@ referencia ya existente (sin distinguir mayúsculas/minúsculas ni espacios).
 
 ## 3.3 Búsqueda de oficios
 
-La pestaña *Oficios* incluye un panel **Buscar oficios** con dos filtros
-combinables:
+La pestaña *Oficios* incluye un panel **Buscar oficios** con tres bloques de
+filtros, que se **acumulan** entre sí (Y lógico):
 
 - **Por texto**, eligiendo el campo: Referencia UDC, Institución del Estado,
   Referencia oficio, Tipo de acción o Causal oficio. La coincidencia es
   **parcial** y no distingue mayúsculas/minúsculas.
+- **Por valor exacto**, en desplegables: **Tipo de acción**, **Causal**,
+  **Estado** y —solo para administradores y superusuario— **Responsable**. A un
+  usuario regular el filtro de responsable no se le muestra: solo ve sus
+  propios oficios, así que no le aportaría nada.
 - **Por fecha**, eligiendo el tipo (fecha de oficio, de recepción o de
   respuesta) y un rango *desde* / *hasta*. Ambos extremos aplican **siempre al
   mismo tipo de fecha**, por lo que no es posible mezclar (p. ej. desde = fecha
   de oficio y hasta = fecha de recepción). Si se deja *hasta* vacío, se busca
   por esa **fecha única**.
+
+Sobre los desplegables:
+
+- El de **Tipo de acción** se arma con el catálogo (ver 3.4) y el de **Estado**
+  con los tres estados del sistema.
+- El de **Causal** se arma con los causales **realmente registrados**
+  (`causales_registradas`), porque es un campo de texto libre y un catálogo
+  fijo se quedaría corto. Se refresca con cada listado.
+- El de **Responsable** incluye a **todas** las cuentas y la opción
+  *(Sin responsable)*. Aquí no rige la restricción de asignación: un
+  administrador no puede *asignar* oficios a un superusuario, pero sí puede
+  *verlos*, así que también puede filtrarlos.
+- Elegir un valor filtra al instante; *(Todos)* deja de filtrar por ese campo y
+  **Limpiar filtros** los suelta todos.
 
 El panel indica cuántos oficios se están mostrando del total, y "Limpiar
 filtros" restablece la lista completa.

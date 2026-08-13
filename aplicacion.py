@@ -963,10 +963,17 @@ class AplicacionPrincipal(ttk.Frame):
         self.combo_estado.current(0)
         self._refrescar_listado()
 
+    # Primera opción de los desplegables de filtro: no filtra por ese campo.
+    TODOS = "(Todos)"
+
     def _construir_filtros(self, marco):
-        """Panel de búsqueda: por texto (Referencia UDC / Institución /
-        Referencia oficio / Tipo de acción / Causal) y por fecha única o rango
-        de un mismo tipo."""
+        """Panel de búsqueda. Tres bloques que se acumulan entre sí:
+
+        - por texto, sobre uno de los campos de `CAMPOS_BUSQUEDA`;
+        - por tipo de acción, causal, estado y —solo para gestores—
+          responsable, eligiendo de un desplegable;
+        - por fecha única o rango de un mismo tipo.
+        """
         panel = ttk.LabelFrame(marco, text=" Buscar oficios ", padding=(8, 4))
         panel.pack(fill="x", pady=(0, 4))
 
@@ -983,7 +990,40 @@ class AplicacionPrincipal(ttk.Frame):
         self.entrada_busqueda.pack(side="left", padx=(0, 6))
         self.entrada_busqueda.bind("<Return>", lambda e: self._refrescar_listado())
 
-        # Fila 2: filtro por fecha (un solo tipo para ambos extremos).
+        # Fila 2: filtros de valor exacto, elegidos de un desplegable.
+        #
+        # Van en `grid` y no en `pack` a propósito: con el peso repartido entre
+        # las columnas de los desplegables, al estrechar la ventana encogen
+        # todos un poco en vez de quedar el último cortado.
+        filtros = ttk.Frame(panel)
+        filtros.pack(fill="x", pady=(4, 0))
+
+        def desplegable(columna, etiqueta, valores=None):
+            ttk.Label(filtros, text=etiqueta).grid(
+                row=0, column=columna, sticky="w",
+                padx=(0 if columna == 0 else 10, 4))
+            combo = ttk.Combobox(filtros, width=14, state="readonly",
+                                 values=valores or [])
+            combo.grid(row=0, column=columna + 1, sticky="ew")
+            filtros.columnconfigure(columna + 1, weight=1)
+            combo.bind("<<ComboboxSelected>>",
+                       lambda e: self._refrescar_listado())
+            return combo
+
+        self.combo_filtro_accion = desplegable(0, "Tipo de acción")
+        self.combo_filtro_causal = desplegable(2, "Causal")
+        self.combo_filtro_estado = desplegable(4, "Estado",
+                                               [self.TODOS] + list(ESTADOS))
+        self.combo_filtro_estado.current(0)
+        if self._puede_gestionar_usuarios():
+            # Un usuario regular solo ve sus propios oficios, así que filtrar
+            # por responsable no le aportaría nada.
+            self.combo_filtro_responsable = desplegable(6, "Responsable")
+        else:
+            self.combo_filtro_responsable = None
+        self._refrescar_desplegables_filtro()
+
+        # Fila 3: filtro por fecha (un solo tipo para ambos extremos).
         fila2 = ttk.Frame(panel)
         fila2.pack(fill="x", pady=(4, 0))
         ttk.Label(fila2, text="Fecha").pack(side="left")
@@ -1024,12 +1064,55 @@ class AplicacionPrincipal(ttk.Frame):
         self.lbl_resultados.pack(side="right")
         return panel
 
+    def _refrescar_desplegables_filtro(self, registros=None):
+        """Repuebla los desplegables de filtro conservando lo elegido.
+
+        El tipo de acción sale del catálogo y el causal de lo que realmente
+        haya registrado, que es texto libre. El responsable incluye a todos los
+        usuarios: aquí no rige la restricción de asignación, porque un
+        administrador sí puede *ver* los oficios de un superusuario.
+        """
+        def repoblar(combo, valores, todos):
+            if combo is None:
+                return
+            elegido = combo.get()
+            combo.config(values=[todos] + valores)
+            combo.set(elegido if elegido in valores else todos)
+
+        repoblar(self.combo_filtro_accion, self._tipos_accion(), self.TODOS)
+        if registros is None:
+            try:
+                registros = oficios.listar_oficios_visibles(
+                    self.usuario["usuario"], self.usuario.get("rol"))
+            except Exception:
+                registros = []
+        repoblar(self.combo_filtro_causal,
+                 oficios.causales_registradas(registros), "(Todas)")
+        if self.combo_filtro_responsable is not None:
+            repoblar(self.combo_filtro_responsable,
+                     [self.SIN_RESPONSABLE] +
+                     [self._display_responsable(u["usuario"], u["nombre"])
+                      for u in self._usuarios_sistema()],
+                     self.TODOS)
+
+    def _valor_filtro(self, combo):
+        """Valor elegido en un desplegable de filtro, o '' si es "(Todos)"."""
+        if combo is None:
+            return ""
+        valor = combo.get()
+        return "" if valor in (self.TODOS, "(Todas)", "") else valor
+
     def _limpiar_filtros(self):
         self.entrada_busqueda.delete(0, "end")
         self.combo_campo_busqueda.current(0)
         self.combo_campo_fecha.current(0)
         self.filtro_fecha_desde.set("")
         self.filtro_fecha_hasta.set("")
+        self.combo_filtro_accion.set(self.TODOS)
+        self.combo_filtro_causal.set("(Todas)")
+        self.combo_filtro_estado.set(self.TODOS)
+        if self.combo_filtro_responsable is not None:
+            self.combo_filtro_responsable.set(self.TODOS)
         self._refrescar_listado()
 
     def _clave_por_etiqueta(self, mapa, etiqueta):
@@ -1208,6 +1291,13 @@ class AplicacionPrincipal(ttk.Frame):
             total_visibles = len(registros)
             # Filtros de búsqueda (si el panel ya está construido).
             if hasattr(self, "entrada_busqueda"):
+                # Los desplegables se repueblan con lo que hay a la vista: el
+                # causal es texto libre y cambia según lo registrado.
+                self._refrescar_desplegables_filtro(registros)
+                responsable = self._valor_filtro(self.combo_filtro_responsable)
+                sin_responsable = responsable == self.SIN_RESPONSABLE
+                id_responsable = "" if sin_responsable else \
+                    self._responsable_por_display(responsable)[0]
                 registros = oficios.filtrar_oficios(
                     registros,
                     self._clave_por_etiqueta(oficios.CAMPOS_BUSQUEDA,
@@ -1216,7 +1306,12 @@ class AplicacionPrincipal(ttk.Frame):
                     self._clave_por_etiqueta(oficios.CAMPOS_FECHA,
                                              self.combo_campo_fecha.get()),
                     self.filtro_fecha_desde.get(),
-                    self.filtro_fecha_hasta.get())
+                    self.filtro_fecha_hasta.get(),
+                    tipo_accion=self._valor_filtro(self.combo_filtro_accion),
+                    causal=self._valor_filtro(self.combo_filtro_causal),
+                    estado=self._valor_filtro(self.combo_filtro_estado),
+                    id_empleado=id_responsable,
+                    solo_sin_responsable=sin_responsable)
             for registro in registros:
                 observacion = " ".join(registro.get("observacion", "").split())
                 if len(observacion) > 60:

@@ -1230,8 +1230,11 @@ def exportar_oficios(registros: List[Dict], ruta_destino: str,
 
 
 def filtrar_oficios(registros: List[Dict], campo_texto: str = "", texto: str = "",
-                    campo_fecha: str = "", desde: str = "", hasta: str = "") -> List[Dict]:
-    """Filtra una lista de oficios.
+                    campo_fecha: str = "", desde: str = "", hasta: str = "",
+                    tipo_accion: str = "", causal: str = "", estado: str = "",
+                    id_empleado: str = "",
+                    solo_sin_responsable: bool = False) -> List[Dict]:
+    """Filtra una lista de oficios. Todos los filtros se acumulan (Y lógico).
 
     - `campo_texto` + `texto`: coincidencia parcial, sin distinguir
       mayúsculas/minúsculas, sobre uno de los campos de `CAMPOS_BUSQUEDA`.
@@ -1240,6 +1243,11 @@ def filtrar_oficios(registros: List[Dict], campo_texto: str = "", texto: str = "
       lo que no es posible mezclar tipos de fecha. Si solo se indica `desde`,
       se busca esa **fecha única**; si solo se indica `hasta`, todo lo anterior
       o igual a esa fecha.
+    - `tipo_accion`, `causal` y `estado`: coincidencia **exacta**, porque se
+      eligen de un desplegable con los valores que existen.
+    - `id_empleado`: oficios de ese responsable. `solo_sin_responsable` los
+      deja en los que aún no tienen a nadie a cargo; las dos cosas no se
+      combinan (manda `solo_sin_responsable`).
 
     Los oficios sin la fecha indicada (por ejemplo sin fecha de respuesta) no
     aparecen cuando se filtra por ese campo.
@@ -1282,4 +1290,39 @@ def filtrar_oficios(registros: List[Dict], campo_texto: str = "", texto: str = "
             filtrados.append(registro)
         resultado = filtrados
 
+    tipo_accion = (tipo_accion or "").strip()
+    if tipo_accion:
+        resultado = [r for r in resultado
+                     if (r.get("tipo_accion", "") or "") == tipo_accion]
+
+    causal = (causal or "").strip()
+    if causal:
+        resultado = [r for r in resultado
+                     if (r.get("causal_oficio", "") or "") == causal]
+
+    estado = (estado or "").strip()
+    if estado:
+        if estado not in ESTADOS:
+            raise ValueError(f"El estado «{estado}» no es válido.")
+        resultado = [r for r in resultado if r.get("estado", "") == estado]
+
+    if solo_sin_responsable:
+        resultado = [r for r in resultado if not (r.get("id_empleado") or "").strip()]
+    elif (id_empleado or "").strip():
+        objetivo = id_empleado.strip().casefold()
+        resultado = [r for r in resultado
+                     if (r.get("id_empleado", "") or "").casefold() == objetivo]
+
     return resultado
+
+
+def causales_registradas(registros: List[Dict]) -> List[str]:
+    """Causales distintas presentes en esos oficios, en orden alfabético.
+
+    El causal es texto libre, así que el desplegable del filtro se arma con lo
+    que realmente hay registrado en vez de con un catálogo fijo.
+    """
+    return sorted({(r.get("causal_oficio", "") or "").strip()
+                   for r in registros
+                   if (r.get("causal_oficio", "") or "").strip()},
+                  key=str.casefold)
