@@ -151,6 +151,11 @@ INSTITUCIONES = {
     "Fiscalía General del Estado": "FGE",
 }
 
+# Prioridad con la que se atiende un oficio. El orden es el de los
+# desplegables, de menor a mayor urgencia.
+PRIORIDADES = ["Baja", "Media", "Alta"]
+PRIORIDAD_POR_DEFECTO = "Media"
+
 # Tipos de acción que se piden en un oficio. Es el catálogo de partida: se
 # puede mantener desde la pestaña Configuración (ver `tipos_accion.py`).
 TIPOS_ACCION_INICIALES = [

@@ -239,6 +239,7 @@ el resto son opcionales.
 | Fecha de respuesta | No | No puede ser anterior a la de recepción. **Si se indica, el oficio pasa a "Finalizado"** y exige responsable |
 | Usuario responsable | No | Sin responsable ⇒ "Por asignar" |
 | Estado | **Sí \*** | |
+| Prioridad | No | Baja, Media o Alta. Por defecto **Media**. Se ve y se filtra en *Oficios*, y se puede cambiar después desde su panel |
 | Documento del oficio | **Sí \*** | Archivo `.pdf` o `.docx`; se guarda en `datos/documentos/` |
 | Respuesta en PDF | No | Solo hace falta para registrar de entrada un oficio ya finalizado |
 | Observación | No | Texto libre, editable después |
@@ -257,11 +258,11 @@ del campo, y se ajusta para no salirse de la pantalla.
 
 **Qué puede modificar cada rol** en la pestaña *Oficios*:
 
-| | F. asignación | F. respuesta | Implicados | Responsable | Estado | Observación |
-|---|---|---|---|---|---|---|
-| Superusuario | ✅ | ✅ | ✅ | ✅ (cualquiera) | ✅ (cualquiera) | ✅ |
-| Administrador | ✅ | ✅ | ✅ | ✅ (salvo superusuarios) | ✅ (cualquiera) | ✅ |
-| Usuario (en sus oficios) | ❌ | ✅ | ✅ (en los suyos) | ❌ | ✅ (En proceso ↔ Finalizado) | ✅ |
+| | F. asignación | F. respuesta | Implicados | Prioridad | Responsable | Estado | Observación |
+|---|---|---|---|---|---|---|---|
+| Superusuario | ✅ | ✅ | ✅ | ✅ | ✅ (cualquiera) | ✅ (cualquiera) | ✅ |
+| Administrador | ✅ | ✅ | ✅ | ✅ | ✅ (salvo superusuarios) | ✅ (cualquiera) | ✅ |
+| Usuario (en sus oficios) | ❌ | ✅ | ✅ (en los suyos) | ✅ | ❌ | ✅ (En proceso ↔ Finalizado) | ✅ |
 
 La *cantidad de investigados* no aparece en esa tabla porque **nadie la
 escribe**: la cuenta la lista de implicados.
@@ -422,6 +423,7 @@ corresponda a la institución de cada fila.
 | Columna de la matriz | Campo del oficio |
 |---|---|
 | Institución del Estado | `institucion` (fija la sigla de la Referencia UDC) |
+| Prioridad | `prioridad` |
 | Apellidos, Nombres - Razón Social · TiPASo Id · Identificación · Tipo de Implicado · LCI | `implicados` (uno por fila del mismo oficio) |
 | Referencia - Oficio FGE; Juzgado, Tribunal | `codigo_oficio` (Referencia oficio) |
 | Tipo de Accion | `tipo_accion` |
@@ -683,8 +685,8 @@ filtros, que se **acumulan** entre sí (Y lógico):
   Referencia oficio, Tipo de acción o Causal oficio. La coincidencia es
   **parcial** y no distingue mayúsculas/minúsculas.
 - **Por valor exacto**, en desplegables: **Institución del Estado**, **Tipo de
-  acción**, **Causal**, **Estado** y —solo para administradores y
-  superusuario— **Responsable**. A un usuario regular el filtro de responsable
+  acción**, **Causal**, **Estado**, **Prioridad** y —solo para administradores
+  y superusuario— **Responsable**. A un usuario regular el filtro de responsable
   no se le muestra: solo ve sus propios oficios, así que no le aportaría nada.
 - **Por fecha**, eligiendo el tipo (fecha de oficio, de recepción o de
   respuesta) y un rango *desde* / *hasta*. Ambos extremos aplican **siempre al
@@ -694,8 +696,8 @@ filtros, que se **acumulan** entre sí (Y lógico):
 
 Sobre los desplegables:
 
-- El de **Institución del Estado** trae las dos entidades y el de **Estado**
-  los tres estados del sistema. El de **Tipo de acción** se arma con el
+- El de **Institución del Estado** trae las dos entidades, el de **Estado** los
+  tres estados del sistema y el de **Prioridad** los tres niveles. El de **Tipo de acción** se arma con el
   catálogo (ver 3.4). El de institución va en la fila de la búsqueda por texto,
   donde hay sitio: su nombre es largo y en la fila de los otros desplegables
   los estrecharía a todos.

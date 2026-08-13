@@ -24,7 +24,7 @@ from cryptography.fernet import InvalidToken
 from configuracion import (
     ARCHIVO_OFICIOS, PREFIJO_REFERENCIA, ESTADOS, ROLES_GESTORES, DIR_RESPUESTAS,
     DIR_DOCUMENTOS, EXTENSIONES_DOCUMENTO, ROL_ADMINISTRADOR, ROL_SUPERUSUARIO,
-    TIPOS_IDENTIFICACION, TIPOS_IMPLICADO, VALORES_LCI,
+    TIPOS_IDENTIFICACION, TIPOS_IMPLICADO, VALORES_LCI, PRIORIDADES,
 )
 from cifrado import cifrar, descifrar
 import registro_actividad
@@ -169,6 +169,18 @@ def _validar_tipo_accion(tipo: str) -> str:
     return tipos_accion.validar(tipo)
 
 
+def _validar_prioridad(prioridad: str) -> str:
+    """Prioridad de atención del oficio. Es opcional: el histórico que se carga
+    desde la matriz puede no traerla."""
+    prioridad = " ".join(str(prioridad or "").split()).capitalize()
+    if prioridad and prioridad not in PRIORIDADES:
+        raise ValueError(
+            f"La prioridad «{prioridad}» no es válida. "
+            f"Opciones: {', '.join(PRIORIDADES)}."
+        )
+    return prioridad
+
+
 def _validar_cantidad_investigados(valor) -> str:
     """Cantidad de investigados: número entero no negativo, opcional.
     Devuelve el valor normalizado como texto ('' si no se indicó)."""
@@ -304,6 +316,7 @@ def registrar_oficio(codigo_oficio: str, fecha_recepcion: str, fecha_oficio: str
                      ruta_documento: str = "", fecha_asignacion: str = "",
                      cantidad_investigados="", ruta_respuesta: str = "",
                      institucion: str = "", tipo_accion: str = "",
+                     prioridad: str = "",
                      implicados: Optional[List[Dict]] = None) -> str:
     """`codigo_oficio` es la **Referencia oficio** (obligatoria).
     `causal_oficio` es opcional.
@@ -357,6 +370,7 @@ def registrar_oficio(codigo_oficio: str, fecha_recepcion: str, fecha_oficio: str
     fecha_respuesta = _validar_fecha_respuesta(fecha_respuesta, fecha_recepcion)
     fecha_asignacion = _validar_fecha_asignacion(fecha_asignacion, fecha_recepcion)
     cantidad_investigados = _validar_cantidad_investigados(cantidad_investigados)
+    prioridad = _validar_prioridad(prioridad)
     # Personas investigadas anotadas en el propio alta. Si vienen, son ellas
     # las que fijan la cantidad de investigados.
     detalle = []
@@ -418,6 +432,7 @@ def registrar_oficio(codigo_oficio: str, fecha_recepcion: str, fecha_oficio: str
         "fecha_asignacion": fecha_asignacion,
         "fecha_respuesta": fecha_respuesta,
         "cantidad_investigados": cantidad_investigados,
+        "prioridad": prioridad,
         "implicados": detalle,
         "id_empleado": id_empleado,
         "empleado": nombre_empleado,
@@ -536,6 +551,7 @@ def _preparar_importado(fila: Dict, registros: List[Dict], referencias: set,
     fecha_asignacion = _validar_fecha_asignacion(
         fila.get("fecha_asignacion"), fecha_recepcion)
     cantidad = _validar_cantidad_investigados(fila.get("cantidad_investigados"))
+    prioridad = _validar_prioridad(fila.get("prioridad"))
 
     # La matriz trae una fila por investigado, así que la carga ya llega con el
     # detalle de las personas. Si viene, es quien manda sobre la cantidad.
@@ -568,6 +584,7 @@ def _preparar_importado(fila: Dict, registros: List[Dict], referencias: set,
         "fecha_asignacion": fecha_asignacion,
         "fecha_respuesta": fecha_respuesta,
         "cantidad_investigados": cantidad,
+        "prioridad": prioridad,
         "implicados": implicados,
         "id_empleado": id_empleado,
         "empleado": nombre_empleado,
@@ -653,7 +670,8 @@ def actualizar_oficio(referencia: str, nuevo_estado: str, id_empleado: str,
                      nombre_empleado: str, actualizado_por: str,
                      actor_rol: str = None, fecha_respuesta: str = None,
                      observacion: str = None, fecha_asignacion: str = None,
-                     cantidad_investigados=None, tipo_accion: str = None) -> str:
+                     cantidad_investigados=None, tipo_accion: str = None,
+                     prioridad: str = None) -> str:
     """Actualiza estado, responsable, fecha de respuesta y/o observación de un
     oficio en una sola operación, respetando las reglas de negocio
     (ver `_resolver_estado`).
@@ -719,6 +737,12 @@ def actualizar_oficio(referencia: str, nuevo_estado: str, id_empleado: str,
                 if nuevo_tipo != registro.get("tipo_accion", ""):
                     registro["tipo_accion"] = nuevo_tipo
                     cambios.append(f"Tipo de acción: {nuevo_tipo}")
+            if prioridad is not None:
+                nueva_prioridad = _validar_prioridad(prioridad)
+                if nueva_prioridad != registro.get("prioridad", ""):
+                    registro["prioridad"] = nueva_prioridad
+                    cambios.append(
+                        f"Prioridad: {nueva_prioridad or '(sin dato)'}")
             if fecha_respuesta is not None:
                 if nueva_fecha != registro.get("fecha_respuesta", ""):
                     registro["fecha_respuesta"] = nueva_fecha
@@ -757,7 +781,8 @@ def actualizar_estado_asignado(referencia: str, actor: str, nuevo_estado: str,
                                fecha_respuesta: str = None,
                                observacion: str = None,
                                cantidad_investigados=None,
-                               tipo_accion: str = None) -> str:
+                               tipo_accion: str = None,
+                               prioridad: str = None) -> str:
     """Actualización desde el rol de usuario regular, sobre sus propios oficios.
 
     Puede cambiar la fecha de respuesta, la observación y alternar el estado
@@ -807,6 +832,12 @@ def actualizar_estado_asignado(referencia: str, actor: str, nuevo_estado: str,
                 if nuevo_tipo != registro.get("tipo_accion", ""):
                     registro["tipo_accion"] = nuevo_tipo
                     cambios.append(f"Tipo de acción: {nuevo_tipo}")
+            if prioridad is not None:
+                nueva_prioridad = _validar_prioridad(prioridad)
+                if nueva_prioridad != registro.get("prioridad", ""):
+                    registro["prioridad"] = nueva_prioridad
+                    cambios.append(
+                        f"Prioridad: {nueva_prioridad or '(sin dato)'}")
             if fecha_respuesta is not None:
                 if nueva_fecha != registro.get("fecha_respuesta", ""):
                     registro["fecha_respuesta"] = nueva_fecha
@@ -1148,6 +1179,7 @@ COLUMNAS_EXPORTACION = {
     "fecha_asignacion": "Fecha de asignación",
     "fecha_respuesta": "Fecha de respuesta",
     "cantidad_investigados": "Cantidad de investigados",
+    "prioridad": "Prioridad",
     "id_empleado": "Usuario responsable",
     "empleado": "Responsable",
     "estado": "Estado",
@@ -1330,7 +1362,7 @@ def exportar_oficios(registros: List[Dict], ruta_destino: str,
 def filtrar_oficios(registros: List[Dict], campo_texto: str = "", texto: str = "",
                     campo_fecha: str = "", desde: str = "", hasta: str = "",
                     institucion: str = "", tipo_accion: str = "",
-                    causal: str = "", estado: str = "",
+                    causal: str = "", estado: str = "", prioridad: str = "",
                     id_empleado: str = "",
                     solo_sin_responsable: bool = False) -> List[Dict]:
     """Filtra una lista de oficios. Todos los filtros se acumulan (Y lógico).
@@ -1342,9 +1374,9 @@ def filtrar_oficios(registros: List[Dict], campo_texto: str = "", texto: str = "
       lo que no es posible mezclar tipos de fecha. Si solo se indica `desde`,
       se busca esa **fecha única**; si solo se indica `hasta`, todo lo anterior
       o igual a esa fecha.
-    - `institucion`, `tipo_accion`, `causal` y `estado`: coincidencia
-      **exacta**, porque se eligen de un desplegable con los valores que
-      existen.
+    - `institucion`, `tipo_accion`, `causal`, `estado` y `prioridad`:
+      coincidencia **exacta**, porque se eligen de un desplegable con los
+      valores que existen.
     - `id_empleado`: oficios de ese responsable. `solo_sin_responsable` los
       deja en los que aún no tienen a nadie a cargo; las dos cosas no se
       combinan (manda `solo_sin_responsable`).
@@ -1411,6 +1443,12 @@ def filtrar_oficios(registros: List[Dict], campo_texto: str = "", texto: str = "
         if estado not in ESTADOS:
             raise ValueError(f"El estado «{estado}» no es válido.")
         resultado = [r for r in resultado if r.get("estado", "") == estado]
+
+    prioridad = (prioridad or "").strip()
+    if prioridad:
+        prioridad = _validar_prioridad(prioridad)
+        resultado = [r for r in resultado
+                     if (r.get("prioridad", "") or "") == prioridad]
 
     if solo_sin_responsable:
         resultado = [r for r in resultado if not (r.get("id_empleado") or "").strip()]

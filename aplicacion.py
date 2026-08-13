@@ -21,7 +21,7 @@ from configuracion import (
     ESTADOS, ARCHIVO_LOGO, ARCHIVO_ICONO, PREFIJO_REFERENCIA,
     DIR_RESPALDOS, DIAS_RESPALDO_POR_DEFECTO,
     ROL_SUPERUSUARIO, ROL_ADMINISTRADOR, ROL_USUARIO,
-    ROLES_GESTORES, INSTITUCIONES,
+    ROLES_GESTORES, INSTITUCIONES, PRIORIDADES, PRIORIDAD_POR_DEFECTO,
     TIPOS_IDENTIFICACION, TIPOS_IMPLICADO, VALORES_LCI,
     COLOR_AZUL, COLOR_BLANCO, COLOR_GRIS_CLARO, COLOR_TEXTO, COLOR_TEXTO_INV
 )
@@ -935,6 +935,10 @@ class AplicacionPrincipal(ttk.Frame):
         self.entrada_fecha_respuesta = self._campo(
             gestion, 3, "Fecha de respuesta",
             SelectorFecha(gestion, permitir_vacio=True), estirar=False)
+        self.combo_prioridad = ttk.Combobox(gestion, state="readonly",
+                                            values=PRIORIDADES)
+        self.combo_prioridad.set(PRIORIDAD_POR_DEFECTO)
+        self._campo(gestion, 4, "Prioridad", self.combo_prioridad)
 
         # --- Personas investigadas (ancho completo) --------------------------
         self._construir_implicados_registro(contenido, 2)
@@ -1100,6 +1104,7 @@ class AplicacionPrincipal(ttk.Frame):
                 ruta_respuesta=self.archivo_respuesta_registro.get(),
                 institucion=self.combo_institucion.get(),
                 tipo_accion=self.combo_tipo_accion.get(),
+                prioridad=self.combo_prioridad.get(),
                 implicados=self.implicados_registro,
             )
         except ValueError as error:
@@ -1120,6 +1125,7 @@ class AplicacionPrincipal(ttk.Frame):
         if self.combo_empleado is not None:
             self.combo_empleado.current(0)
         self.combo_estado.current(0)
+        self.combo_prioridad.set(PRIORIDAD_POR_DEFECTO)
         self.implicados_registro = []
         self._refrescar_implicados_registro()
         self._refrescar_listado()
@@ -1136,8 +1142,8 @@ class AplicacionPrincipal(ttk.Frame):
         """Panel de búsqueda. Tres bloques que se acumulan entre sí:
 
         - por texto, sobre uno de los campos de `CAMPOS_BUSQUEDA`;
-        - por institución, tipo de acción, causal, estado y —solo para
-          gestores— responsable, eligiendo de un desplegable;
+        - por institución, tipo de acción, causal, estado, prioridad y —solo
+          para gestores— responsable, eligiendo de un desplegable;
         - por fecha única o rango de un mismo tipo.
         """
         panel = ttk.LabelFrame(marco, text=" Buscar oficios ", padding=(8, 4))
@@ -1167,6 +1173,7 @@ class AplicacionPrincipal(ttk.Frame):
         self.combo_filtro_institucion.bind("<<ComboboxSelected>>",
                                            lambda e: self._refrescar_listado())
 
+
         # Fila 2: filtros de valor exacto, elegidos de un desplegable.
         #
         # Van en `grid` y no en `pack` a propósito: con el peso repartido entre
@@ -1192,10 +1199,13 @@ class AplicacionPrincipal(ttk.Frame):
         self.combo_filtro_estado = desplegable(4, "Estado",
                                                [self.TODOS] + list(ESTADOS))
         self.combo_filtro_estado.current(0)
+        self.combo_filtro_prioridad = desplegable(
+            6, "Prioridad", [self.TODOS] + list(PRIORIDADES))
+        self.combo_filtro_prioridad.current(0)
         if self._puede_gestionar_usuarios():
             # Un usuario regular solo ve sus propios oficios, así que filtrar
             # por responsable no le aportaría nada.
-            self.combo_filtro_responsable = desplegable(6, "Responsable")
+            self.combo_filtro_responsable = desplegable(8, "Responsable")
         else:
             self.combo_filtro_responsable = None
         self._refrescar_desplegables_filtro()
@@ -1286,6 +1296,7 @@ class AplicacionPrincipal(ttk.Frame):
         self.filtro_fecha_desde.set("")
         self.filtro_fecha_hasta.set("")
         self.combo_filtro_institucion.set(self.TODOS)
+        self.combo_filtro_prioridad.set(self.TODOS)
         self.combo_filtro_accion.set(self.TODOS)
         self.combo_filtro_causal.set("(Todas)")
         self.combo_filtro_estado.set(self.TODOS)
@@ -1313,7 +1324,8 @@ class AplicacionPrincipal(ttk.Frame):
         # --- 2) Tabla de oficios (orden: oficio -> recepción -> respuesta) --
         columnas = ("referencia", "institucion", "codigo", "accion", "causal",
                     "oficio", "recepcion", "asignacion", "respuesta",
-                    "investigados", "empleado", "estado", "pdf", "observacion")
+                    "investigados", "empleado", "estado", "prioridad", "pdf",
+                    "observacion")
         # Encabezados con el nombre completo del campo, sin abreviar y en una
         # sola línea (ver `_ancho_columna`): la tabla queda más ancha, pero se
         # lee sin ambigüedad. Para el ancho está la barra horizontal.
@@ -1322,10 +1334,11 @@ class AplicacionPrincipal(ttk.Frame):
                    "Causal oficio", "Fecha de oficio", "Fecha de recepción",
                    "Fecha de asignación", "Fecha de respuesta",
                    "Cantidad de investigados",
-                   "Responsable", "Estado", "PDF", "Observación")
+                   "Responsable", "Estado", "Prioridad", "PDF", "Observación")
         # Ancho que pide el DATO (p. ej. "REQ-UDC-FGE-2026-0001" o
         # "Superintendencia de Bancos"); si el título es más largo, manda él.
-        anchos = (190, 215, 150, 120, 150, 90, 95, 90, 90, 60, 110, 90, 40, 200)
+        anchos = (190, 215, 150, 120, 150, 90, 95, 90, 90, 60, 110, 90, 60, 40,
+                  200)
         contenedor = ttk.Frame(marco)
         # Altura fija (no expand): dentro de un área desplazable la tabla debe
         # tener alto propio para que el panel inferior siga siendo alcanzable.
@@ -1380,7 +1393,14 @@ class AplicacionPrincipal(ttk.Frame):
         ttk.Label(fila, text="Tipo de acción").pack(side="left")
         self.combo_tipo_accion_edicion = ttk.Combobox(
             fila, width=20, state="readonly", values=self._tipos_accion())
-        self.combo_tipo_accion_edicion.pack(side="left", padx=6)
+        self.combo_tipo_accion_edicion.pack(side="left", padx=(6, 16))
+
+        # La prioridad es parte del seguimiento: se corrige aquí, no en el
+        # mantenimiento, que es para los datos que identifican al oficio.
+        ttk.Label(fila, text="Prioridad").pack(side="left")
+        self.combo_prioridad_edicion = ttk.Combobox(
+            fila, width=10, state="readonly", values=PRIORIDADES)
+        self.combo_prioridad_edicion.pack(side="left", padx=6)
 
         # Segunda fila: responsable y estado (así ninguna queda apretada).
         fila2 = ttk.Frame(panel)
@@ -1499,6 +1519,7 @@ class AplicacionPrincipal(ttk.Frame):
                     self.filtro_fecha_hasta.get(),
                     institucion=self._valor_filtro(
                         self.combo_filtro_institucion),
+                    prioridad=self._valor_filtro(self.combo_filtro_prioridad),
                     tipo_accion=self._valor_filtro(self.combo_filtro_accion),
                     causal=self._valor_filtro(self.combo_filtro_causal),
                     estado=self._valor_filtro(self.combo_filtro_estado),
@@ -1524,6 +1545,7 @@ class AplicacionPrincipal(ttk.Frame):
                     # más compacta y sigue identificando sin ambigüedad.
                     registro.get("id_empleado", ""),
                     "ANULADO" if anulado else registro["estado"],
+                    registro.get("prioridad", ""),
                     "Sí" if registro.get("archivo_respuesta") else "",
                     observacion))
         except ValueError as error:
@@ -1574,6 +1596,7 @@ class AplicacionPrincipal(ttk.Frame):
             text=registro.get("cantidad_investigados", "") or "—")
         self.combo_tipo_accion_edicion.config(values=self._tipos_accion())
         self.combo_tipo_accion_edicion.set(registro.get("tipo_accion", ""))
+        self.combo_prioridad_edicion.set(registro.get("prioridad", ""))
         self.edicion_observacion.delete("1.0", "end")
         self.edicion_observacion.insert("1.0", registro.get("observacion", ""))
 
@@ -1616,12 +1639,14 @@ class AplicacionPrincipal(ttk.Frame):
                     id_empleado, nombre_empleado, self.usuario["usuario"],
                     self.usuario.get("rol"), fecha_respuesta, observacion,
                     fecha_asignacion=self.edicion_fecha_asignacion.get(),
-                    tipo_accion=self.combo_tipo_accion_edicion.get())
+                    tipo_accion=self.combo_tipo_accion_edicion.get(),
+                    prioridad=self.combo_prioridad_edicion.get())
             else:
                 estado_final = oficios.actualizar_estado_asignado(
                     seleccion[0], self.usuario["usuario"],
                     self.combo_nuevo_estado.get(), fecha_respuesta, observacion,
-                    tipo_accion=self.combo_tipo_accion_edicion.get())
+                    tipo_accion=self.combo_tipo_accion_edicion.get(),
+                    prioridad=self.combo_prioridad_edicion.get())
         except ValueError as error:
             messagebox.showerror("Error", str(error))
             return

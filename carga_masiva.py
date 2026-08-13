@@ -24,6 +24,7 @@ Correspondencia con los campos de la aplicación
     Institución del Estado                   institucion (fija la sigla de la
                                              Referencia UDC, que genera el
                                              sistema)
+    Prioridad                                prioridad
     Apellidos, Nombres - Razón Social        )
     TiPASo Id / Identificación               ) implicados (uno por fila del
     Tipo de Implicado / LCI                  ) mismo oficio)
@@ -39,7 +40,7 @@ Correspondencia con los campos de la aplicación
     Observación                              observacion
     (nº de filas con la misma Ref. oficio)   cantidad_investigados
 
-Las columnas restantes de la matriz (Mes, Prioridad, Medio Respuesta, Días,
+Las columnas restantes de la matriz (Mes, Medio Respuesta, Días,
 Canal Recepción, Expediente Fiscal, la Referencia de la circular de la
 Superintendencia y el bloque RCSA) no tienen equivalente en la aplicación y se
 ignoran; la carga informa de ello.
@@ -77,7 +78,7 @@ CABECERA_MATRIZ = [
     ("Mes",                                 "mes",                    None),
     ("Fecha Asignación",                    "fecha asignacion",       "fecha_asignacion"),
     ("Usuario",                             "usuario",                "empleado"),
-    ("Prioridad",                           "prioridad",              None),
+    ("Prioridad",                           "prioridad",              "prioridad"),
     ("Fecha Emisión",                       "fecha emision",          "fecha_recepcion"),
     ("Referencia",                          "referencia",             None),
     ("Medio Repuesta",                      "medio repuesta",         None),
