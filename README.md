@@ -101,6 +101,13 @@ Dentro de un área desplazable una tabla no puede "expandirse" sola, porque el
 lienzo mide el contenido y no al revés. Por eso en *Oficios* se calcula cuántas
 filas caben entre el panel de filtros y el de edición y se le fija ese alto.
 
+En *Usuarios*, el mismo formulario sirve para **crear** y para **editar**: al
+pulsar *Editar* se carga la cuenta seleccionada y el botón principal pasa a
+*Guardar cambios*. El botón **Nuevo**, a su lado, devuelve el formulario en
+blanco al modo de creación **sin guardar nada**, para no tener que confirmar una
+edición que no se quería hacer solo para poder dar de alta a otra persona.
+
+
 ## 2.1 Roles de usuario
 
 - **Superusuario:** es el primer usuario que se crea. Es el único que puede

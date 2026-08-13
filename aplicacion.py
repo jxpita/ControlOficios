@@ -1510,11 +1510,21 @@ class AplicacionPrincipal(ttk.Frame):
                                          font=("Helvetica", 8), wraplength=260)
         self.lbl_ayuda_clave.grid(row=5, column=0, columnspan=2, sticky="w")
 
-        self.btn_guardar_usuario = ttk.Button(formulario, text="Crear usuario",
+        # El botón principal cambia de texto entre crear y editar. "Nuevo" va a
+        # su lado porque es la única salida del modo edición: sin él habría que
+        # guardar los cambios para poder volver a crear una cuenta.
+        barra_formulario = ttk.Frame(formulario)
+        barra_formulario.grid(row=6, column=0, columnspan=2, sticky="ew",
+                              pady=(12, 0))
+        barra_formulario.columnconfigure(0, weight=1)
+        self.btn_guardar_usuario = ttk.Button(barra_formulario,
+                                              text="Crear usuario",
                                               command=self._guardar_usuario)
-        self.btn_guardar_usuario.grid(row=6, column=0, columnspan=2,
-                                      sticky="ew", pady=(12, 0))
+        self.btn_guardar_usuario.grid(row=0, column=0, sticky="ew")
         self.btn_guardar_usuario.config(style="Accent.TButton")
+        ttk.Button(barra_formulario, text="Nuevo",
+                   command=self._nuevo_usuario).grid(row=0, column=1,
+                                                     sticky="e", padx=(6, 0))
 
         # --- Lista de cuentas (se queda con el espacio sobrante) -------------
         lista = ttk.LabelFrame(marco, text=" Usuarios existentes ", padding=(10, 6))
@@ -1573,10 +1583,13 @@ class AplicacionPrincipal(ttk.Frame):
         self.lbl_form_usuario.config(text="Crear usuario del sistema")
         self.btn_guardar_usuario.config(text="Crear usuario")
         self.lbl_ayuda_clave.config(text="")
+        # Primero se rehabilita: al editar, el campo Usuario queda deshabilitado
+        # y borrarlo entonces no surte efecto (Tk ignora la escritura), con lo
+        # que el formulario arrastraría el nombre de la cuenta anterior.
+        self.entrada_usuario.config(state="normal")
         for entrada in (self.entrada_usuario, self.entrada_nombre,
                         self.entrada_clave, self.entrada_clave2):
             entrada.delete(0, "end")
-        self.entrada_usuario.config(state="normal")
         self.combo_rol.config(state="readonly", values=self._roles_asignables())
         self.combo_rol.set(ROL_USUARIO)
         if self.tabla_usuarios.selection():

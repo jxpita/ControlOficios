@@ -5,8 +5,8 @@
     "semantic_hash": "1bb4a138c2b92c95770e06f9f44a200a"
   },
   "aplicacion.py": {
-    "mtime": 1786566773.5477562,
-    "ast_hash": "21123edbf98f26f22ed07969120015f3",
+    "mtime": 1786587737.217915,
+    "ast_hash": "2ac67f8fd0b0d192f2f7eb8ebe066cec",
     "semantic_hash": ""
   },
   "autenticacion.py": {
@@ -90,8 +90,8 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1786566882.9053264,
-    "ast_hash": "082e54070248d954fa7249cd71ec23ca",
+    "mtime": 1786587787.6894042,
+    "ast_hash": "5e9bc35fac02ce3495149e490db71a76",
     "semantic_hash": ""
   },
   "requirements.txt": {
