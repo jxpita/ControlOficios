@@ -8,9 +8,9 @@ cuerpo de estas funciones y NO tocas la interfaz ni las métricas.
 
 Formato: oficios.dat cifrado con Fernet; internamente una lista JSON.
 Cada oficio recibe una Referencia UDC generada por el sistema:
-    REQ-UDC-<sigla>-NNNN    REQ-UDC-SB-0001, REQ-UDC-FGE-0001, ...
-La sigla la aporta la institución que remite el oficio y el secuencial corre de
-forma continua e independiente para cada una (ver el módulo parametros).
+    REQ-UDC-<sigla>-<año>-NNNN    REQ-UDC-SB-2026-0001, REQ-UDC-FGE-2026-0001, ...
+La sigla la aporta la institución que remite el oficio; el secuencial es
+independiente para cada una y se reinicia cada año (ver el módulo parametros).
 """
 import csv
 import json
@@ -65,12 +65,12 @@ def _validar_fecha(texto: str, campo: str) -> str:
 
 
 def _generar_referencia(registros: List[Dict], institucion: str) -> str:
-    """Genera la Referencia UDC:  REQ-UDC-<sigla>-<secuencial de 4 dígitos>.
+    """Genera la Referencia UDC:  REQ-UDC-<sigla>-<año>-<secuencial de 4 dígitos>.
 
-    El secuencial es **independiente para cada institución** y corre de forma
-    continua: REQ-UDC-SB-0001, REQ-UDC-SB-0002… y en paralelo REQ-UDC-FGE-0001,
-    REQ-UDC-FGE-0002… No se reinicia por año, porque el año no forma parte de
-    la referencia.
+    El secuencial es **independiente para cada institución** y **se reinicia
+    cada año**: REQ-UDC-SB-2026-0001, REQ-UDC-SB-2026-0002… y en paralelo
+    REQ-UDC-FGE-2026-0001, REQ-UDC-FGE-2026-0002…; al cambiar de año ambas
+    vuelven a 0001.
 
     Arranca desde el último número usado fuera del sistema, que un gestor puede
     configurar por institución (ver `parametros`). Se usa
@@ -78,8 +78,9 @@ def _generar_referencia(registros: List[Dict], institucion: str) -> str:
     referencia duplicada aunque se reconfigure el valor inicial o queden huecos.
     """
     sigla = parametros.sigla_de(institucion)
-    prefijo = f"{PREFIJO_REFERENCIA}-{sigla}-"
-    secuencial_max = parametros.obtener_secuencial_inicial(institucion)
+    anio = parametros.anio_vigente()
+    prefijo = f"{PREFIJO_REFERENCIA}-{sigla}-{anio}-"
+    secuencial_max = parametros.obtener_secuencial_inicial(institucion, anio)
     for registro in registros:
         referencia = (registro.get("referencia", "") or "").upper()
         if referencia.startswith(prefijo.upper()):

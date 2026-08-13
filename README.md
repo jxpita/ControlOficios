@@ -522,41 +522,47 @@ herramienta imprime su propia ayuda.
 ## 3.2 Referencia UDC y secuencial inicial
 
 La **Referencia UDC** la genera el sistema con el formato
-**`REQ-UDC-<SIGLA>-<NNNN>`**, donde la sigla depende de la **institución que
-remite el oficio**:
+**`REQ-UDC-<SIGLA>-<AÑO>-<NNNN>`**, donde la sigla depende de la **institución
+que remite el oficio** y el año es el año en curso:
 
 | Institución del Estado | Sigla | Referencia |
 |---|---|---|
-| Superintendencia de Bancos | `SB` | `REQ-UDC-SB-0001` |
-| Fiscalía General del Estado | `FGE` | `REQ-UDC-FGE-0001` |
+| Superintendencia de Bancos | `SB` | `REQ-UDC-SB-2026-0001` |
+| Fiscalía General del Estado | `FGE` | `REQ-UDC-FGE-2026-0001` |
 
 Por eso la institución es un **campo obligatorio** del formulario de registro y
 de la carga masiva. **No se muestra en el listado de oficios**: su única función
 es decidir la nomenclatura de la referencia.
 
 Cada institución lleva su **propia numeración**, independiente de la otra: el
-tercer oficio de la Superintendencia es `REQ-UDC-SB-0003` aunque entre medias se
-hayan registrado veinte de la Fiscalía. El secuencial `NNNN` es de 4 dígitos y
-**no se reinicia por año**: es correlativo por entidad.
+tercer oficio de la Superintendencia es `REQ-UDC-SB-2026-0003` aunque entre
+medias se hayan registrado veinte de la Fiscalía. El secuencial `NNNN` es de 4
+dígitos y **se reinicia cada año**: el primer oficio de un año nuevo vuelve a
+`0001` en ambas entidades, sin que el año anterior influya.
 
 **Continuidad con el Excel anterior:** el **superusuario o un administrador**
 abre la pestaña **Configuración**, elige la institución e ingresa **una sola
-vez** la última Referencia UDC usada en ella (por ejemplo `REQ-UDC-SB-0240`). A
-partir de ahí el sistema numera `REQ-UDC-SB-0241`, `REQ-UDC-SB-0242`, … sin
-tocar la serie de la otra institución.
+vez** la última Referencia UDC usada en ella (por ejemplo
+`REQ-UDC-SB-2026-0240`). A partir de ahí el sistema numera
+`REQ-UDC-SB-2026-0241`, `REQ-UDC-SB-2026-0242`, … sin tocar la serie de la otra
+institución.
 
 Detalles:
 
-- Se acepta la referencia completa (`REQ-UDC-SB-0240`) o solo el número (`240`).
-  Si se escribe una sigla que **no corresponde** a la institución elegida, se
-  rechaza indicándolo, para no configurar sin querer la serie equivocada.
+- Se acepta la referencia completa (`REQ-UDC-SB-2026-0240`) o solo el número
+  (`240`, que se entiende del año en curso). Si se escribe una sigla que **no
+  corresponde** a la institución elegida, se rechaza indicándolo, para no
+  configurar sin querer la serie equivocada. Tampoco se admite el año de otro
+  ejercicio: como la numeración se reinicia, configurarlo no tendría efecto.
 - La pestaña muestra siempre cuál será la **próxima** referencia de cada
   institución, y el formulario de registro la anticipa al elegirla.
 - Los valores se guardan cifrados en `datos/parametros.dat` y cada cambio queda
   en la bitácora de auditoría, con el usuario que lo definió.
 - Reconfigurar **nunca genera duplicados**: la numeración usa
-  `max(valor configurado, mayor secuencial ya existente de esa entidad) + 1`.
+  `max(valor configurado, mayor secuencial ya existente de esa entidad y año) + 1`.
 - Si nunca se configura, cada institución arranca en `0001`.
+- El valor se guarda por entidad **y año**, así que el 1 de enero la numeración
+  vuelve a empezar sola.
 
 Las referencias con **cualquier otro formato** (las de versiones anteriores del
 sistema) no influyen en la numeración. Para eliminarlas, use
@@ -622,9 +628,16 @@ la bitácora (`AGREGAR_TIPO_ACCION`, `RENOMBRAR_TIPO_ACCION`,
 tocar información real:
 
 - `Matriz de prueba - 55 oficios.xlsx` — **55 oficios** repartidos entre las dos
-  instituciones (115 filas, porque algunos oficios tienen varios investigados),
-  con casos variados: finalizados, en proceso, sin responsable y con distintos
-  tipos de acción.
+  instituciones (unas 100 filas, porque algunos oficios tienen varios
+  investigados). Los datos se reparten a propósito para que el **Tablero** se
+  vea con contenido: fechas de recepción a lo largo de los últimos seis meses
+  con un grupo en las dos últimas semanas, cargas de trabajo distintas por
+  responsable, los tres estados presentes y tiempos de respuesta variados.
+- Los responsables se escriben como en la matriz real (`C. Roman`,
+  `J. Portero`, …) y corresponden a las cuentas con rol **usuario**; los
+  oficios no se asignan a quien administra el sistema. Las cuentas tienen que
+  existir antes de cargar el archivo para que el emparejamiento funcione; las
+  que no encajen entran como *Por asignar*.
 - `generar_datos_prueba.py` — lo vuelve a generar (`python
   datos_de_prueba/generar_datos_prueba.py`). Usa una semilla fija, así que
   produce siempre el mismo archivo.

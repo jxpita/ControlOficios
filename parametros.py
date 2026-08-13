@@ -6,20 +6,22 @@ que es independiente para cada institución.
 
 Contexto: la Referencia UDC tiene el formato
 
-    REQ-UDC-<sigla>-<secuencial de 4 dígitos>      REQ-UDC-SB-0001
-                                                   REQ-UDC-FGE-0001
+    REQ-UDC-<sigla>-<año>-<secuencial de 4 dígitos>    REQ-UDC-SB-2026-0001
+                                                       REQ-UDC-FGE-2026-0001
 
 La sigla la aporta la institución que remite el oficio (ver
-`configuracion.INSTITUCIONES`) y el secuencial corre de forma **continua** para
-cada una: no se reinicia por año, porque el año no forma parte de la
-referencia.
+`configuracion.INSTITUCIONES`). El secuencial es independiente para cada
+institución y **se reinicia cada año**: el primer oficio de un año nuevo vuelve
+a 0001, sin que el año anterior influya.
 
 Si al empezar ya se llevaba una numeración fuera del sistema, un gestor indica
 por institución cuál fue el último número usado y la aplicación continúa desde
-el siguiente.
+el siguiente. Como la numeración se reinicia por año, ese valor se guarda para
+el año al que pertenece.
 """
 import json
 import re
+from datetime import date
 from typing import Dict, Optional
 
 from cryptography.fernet import InvalidToken
@@ -33,11 +35,21 @@ import permisos
 import bloqueo
 
 
-# Acepta "REQ-UDC-SB-0001" con cualquiera de las siglas configuradas, sin
+# Acepta "REQ-UDC-SB-2026-0001" con cualquiera de las siglas configuradas, sin
 # distinguir mayúsculas ni espacios sobrantes.
 _PATRON_REFERENCIA = re.compile(
-    rf"^{re.escape(PREFIJO_REFERENCIA)}-([A-Za-zÁÉÍÓÚÑ]+)-(\d{{1,6}})$",
+    rf"^{re.escape(PREFIJO_REFERENCIA)}-([A-Za-zÁÉÍÓÚÑ]+)-(\d{{4}})-(\d{{1,6}})$",
     re.IGNORECASE)
+
+
+def anio_vigente() -> int:
+    """Año al que pertenece la numeración en curso."""
+    return date.today().year
+
+
+def _clave(sigla: str, anio: int) -> str:
+    """Clave con la que se guarda el secuencial inicial de una entidad y año."""
+    return f"{sigla.upper()}-{int(anio)}"
 
 
 # --- Persistencia ------------------------------------------------------------
@@ -86,10 +98,11 @@ def validar_institucion(institucion: str) -> str:
 
 # --- Secuencial inicial de la Referencia UDC ---------------------------------
 def analizar_referencia(referencia: str, institucion: Optional[str] = None):
-    """Descompone una referencia UDC en (sigla, secuencial).
+    """Descompone una referencia UDC en (sigla, año, secuencial).
 
-    Acepta la referencia completa (`REQ-UDC-SB-0241`) o solo el número
-    (`241`), en cuyo caso hay que indicar la institución.
+    Acepta la referencia completa (`REQ-UDC-SB-2026-0241`) o solo el número
+    (`241`), en cuyo caso hay que indicar la institución y se entiende del año
+    en curso.
     """
     referencia = " ".join(str(referencia or "").split())
     if not referencia:
@@ -103,49 +116,58 @@ def analizar_referencia(referencia: str, institucion: Optional[str] = None):
                 f"«{sigla}» no corresponde a ninguna institución. "
                 f"Siglas válidas: {', '.join(INSTITUCIONES.values())}."
             )
-        return sigla, int(coincidencia.group(2))
+        return sigla, int(coincidencia.group(2)), int(coincidencia.group(3))
     if referencia.isdigit() and institucion:
-        return sigla_de(institucion), int(referencia)
-    ejemplo = f"{PREFIJO_REFERENCIA}-{list(INSTITUCIONES.values())[0]}-0241"
+        return sigla_de(institucion), anio_vigente(), int(referencia)
+    ejemplo = (f"{PREFIJO_REFERENCIA}-{list(INSTITUCIONES.values())[0]}-"
+               f"{anio_vigente()}-0241")
     raise ValueError(
-        f"Formato no válido. Use {PREFIJO_REFERENCIA}-SIGLA-NNNN "
+        f"Formato no válido. Use {PREFIJO_REFERENCIA}-SIGLA-AAAA-NNNN "
         f"(por ejemplo {ejemplo})."
     )
 
 
-def formatear_referencia(sigla: str, secuencial: int) -> str:
-    return f"{PREFIJO_REFERENCIA}-{sigla.upper()}-{int(secuencial):04d}"
+def formatear_referencia(sigla: str, anio: int, secuencial: int) -> str:
+    return (f"{PREFIJO_REFERENCIA}-{sigla.upper()}-{int(anio)}-"
+            f"{int(secuencial):04d}")
 
 
-def obtener_secuencial_inicial(institucion: str) -> int:
-    """Último secuencial ya usado fuera del sistema para esa institución.
-    Devuelve 0 si no se configuró nada."""
+def obtener_secuencial_inicial(institucion: str,
+                               anio: Optional[int] = None) -> int:
+    """Último secuencial ya usado fuera del sistema para esa institución en el
+    año indicado (por omisión, el año en curso). Devuelve 0 si no se configuró
+    nada: como la numeración se reinicia cada año, un año sin configurar
+    arranca en 0001."""
     try:
         sigla = sigla_de(institucion)
     except ValueError:
         return 0
-    datos = (_leer().get("secuenciales") or {}).get(sigla) or {}
+    clave = _clave(sigla, anio or anio_vigente())
+    datos = (_leer().get("secuenciales") or {}).get(clave) or {}
     return int(datos.get("secuencial", 0))
 
 
-def obtener_referencia_inicial(institucion: str) -> str:
-    """Referencia configurada para esa institución, o '' si no hay ninguna."""
+def obtener_referencia_inicial(institucion: str,
+                               anio: Optional[int] = None) -> str:
+    """Referencia configurada para esa institución y año, o '' si no hay."""
     try:
         sigla = sigla_de(institucion)
     except ValueError:
         return ""
-    datos = (_leer().get("secuenciales") or {}).get(sigla) or {}
+    anio = anio or anio_vigente()
+    datos = (_leer().get("secuenciales") or {}).get(_clave(sigla, anio)) or {}
     if not datos:
         return ""
-    return formatear_referencia(sigla, datos["secuencial"])
+    return formatear_referencia(sigla, anio, datos["secuencial"])
 
 
-def esta_configurado(institucion: Optional[str] = None) -> bool:
+def esta_configurado(institucion: Optional[str] = None,
+                     anio: Optional[int] = None) -> bool:
     secuenciales = _leer().get("secuenciales") or {}
     if institucion is None:
         return bool(secuenciales)
     try:
-        return sigla_de(institucion) in secuenciales
+        return _clave(sigla_de(institucion), anio or anio_vigente()) in secuenciales
     except ValueError:
         return False
 
@@ -163,7 +185,14 @@ def definir_secuencial_inicial(referencia: str, actor: str, actor_rol: str,
             "Solo el superusuario o un administrador pueden definir el "
             "secuencial inicial."
         )
-    sigla, secuencial = analizar_referencia(referencia, institucion)
+    sigla, anio, secuencial = analizar_referencia(referencia, institucion)
+    # La numeración se reinicia cada año, así que configurar la de un año que
+    # ya pasó (o que aún no empieza) no tendría ningún efecto.
+    if anio != anio_vigente():
+        raise ValueError(
+            f"La numeración se reinicia cada año: indique una referencia de "
+            f"{anio_vigente()} o solo el número."
+        )
     # Si se indicó la institución en el desplegable y además una referencia
     # completa de otra, manda lo escrito pero se avisa de la contradicción.
     if institucion:
@@ -175,13 +204,13 @@ def definir_secuencial_inicial(referencia: str, actor: str, actor_rol: str,
             )
 
     datos = _leer()
-    datos.setdefault("secuenciales", {})[sigla] = {
+    datos.setdefault("secuenciales", {})[_clave(sigla, anio)] = {
         "secuencial": secuencial,
         "definido_por": actor,
         "definido_el": __import__("datetime").date.today().isoformat(),
     }
     _guardar(datos)
-    normalizada = formatear_referencia(sigla, secuencial)
+    normalizada = formatear_referencia(sigla, anio, secuencial)
     registro_actividad.registrar(
         "DEFINIR_SECUENCIAL_INICIAL",
         f"institucion={institucion_de(sigla)}; referencia={normalizada}", actor)

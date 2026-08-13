@@ -3,8 +3,19 @@ Genera el archivo de datos de prueba para la carga masiva.
 
 Crea `Matriz de prueba - 55 oficios.xlsx` con el FORMATO ESTABLECIDO (cabecera
 en la fila 4, de la columna B a la AA) y 55 oficios repartidos entre las dos
-instituciones, con casos variados: finalizados, en proceso, sin responsable,
-con varios investigados y sin fecha de respuesta.
+instituciones.
+
+Los datos se reparten a propósito para que el TABLERO se vea con contenido:
+
+- **Fechas de recepción** repartidas por los últimos seis meses, con un grupo
+  reciente en las dos últimas semanas y alguno de hoy mismo, para que los
+  gráficos por día y por mes no salgan vacíos.
+- **Responsables** con cargas distintas, de modo que el gráfico por responsable
+  tenga barras de tamaños diferentes; unos pocos oficios entran sin responsable.
+- **Estados** mezclados: mayoría finalizados, varios en proceso y algunos por
+  asignar.
+- **Tiempos de respuesta** variados, para que el promedio de días sea
+  representativo.
 
 Algunos oficios ocupan más de una fila (una por investigado), igual que en la
 matriz real, así que el archivo tiene más filas que oficios.
@@ -29,9 +40,23 @@ CANTIDAD_OFICIOS = 55
 INSTITUCIONES = ["Superintendencia de Bancos", "Fiscalía General del Estado"]
 
 # Los nombres se escriben como en la matriz real: inicial y apellido. Al
-# importar, la aplicación los empareja con las cuentas del sistema; los que no
-# existan entrarán como "Por asignar", que también conviene ver en la prueba.
-USUARIOS = ["C. Roman", "J. Portero", "J. Rosero", "M. Vera", ""]
+# importar, la aplicación los empareja con las cuentas del sistema.
+#
+# Son las cuentas con rol "usuario": los oficios se asignan a quien los
+# tramita, no a quien administra el sistema. La cadena vacía es el oficio que
+# llega sin responsable, que entra como "Por asignar".
+#
+# Cuántos oficios lleva cada uno (suman CANTIDAD_OFICIOS), para que el gráfico
+# por responsable tenga barras claramente distintas.
+CARGA_POR_USUARIO = {
+    "C. Roman": 13,
+    "J. Portero": 12,
+    "J. Rosero": 9,
+    "D. Franco": 7,
+    "J. Galecio": 5,
+    "L. Jarrin": 5,
+    "": 4,                 # oficios que llegan sin responsable
+}
 
 TIPOS_ACCION = ["CERTIFICACIÓN", "RETENCIÓN", "INFORMACIÓN", "INMOVILIZACIÓN",
                 "LEVANTAMIENTO DE MEDIDAS", "BLOQUEO Y RETENCIÓN",
@@ -52,28 +77,76 @@ MESES = ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN",
          "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"]
 
 
+# Cómo se reparten las fechas de recepción, para que los gráficos del tablero
+# tengan altibajos en vez de una línea plana.
+#
+# Días hacia atrás de los oficios recientes (0 = hoy). El gráfico por día cubre
+# las dos últimas semanas: se repiten unos días y se saltan otros a propósito.
+DIAS_RECIENTES = [0, 0, 1, 2, 2, 2, 3, 5, 5, 6, 8, 8, 8, 9, 11, 12, 13, 13]
+
+# Cuántos oficios llegaron en cada mes anterior, del más reciente al más
+# antiguo. Suman el resto de los oficios.
+REPARTO_MESES = [11, 4, 9, 5, 8]
+
+
+def _mes_atras(fecha, meses):
+    """(año, mes) de la fecha indicada retrocediendo esa cantidad de meses."""
+    mes = fecha.month - meses
+    return fecha.year + (mes - 1) // 12, (mes - 1) % 12 + 1
+
+
+def _fechas_recepcion(cantidad, hoy):
+    """Fecha de recepción de cada oficio, repartida según los dos patrones."""
+    fechas = [hoy - timedelta(days=dias) for dias in DIAS_RECIENTES]
+    restantes = cantidad - len(fechas)
+    for meses, cuantos in enumerate(REPARTO_MESES, start=1):
+        anio, mes = _mes_atras(hoy, meses)
+        for indice in range(min(cuantos, restantes)):
+            # Días del 1 al 28: cualquier mes los tiene.
+            fechas.append(date(anio, mes, 1 + indice * 27 // max(cuantos - 1, 1)))
+        restantes -= cuantos
+        if restantes <= 0:
+            break
+    # Si el reparto no llegó a cubrirlos todos, el resto va al mes más antiguo.
+    while len(fechas) < cantidad:
+        anio, mes = _mes_atras(hoy, len(REPARTO_MESES))
+        fechas.append(date(anio, mes, 1 + len(fechas) % 28))
+    return fechas[:cantidad]
+
+
 def generar_filas():
     """Una fila por investigado. Algunos oficios repiten Referencia oficio para
     que la carga los agrupe y calcule la cantidad de investigados."""
     random.seed(2026)          # mismo archivo en cada ejecución
     hoy = date.today()
+    fechas = _fechas_recepcion(CANTIDAD_OFICIOS, hoy)
+    # Se reparten al azar para que la carga de cada persona no quede pegada a
+    # un tramo de fechas concreto.
+    responsables = [usuario
+                    for usuario, cantidad in CARGA_POR_USUARIO.items()
+                    for _ in range(cantidad)]
+    random.shuffle(responsables)
     filas = []
     for numero in range(1, CANTIDAD_OFICIOS + 1):
-        institucion = random.choice(INSTITUCIONES)
+        institucion = INSTITUCIONES[numero % 2]      # mitad y mitad
         sigla = "SB" if institucion.startswith("Super") else "FGE"
 
-        recepcion = hoy - timedelta(days=random.randint(5, 240))
+        recepcion = fechas[numero - 1]
         oficio = recepcion - timedelta(days=random.randint(1, 20))
-        asignacion = recepcion + timedelta(days=random.randint(0, 3))
-        # Tres de cada cuatro ya están respondidos.
-        respondido = random.random() < 0.75
-        respuesta = asignacion + timedelta(days=random.randint(1, 25)) \
-            if respondido else None
-        if respuesta and respuesta > hoy:
-            respuesta = None
-            respondido = False
+        # Ninguna fecha puede ser futura: la aplicación las rechaza.
+        asignacion = min(recepcion + timedelta(days=random.randint(0, 3)), hoy)
 
-        usuario = random.choice(USUARIOS)
+        usuario = responsables[numero - 1]
+        # Lo recién llegado suele estar en proceso y lo antiguo ya respondido,
+        # que es como se ve una carga real.
+        antiguo = (hoy - recepcion).days > 20
+        respondido = usuario and (antiguo or numero % 4 == 0)
+        respuesta = None
+        if respondido:
+            # Tiempos de respuesta variados: de 1 a 30 días.
+            respuesta = asignacion + timedelta(days=1 + (numero * 7) % 30)
+            if respuesta > hoy:
+                respuesta, respondido = None, False
         if not usuario:
             # Sin responsable no puede haber respuesta: la aplicación lo dejaría
             # "Por asignar" y le quitaría la fecha; se genera ya coherente.
@@ -86,14 +159,15 @@ def generar_filas():
             filas.append({
                 "Institución del Estado": institucion,
                 "Mes": MESES[recepcion.month - 1],
-                "Fecha Asignación": asignacion,
+                "Fecha Asignación": asignacion if usuario else None,
                 "Usuario": usuario,
                 "Prioridad": random.choice(["Alta", "Media", "Baja"]),
                 "Fecha Emisión": recepcion,
                 "Referencia": f"{str(recepcion.year)[2:]}-{numero:04d}-UDC",
                 "Medio Repuesta": random.choice(["Electrónico", "Físico"]),
                 "Fecha Envío": respuesta,
-                "Estado": "Finalizado" if respondido else "En proceso",
+                "Estado": "Finalizado" if respondido else (
+                    "En proceso" if usuario else "Por asignar"),
                 "Días": (respuesta - asignacion).days if respuesta else "",
                 "Canal Recepc": random.choice(["Proveedor", "Ventanilla",
                                                "Correo"]),
@@ -106,8 +180,8 @@ def generar_filas():
                 "Número Expediente Fiscal": "-",
                 "Referencia - Circular Superintendencia Bancos":
                     f"SB-SG-{recepcion.year}-{random.randint(10000, 99999)}-C",
-                "Delito": random.choice(DELITOS),
-                "Tipo de Accion": random.choice(TIPOS_ACCION),
+                "Delito": DELITOS[numero % len(DELITOS)],
+                "Tipo de Accion": TIPOS_ACCION[numero % len(TIPOS_ACCION)],
                 "Observación": random.choice(
                     ["", "", "Atendido dentro del plazo",
                      "Requiere seguimiento", "Se remitió por correo"]),
@@ -154,9 +228,26 @@ def escribir(filas):
     libro.save(SALIDA)
 
 
+def _resumen(filas):
+    """Cómo quedó repartido lo generado (para verlo al ejecutar el script)."""
+    from collections import Counter
+    oficios = {}
+    for fila in filas:
+        oficios.setdefault(fila["Referencia - Oficio FGE; Juzgado"], fila)
+    estados = Counter(f["Estado"] for f in oficios.values())
+    usuarios = Counter(f["Usuario"] or "(sin responsable)"
+                       for f in oficios.values())
+    entidades = Counter(f["Institución del Estado"] for f in oficios.values())
+    return oficios, estados, usuarios, entidades
+
+
 if __name__ == "__main__":
     filas = generar_filas()
     escribir(filas)
-    oficios = len({f["Referencia - Oficio FGE; Juzgado"] for f in filas})
-    print(f"{SALIDA.name}: {len(filas)} filas -> {oficios} oficios "
+    oficios, estados, usuarios, entidades = _resumen(filas)
+    print(f"{SALIDA.name}: {len(filas)} filas -> {len(oficios)} oficios "
           f"(las filas que comparten Referencia oficio se agrupan).")
+    print("  Estados:      " + ", ".join(f"{k}: {v}" for k, v in estados.items()))
+    print("  Instituciones:" + ", ".join(f" {k}: {v}" for k, v in entidades.items()))
+    print("  Responsables: " + ", ".join(f"{k}: {v}"
+                                         for k, v in usuarios.most_common()))

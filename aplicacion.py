@@ -1809,11 +1809,11 @@ class AplicacionPrincipal(ttk.Frame):
         ejemplo_sigla = list(INSTITUCIONES.values())[0]
         self._etiqueta_ajustable(
             panel,
-            "Cada institución lleva su propia numeración. Indique, por "
-            "institución, la ÚLTIMA Referencia UDC utilizada antes del sistema.\n"
-            f"Formato: {PREFIJO_REFERENCIA}-SIGLA-NNNN  "
-            f"(por ejemplo {PREFIJO_REFERENCIA}-{ejemplo_sigla}-0241 → "
-            f"el siguiente será {PREFIJO_REFERENCIA}-{ejemplo_sigla}-0242)."
+            "Indique, por institución, la ÚLTIMA Referencia UDC utilizada "
+            "antes del sistema.\n"
+            f"Formato: {PREFIJO_REFERENCIA}-SIGLA-AAAA-NNNN  "
+            f"(por ejemplo {PREFIJO_REFERENCIA}-{ejemplo_sigla}-"
+            f"{parametros.anio_vigente()}-0241)."
         ).grid(row=0, column=0, columnspan=3, sticky="w", pady=(0, 10))
 
         ttk.Label(panel, text="Institución").grid(row=1, column=0, sticky="w", pady=4)
@@ -1839,9 +1839,8 @@ class AplicacionPrincipal(ttk.Frame):
 
         self._etiqueta_ajustable(
             panel,
-            "La numeración de cada institución corre de forma continua: no se "
-            "reinicia por año. Solo el superusuario y los administradores "
-            "pueden modificar este valor.",
+            "El formato de los códigos corren de forma continua. Solo el "
+            "superusuario y los administradores pueden modificar este valor.",
             foreground="#6B7280", font=("Helvetica", 8)
         ).grid(row=5, column=0, columnspan=3, sticky="w", pady=(10, 0))
 
