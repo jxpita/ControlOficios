@@ -409,9 +409,16 @@ class AplicacionPrincipal(ttk.Frame):
         estilo.configure("TEntry", fieldbackground=COLOR_BLANCO, foreground=COLOR_TEXTO)
         estilo.configure("TCombobox", fieldbackground=COLOR_BLANCO, foreground=COLOR_TEXTO)
         estilo.configure("Treeview", background=COLOR_BLANCO, foreground=COLOR_TEXTO, rowheight=25)
-        estilo.configure("Treeview.Heading", background=COLOR_AZUL,
-                         foreground=COLOR_BLANCO, font=("Helvetica", 10, "bold"),
-                         padding=(6, 5))
+        # Encabezados en dos líneas donde Tk sepa dibujarlas: ahorra bastante
+        # ancho de tabla. El alto se amplía a mano —el encabezado no crece
+        # solo— con el espacio de una línea más.
+        cabecera = {"background": COLOR_AZUL, "foreground": COLOR_BLANCO,
+                    "font": self.FUENTE_CABECERA, "padding": (6, 5)}
+        if self._cabecera_se_parte():
+            alto_linea = tkfont.Font(font=self.FUENTE_CABECERA).metrics("linespace")
+            cabecera["wraplength"] = self.ANCHO_CORTE_CABECERA
+            cabecera["padding"] = (6, 4, 6, 4 + alto_linea)
+        estilo.configure("Treeview.Heading", **cabecera)
         estilo.map("Treeview.Heading", background=[("active", "#1A2E5A")])
         # Los marcos con título (LabelFrame) deben compartir el fondo blanco de
         # las etiquetas; si no, se ven franjas grises alrededor de los textos.
@@ -792,22 +799,66 @@ class AplicacionPrincipal(ttk.Frame):
         except ValueError:
             self.lbl_proxima_referencia.config(text="")
 
-    @staticmethod
-    def _ancho_columna(titulo, ancho_dato):
+    # ¿Este Tk dibuja el texto de los encabezados en varias líneas? Se resuelve
+    # una sola vez, la primera vez que se pregunta.
+    _cabecera_parte = None
+
+    @classmethod
+    def _cabecera_se_parte(cls):
+        """Comprueba si en este equipo los encabezados se pueden partir.
+
+        No todas las versiones de Tk dibujan más de una línea en el encabezado
+        de un `Treeview`: donde no lo hacen, la segunda línea desaparece y
+        quedan encabezados truncados. Se sondea con una etiqueta, que usa el
+        mismo motor de texto, y según el resultado se parten los títulos o se
+        dejan de una sola línea con la columna más ancha.
+        """
+        if cls._cabecera_parte is None:
+            try:
+                sonda = ttk.Label(text="Cantidad de investigados",
+                                  font=cls.FUENTE_CABECERA)
+                una_linea = sonda.winfo_reqheight()
+                sonda.config(wraplength=cls.ANCHO_CORTE_CABECERA)
+                cls._cabecera_parte = sonda.winfo_reqheight() > una_linea
+                sonda.destroy()
+            except tk.TclError:
+                cls._cabecera_parte = False
+        return cls._cabecera_parte
+
+    @classmethod
+    def _ancho_columna(cls, titulo, ancho_dato):
         """Ancho de una columna de tabla: el mayor entre lo que pide el dato y
         lo que ocupa su encabezado.
 
-        Los encabezados se miden con la fuente real, no a ojo: así el nombre
-        del campo se lee entero en cualquier equipo, con cualquier tamaño de
-        fuente. (Repartir el título en dos líneas no sirve: Tk no dibuja el
-        salto de línea en el encabezado de un Treeview en todas las
-        plataformas, y la segunda línea desaparece.)
+        El encabezado se mide con la fuente real, no a ojo, así que el nombre
+        del campo se lee entero en cualquier equipo y con cualquier tamaño de
+        fuente. Si los encabezados se parten, lo que se mide es la línea más
+        larga de las que resultan, que es lo que de verdad ocupa.
         """
         try:
-            fuente = tkfont.Font(font=("Helvetica", 10, "bold"))
-            return max(ancho_dato, fuente.measure(titulo) + 22)
+            fuente = tkfont.Font(font=cls.FUENTE_CABECERA)
+            if cls._cabecera_se_parte():
+                ancho_titulo = max(fuente.measure(linea) for linea in
+                                   cls._partir_titulo(titulo, fuente))
+            else:
+                ancho_titulo = fuente.measure(titulo)
+            return max(ancho_dato, ancho_titulo + 22)
         except tk.TclError:
             return ancho_dato
+
+    @classmethod
+    def _partir_titulo(cls, titulo, fuente):
+        """Líneas en las que Tk repartirá el título con ese ancho de corte."""
+        lineas, actual = [], ""
+        for palabra in titulo.split():
+            prueba = f"{actual} {palabra}".strip()
+            if actual and fuente.measure(prueba) > cls.ANCHO_CORTE_CABECERA:
+                lineas.append(actual)
+                actual = palabra
+            else:
+                actual = prueba
+        lineas.append(actual)
+        return lineas
 
     def _campo(self, grupo, fila, etiqueta, widget, ayuda=None, estirar=True):
         """Coloca una etiqueta y su campo en una fila del grupo.
@@ -1023,6 +1074,12 @@ class AplicacionPrincipal(ttk.Frame):
     # Ancho máximo de la etiqueta de un campo antes de partirla en dos líneas.
     ANCHO_MAXIMO_ETIQUETA = 140
 
+    # Ancho de corte de los ENCABEZADOS de las tablas. Partirlos ahorra ancho:
+    # "Fecha de recepción" ocupa una columna de 95 px en dos líneas y de 140 en
+    # una sola.
+    ANCHO_CORTE_CABECERA = 90
+    FUENTE_CABECERA = ("Helvetica", 10, "bold")
+
     def _construir_filtros(self, marco):
         """Panel de búsqueda. Tres bloques que se acumulan entre sí:
 
@@ -1205,10 +1262,11 @@ class AplicacionPrincipal(ttk.Frame):
         columnas = ("referencia", "institucion", "codigo", "accion", "causal",
                     "oficio", "recepcion", "asignacion", "respuesta",
                     "investigados", "empleado", "estado", "pdf", "observacion")
-        # Los encabezados van con la palabra completa, sin abreviar. El ancho de
-        # cada columna es el mayor entre lo que necesita el DATO y lo que mide
-        # su título, así que el nombre del campo siempre se lee entero (ver
-        # `_ancho_columna`).
+        # Los encabezados van con la palabra completa, sin abreviar, y se
+        # parten en dos líneas para no ensanchar la tabla. El ancho de cada
+        # columna es el mayor entre lo que necesita el DATO y lo que mide su
+        # título ya partido, así que el nombre del campo siempre se lee entero
+        # (ver `_ancho_columna`).
         titulos = ("Referencia UDC", "Institución del Estado",
                    "Referencia oficio", "Tipo de acción",
                    "Causal oficio", "Fecha de oficio", "Fecha de recepción",

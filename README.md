@@ -114,14 +114,26 @@ duro para que no se quede solo en la segunda línea. El ajuste se dispara con el
 redimensionarse antes que sus hijos, y atender solo a la ventana dejaría anchos
 de corte antiguos.
 
-Los **encabezados de las tablas** siguen otro camino: llevan la palabra
-completa, sin abreviar, **en una sola línea**, y el ancho de cada columna es el
-mayor entre lo que pide el dato y lo que **mide** su título con la fuente real
-(`_ancho_columna`). Repartir el título en dos líneas no sirve: Tk **no dibuja el
-salto de línea** en el encabezado de un `Treeview` en todas las plataformas, y
-donde no lo hace la segunda línea desaparece, dejando encabezados como «F.» o
-«Cant.». Medir es lo único que se comporta igual en cualquier equipo, con
-cualquier tamaño de fuente.
+Los **encabezados de las tablas** llevan siempre la palabra completa, sin
+abreviar, y se **parten en dos líneas** para no ensanchar la tabla: partirlos
+ahorra unos 300 px en la de oficios («Fecha de recepción» ocupa 95 px en dos
+líneas y 140 en una). El ancho de cada columna es el mayor entre lo que pide el
+dato y lo que **mide** su título —ya partido— con la fuente real
+(`_ancho_columna`), así que el nombre del campo se lee entero en cualquier
+equipo y con cualquier tamaño de fuente.
+
+Dos detalles que no son evidentes:
+
+- El encabezado **no crece solo** al partirse: hay que ampliarlo a mano con el
+  `padding` del estilo `Treeview.Heading`, sumándole el alto de una línea. Si
+  no, Tk dibuja las dos líneas pero recorta la segunda.
+- **No todas las versiones de Tk parten el texto del encabezado.** Donde no lo
+  hacen, la segunda línea desaparece y quedan encabezados truncados («F.»,
+  «Cant.»). Por eso se **sondea** el comportamiento al arrancar
+  (`_cabecera_se_parte`, con una etiqueta que usa el mismo motor de texto): si
+  el equipo parte, se usan columnas estrechas con el título en dos líneas; si
+  no, el título va de una sola línea y la columna se ensancha lo necesario.
+  Nunca se recorta un nombre de campo.
 
 En *Usuarios*, el mismo formulario sirve para **crear** y para **editar**: al
 pulsar *Editar* se carga la cuenta seleccionada y el botón principal pasa a
