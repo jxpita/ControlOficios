@@ -797,13 +797,13 @@ class AplicacionPrincipal(ttk.Frame):
         """Ancho de una columna de tabla: el mayor entre lo que pide el dato y
         lo que ocupa su encabezado, medido con la fuente real.
 
-        Los encabezados van **en una sola línea**. Repartirlos en dos ahorraría
-        ancho, pero no es fiable: hay versiones de Tk que dibujan solo la
-        primera línea del encabezado de un `Treeview` —da igual que el corte se
-        pida con un salto de línea o con `wraplength`— y el nombre del campo
-        queda truncado («Fecha de», «Cantidad de»). Para no ensanchar la tabla,
-        lo que se hace es titular con **una palabra completa** en vez de con
-        una frase: «Recepción» en lugar de «Fecha de recepción».
+        Los encabezados van **en una sola línea**, con el nombre completo del
+        campo. Repartirlos en dos ahorraría ancho, pero no es fiable: hay
+        versiones de Tk que dibujan solo la primera línea del encabezado de un
+        `Treeview` —da igual que el corte se pida con un salto de línea o con
+        `wraplength`— y el nombre del campo queda truncado («Fecha de»,
+        «Cantidad de»), que es peor que una tabla ancha. Para el ancho está la
+        barra de desplazamiento horizontal.
         """
         try:
             fuente = tkfont.Font(font=cls.FUENTE_CABECERA)
@@ -1209,15 +1209,14 @@ class AplicacionPrincipal(ttk.Frame):
         columnas = ("referencia", "institucion", "codigo", "accion", "causal",
                     "oficio", "recepcion", "asignacion", "respuesta",
                     "investigados", "empleado", "estado", "pdf", "observacion")
-        # Encabezados sin abreviaturas y en una sola línea (ver
-        # `_ancho_columna`). Las cuatro fechas y la cantidad se titulan con UNA
-        # palabra: en columnas de 90 px, "Fecha de recepción" obligaría a
-        # ensanchar la tabla 50 px por columna, y todas ellas muestran fechas,
-        # así que "Recepción" se entiende igual.
+        # Encabezados con el nombre completo del campo, sin abreviar y en una
+        # sola línea (ver `_ancho_columna`): la tabla queda más ancha, pero se
+        # lee sin ambigüedad. Para el ancho está la barra horizontal.
         titulos = ("Referencia UDC", "Institución del Estado",
                    "Referencia oficio", "Tipo de acción",
-                   "Causal oficio", "Oficio", "Recepción",
-                   "Asignación", "Respuesta", "Investigados",
+                   "Causal oficio", "Fecha de oficio", "Fecha de recepción",
+                   "Fecha de asignación", "Fecha de respuesta",
+                   "Cantidad de investigados",
                    "Responsable", "Estado", "PDF", "Observación")
         # Ancho que pide el DATO (p. ej. "REQ-UDC-FGE-2026-0001" o
         # "Superintendencia de Bancos"); si el título es más largo, manda él.

@@ -114,26 +114,21 @@ duro para que no se quede solo en la segunda línea. El ajuste se dispara con el
 redimensionarse antes que sus hijos, y atender solo a la ventana dejaría anchos
 de corte antiguos.
 
-Los **encabezados de las tablas** van **en una sola línea**, sin abreviaturas, y
-el ancho de cada columna es el mayor entre lo que pide el dato y lo que **mide**
-su título con la fuente real (`_ancho_columna`), así que el nombre del campo se
-lee entero en cualquier equipo.
+Los **encabezados de las tablas** llevan el **nombre completo del campo**, sin
+abreviar, **en una sola línea**. El ancho de cada columna es el mayor entre lo
+que pide el dato y lo que **mide** su título con la fuente real
+(`_ancho_columna`), así que el nombre se lee entero en cualquier equipo y con
+cualquier tamaño de fuente. La tabla resulta ancha (unos 2050 px en la de
+oficios); para eso está la barra de desplazamiento horizontal.
 
-**Por qué no se parten en dos líneas.** Ahorraría ancho, y se intentó de las dos
-formas posibles —un salto de línea dentro del texto y `wraplength` en el estilo,
-ampliando a mano el alto del encabezado—, pero **hay versiones de Tk que dibujan
-solo la primera línea** del encabezado de un `Treeview`. Donde eso pasa, el
-encabezado queda truncado («Fecha de», «Cantidad de») y el usuario no sabe qué
-columna está mirando. Tampoco sirve detectarlo a tiempo de ejecución: una
-`ttk.Label` de prueba sí parte el texto en esos mismos equipos, así que la sonda
-da un falso positivo.
-
-Para no ensanchar la tabla, la solución es otra: **titular con una palabra
-completa** en vez de con una frase. Las cuatro fechas y la cantidad se llaman
-*Oficio*, *Recepción*, *Asignación*, *Respuesta* e *Investigados*; todas esas
-columnas muestran fechas o números, así que se entienden igual y la tabla mide
-1755 px en lugar de 2048. Donde no aprieta el ancho —el diálogo de implicados—
-los títulos van completos.
+**Por qué no se parten en dos líneas.** Ahorraría unos 300 px, y se intentó de
+las dos formas posibles —un salto de línea dentro del texto y `wraplength` en el
+estilo, ampliando a mano el alto del encabezado—, pero **hay versiones de Tk que
+dibujan solo la primera línea** del encabezado de un `Treeview`. Donde eso pasa,
+el encabezado queda truncado («Fecha de», «Cantidad de») y el usuario no sabe
+qué columna está mirando, que es peor que una tabla ancha. Tampoco sirve
+detectarlo a tiempo de ejecución: una `ttk.Label` de prueba sí parte el texto en
+esos mismos equipos, así que la sonda da un falso positivo.
 
 ## 2.1 Roles de usuario
 

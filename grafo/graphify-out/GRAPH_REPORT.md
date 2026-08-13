@@ -4,12 +4,12 @@
 - cluster-only mode — file stats not available
 
 ## Summary
-- 598 nodes · 1270 edges · 30 communities (29 shown, 1 thin omitted)
+- 598 nodes · 1270 edges · 30 communities
 - Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 29 edges (avg confidence: 0.79)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `34173003`
+- Built from commit: `524791e9`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -71,7 +71,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (30 total, 1 thin omitted)
+## Communities (30 total, 0 thin omitted)
 
 ### Community 0 - "ValueError"
 Cohesion: 0.12
@@ -138,8 +138,8 @@ Cohesion: 0.24
 Nodes (5): Permite al superusuario o a un administrador indicar la última         Referenci, Etiqueta de texto largo cuyo ancho de corte sigue al de la ventana.          Con, Catálogo de tipos de acción, mantenible por los gestores., Panel para volcar de una vez el histórico de la matriz de Excel., Panel de copias de seguridad. Solo lo ve el superusuario.
 
 ### Community 16 - "almacen_oficios.py"
-Cohesion: 0.09
-Nodes (44): actualizar_implicado(), adjuntar_respuesta(), agregar_implicado(), anular_oficio(), causales_registradas(), contar_por_tipo_accion(), eliminar_implicado(), eliminar_respuesta() (+36 more)
+Cohesion: 0.10
+Nodes (40): actualizar_implicado(), adjuntar_respuesta(), agregar_implicado(), anular_oficio(), contar_por_tipo_accion(), eliminar_implicado(), eliminar_respuesta(), esta_anulado() (+32 more)
 
 ### Community 17 - ".__init__"
 Cohesion: 0.12
@@ -185,10 +185,13 @@ Nodes (17): _encabezados_exportacion(), exportar_csv(), exportar_oficios(), expo
 Cohesion: 0.33
 Nodes (3): Corrige los datos de identificación de un oficio, o lo retira., Abre los implicados del oficio sobre el que se hizo doble clic., Busca solo entre los oficios visibles para el usuario en sesión.          Incluy
 
+### Community 33 - "_rol_de"
+Cohesion: 0.20
+Nodes (6): causales_registradas(), hay_soporte_xlsx(), ¿Está disponible openpyxl para exportar a Excel?, Rol del usuario indicado, o '' si no existe., Causales distintas presentes en esos oficios, en orden alfabético.      El causa, _rol_de()
+
 ## Knowledge Gaps
 - **47 isolated node(s):** `Dependencias`, `IMPORTANTE: actualizar el grafo tras CADA cambio de código`, `Qué se versiona y qué no`, `Consultar el grafo`, `Dependencias externas` (+42 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **1 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
