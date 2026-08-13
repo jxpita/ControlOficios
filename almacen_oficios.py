@@ -199,6 +199,22 @@ def _validar_fecha_asignacion(fecha_asignacion: str, fecha_recepcion: str) -> st
     return fecha_asignacion
 
 
+def _exigir_cantidad_coherente(registro: Dict, cantidad: str) -> None:
+    """La cantidad de investigados no se teclea si el oficio tiene detalle.
+
+    Con implicados anotados el número lo cuenta la lista (ver
+    `_sincronizar_investigados`); dejar que además se escriba a mano solo sirve
+    para que digan cosas distintas.
+    """
+    implicados = registro.get("implicados") or []
+    if implicados and cantidad and cantidad != str(len(implicados)):
+        raise ValueError(
+            f"La cantidad de investigados la cuentan los implicados del "
+            f"oficio ({len(implicados)}). Añada o quite personas en el "
+            f"detalle del oficio (doble clic) en vez de escribir el número."
+        )
+
+
 def _exigir_no_anulado(registro: Dict) -> None:
     """Un oficio anulado está retirado de la operación: no admite cambios de
     trámite hasta que se reactive."""
@@ -679,6 +695,7 @@ def actualizar_oficio(referencia: str, nuevo_estado: str, id_empleado: str,
                         f"Fecha de asignación: {nueva_asignacion or '(sin fecha)'}")
             if cantidad_investigados is not None:
                 nueva_cantidad = _validar_cantidad_investigados(cantidad_investigados)
+                _exigir_cantidad_coherente(registro, nueva_cantidad)
                 if nueva_cantidad != registro.get("cantidad_investigados", ""):
                     registro["cantidad_investigados"] = nueva_cantidad
                     cambios.append(
@@ -766,6 +783,7 @@ def actualizar_estado_asignado(referencia: str, actor: str, nuevo_estado: str,
                 registro.get("estado", ""))
             if cantidad_investigados is not None:
                 nueva_cantidad = _validar_cantidad_investigados(cantidad_investigados)
+                _exigir_cantidad_coherente(registro, nueva_cantidad)
                 if nueva_cantidad != registro.get("cantidad_investigados", ""):
                     registro["cantidad_investigados"] = nueva_cantidad
                     cambios.append(

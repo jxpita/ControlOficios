@@ -902,10 +902,13 @@ class AplicacionPrincipal(ttk.Frame):
             datos, 5, "Fecha de oficio *", SelectorFecha(datos), estirar=False)
         self.entrada_fecha_recepcion = self._campo(
             datos, 6, "Fecha de recepción *", SelectorFecha(datos), estirar=False)
-        # La cantidad de investigados describe al oficio, no a su asignación.
-        self.entrada_investigados = self._campo(
-            datos, 7, "Cantidad de investigados", ttk.Entry(datos, width=10),
-            estirar=False)
+        # La cantidad de investigados NO se teclea: la cuenta la lista de
+        # implicados, que se registra después con doble clic sobre el oficio.
+        self._campo(datos, 7, "Cantidad de investigados",
+                    ttk.Label(datos,
+                              text="La calcula la lista de implicados",
+                              foreground="#6B7280", font=("Helvetica", 9)),
+                    estirar=False)
 
         # --- Columna derecha: asignación y seguimiento -----------------------
         gestion = self._grupo(contenido, "Asignación y seguimiento", 1, 1)
@@ -993,7 +996,6 @@ class AplicacionPrincipal(ttk.Frame):
                 actor_rol=self.usuario.get("rol"),
                 ruta_documento=self.archivo_oficio.get(),
                 fecha_asignacion=self.entrada_fecha_asignacion.get(),
-                cantidad_investigados=self.entrada_investigados.get(),
                 ruta_respuesta=self.archivo_respuesta_registro.get(),
                 institucion=self.combo_institucion.get(),
                 tipo_accion=self.combo_tipo_accion.get(),
@@ -1001,10 +1003,11 @@ class AplicacionPrincipal(ttk.Frame):
         except ValueError as error:
             messagebox.showerror("Error", str(error))
             return
-        messagebox.showinfo("Registrado",
-                            f"Oficio registrado.\nReferencia UDC: {referencia}")
-        for entrada in (self.entrada_codigo, self.entrada_causal,
-                        self.entrada_investigados):
+        registrar_implicados = messagebox.askyesno(
+            "Registrado",
+            f"Oficio registrado.\nReferencia UDC: {referencia}\n\n"
+            "¿Desea anotar ahora a las personas investigadas?")
+        for entrada in (self.entrada_codigo, self.entrada_causal):
             entrada.delete(0, "end")
         self.entrada_fecha_asignacion.set("")
         self.entrada_fecha_respuesta.set("")
@@ -1018,6 +1021,11 @@ class AplicacionPrincipal(ttk.Frame):
             self.combo_empleado.current(0)
         self.combo_estado.current(0)
         self._refrescar_listado()
+        if registrar_implicados:
+            registro = self._oficio_por_referencia(referencia)
+            if registro is not None:
+                self.cuaderno.select(self.pestana_listado)
+                DialogoImplicados(self, self.usuario, registro)
 
     # Primera opción de los desplegables de filtro: no filtra por ese campo.
     TODOS = "(Todos)"
@@ -1265,8 +1273,11 @@ class AplicacionPrincipal(ttk.Frame):
         self.edicion_fecha_respuesta = SelectorFecha(fila, permitir_vacio=True)
         self.edicion_fecha_respuesta.pack(side="left", padx=(6, 16))
 
+        # La cantidad de investigados no se edita aquí: la cuenta la lista de
+        # implicados (doble clic sobre el oficio).
         ttk.Label(fila, text="Cantidad de investigados").pack(side="left")
-        self.edicion_cantidad = ttk.Entry(fila, width=6)
+        self.edicion_cantidad = ttk.Label(fila, text="—", width=4,
+                                          anchor="center")
         self.edicion_cantidad.pack(side="left", padx=(6, 16))
 
         ttk.Label(fila, text="Tipo de acción").pack(side="left")
@@ -1432,6 +1443,15 @@ class AplicacionPrincipal(ttk.Frame):
         for referencia in seleccion_previa:
             if self.tabla.exists(referencia):
                 self.tabla.selection_set(referencia)
+        # La cantidad de investigados del panel se refresca siempre: no la
+        # teclea nadie —la cuentan los implicados—, así que actualizarla no
+        # puede pisar una edición a medias, y si acaban de añadir o quitar a
+        # una persona tiene que verse al momento.
+        if hasattr(self, "edicion_cantidad") and seleccion_previa:
+            registro = self._oficio_por_referencia(seleccion_previa[0])
+            if registro is not None:
+                self.edicion_cantidad.config(
+                    text=registro.get("cantidad_investigados", "") or "—")
 
     def _al_seleccionar_oficio(self, evento=None):
         """Precarga el panel de edición con los datos del oficio seleccionado.
@@ -1453,8 +1473,8 @@ class AplicacionPrincipal(ttk.Frame):
             return
         self._referencia_en_edicion = seleccion[0]
         self.edicion_fecha_respuesta.set(registro.get("fecha_respuesta", ""))
-        self.edicion_cantidad.delete(0, "end")
-        self.edicion_cantidad.insert(0, registro.get("cantidad_investigados", ""))
+        self.edicion_cantidad.config(
+            text=registro.get("cantidad_investigados", "") or "—")
         self.combo_tipo_accion_edicion.config(values=self._tipos_accion())
         self.combo_tipo_accion_edicion.set(registro.get("tipo_accion", ""))
         self.edicion_observacion.delete("1.0", "end")
@@ -1490,7 +1510,6 @@ class AplicacionPrincipal(ttk.Frame):
             return
         fecha_respuesta = self.edicion_fecha_respuesta.get()
         observacion = self.edicion_observacion.get("1.0", "end")
-        cantidad = self.edicion_cantidad.get()
         try:
             if self._puede_gestionar_usuarios():
                 id_empleado, nombre_empleado = self._responsable_por_display(
@@ -1500,13 +1519,11 @@ class AplicacionPrincipal(ttk.Frame):
                     id_empleado, nombre_empleado, self.usuario["usuario"],
                     self.usuario.get("rol"), fecha_respuesta, observacion,
                     fecha_asignacion=self.edicion_fecha_asignacion.get(),
-                    cantidad_investigados=cantidad,
                     tipo_accion=self.combo_tipo_accion_edicion.get())
             else:
                 estado_final = oficios.actualizar_estado_asignado(
                     seleccion[0], self.usuario["usuario"],
                     self.combo_nuevo_estado.get(), fecha_respuesta, observacion,
-                    cantidad_investigados=cantidad,
                     tipo_accion=self.combo_tipo_accion_edicion.get())
         except ValueError as error:
             messagebox.showerror("Error", str(error))

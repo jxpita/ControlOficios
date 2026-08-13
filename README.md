@@ -237,12 +237,12 @@ el resto son opcionales.
 | Fecha de recepción | **Sí \*** | |
 | Fecha de asignación | No | No puede ser anterior a la de recepción |
 | Fecha de respuesta | No | No puede ser anterior a la de recepción. **Si se indica, el oficio pasa a "Finalizado"** y exige responsable |
-| Cant. investigados | No | Número entero no negativo |
 | Usuario responsable | No | Sin responsable ⇒ "Por asignar" |
 | Estado | **Sí \*** | |
 | Documento del oficio | **Sí \*** | Archivo `.pdf` o `.docx`; se guarda en `datos/documentos/` |
 | Respuesta en PDF | No | Solo hace falta para registrar de entrada un oficio ya finalizado |
 | Observación | No | Texto libre, editable después |
+| Cantidad de investigados | — | **No se teclea**: la cuenta la lista de implicados (ver más abajo) |
 
 La **Referencia UDC** no se ingresa: la genera el sistema a partir de la
 institución elegida (ver 3.2). El formulario muestra cuál será la próxima en
@@ -257,11 +257,14 @@ del campo, y se ajusta para no salirse de la pantalla.
 
 **Qué puede modificar cada rol** en la pestaña *Oficios*:
 
-| | F. asignación | F. respuesta | Cant. investigados | Responsable | Estado | Observación |
+| | F. asignación | F. respuesta | Implicados | Responsable | Estado | Observación |
 |---|---|---|---|---|---|---|
 | Superusuario | ✅ | ✅ | ✅ | ✅ (cualquiera) | ✅ (cualquiera) | ✅ |
 | Administrador | ✅ | ✅ | ✅ | ✅ (salvo superusuarios) | ✅ (cualquiera) | ✅ |
-| Usuario (en sus oficios) | ❌ | ✅ | ✅ | ❌ | ✅ (En proceso ↔ Finalizado) | ✅ |
+| Usuario (en sus oficios) | ❌ | ✅ | ✅ (en los suyos) | ❌ | ✅ (En proceso ↔ Finalizado) | ✅ |
+
+La *cantidad de investigados* no aparece en esa tabla porque **nadie la
+escribe**: la cuenta la lista de implicados.
 
 En el listado, la columna **Responsable** muestra el **usuario** (`ana`), no el nombre completo: identifica igual y deja la tabla más compacta. El nombre completo sigue apareciendo en el desplegable de asignación y en la exportación.
 
@@ -327,11 +330,24 @@ La identificación es opcional a propósito: hay requerimientos sobre personas d
 las que la institución no aporta documento, que es justamente lo que significa
 el tipo *Sin identificación*.
 
-**La Cant. investigados la manda el detalle.** Mientras el oficio no tenga
-implicados anotados, ese número es el que alguien escribió a mano o el que
-dedujo la carga masiva; en cuanto hay detalle, se recalcula solo. No tendría
-sentido que el oficio dijera «3 investigados» y la lista mostrara cuatro
-personas.
+**La cantidad de investigados NO se teclea: la cuenta esta lista.** Se
+recalcula sola al añadir o quitar personas, en el momento, y el listado y el
+panel de *Oficios* la muestran al día. No tendría sentido que el oficio dijera
+«3 investigados» y la lista mostrara cuatro.
+
+Por eso el campo aparece **solo de lectura**:
+
+- en el formulario de *Registrar oficio* se ve el aviso «La calcula la lista de
+  implicados» en vez de una caja de texto; al guardar, la aplicación ofrece
+  abrir el detalle para anotar a las personas en ese momento;
+- en el panel de *Oficios* es una etiqueta con el número, que se refresca en
+  cuanto se cierra el detalle;
+- el almacenamiento **rechaza** un número que contradiga a la lista, venga de
+  donde venga la llamada (`_exigir_cantidad_coherente`).
+
+El único caso en que el número existe sin detalle es el **histórico cargado
+desde la matriz** cuyas filas no traían el nombre del investigado: ahí se
+conserva el número de filas agrupadas, hasta que alguien anote a las personas.
 
 Los implicados se guardan **dentro del propio oficio** (lista `implicados`),
 porque no tienen vida fuera de él, y cada uno lleva un `id` propio en vez de
