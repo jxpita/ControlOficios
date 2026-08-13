@@ -21,6 +21,7 @@ from configuracion import (
     DIR_RESPALDOS, DIAS_RESPALDO_POR_DEFECTO,
     ROL_SUPERUSUARIO, ROL_ADMINISTRADOR, ROL_USUARIO,
     ROLES_GESTORES, INSTITUCIONES,
+    TIPOS_IDENTIFICACION, TIPOS_IMPLICADO, VALORES_LCI,
     COLOR_AZUL, COLOR_BLANCO, COLOR_GRIS_CLARO, COLOR_TEXTO, COLOR_TEXTO_INV
 )
 
@@ -407,7 +408,12 @@ class AplicacionPrincipal(ttk.Frame):
         estilo.configure("TEntry", fieldbackground=COLOR_BLANCO, foreground=COLOR_TEXTO)
         estilo.configure("TCombobox", fieldbackground=COLOR_BLANCO, foreground=COLOR_TEXTO)
         estilo.configure("Treeview", background=COLOR_BLANCO, foreground=COLOR_TEXTO, rowheight=25)
-        estilo.configure("Treeview.Heading", background=COLOR_AZUL, foreground=COLOR_BLANCO, font=("Helvetica", 10, "bold"))
+        # `padding` vertical para que quepan DOS líneas: los títulos largos de
+        # la tabla de oficios llevan un salto de línea y, con la altura de una
+        # sola, la segunda quedaría cortada.
+        estilo.configure("Treeview.Heading", background=COLOR_AZUL,
+                         foreground=COLOR_BLANCO, font=("Helvetica", 10, "bold"),
+                         padding=(4, 4, 4, 16))
         estilo.map("Treeview.Heading", background=[("active", "#1A2E5A")])
         # Los marcos con título (LabelFrame) deben compartir el fondo blanco de
         # las etiquetas; si no, se ven franjas grises alrededor de los textos.
@@ -640,6 +646,17 @@ class AplicacionPrincipal(ttk.Frame):
                     combo.config(values=valores)
                 except tk.TclError:
                     pass
+
+    def _abrir_implicados(self, evento=None):
+        """Abre los implicados del oficio sobre el que se hizo doble clic."""
+        fila = self.tabla.identify_row(evento.y) if evento else None
+        referencia = fila or (self.tabla.selection() or [None])[0]
+        if not referencia:
+            return
+        registro = self._oficio_por_referencia(referencia)
+        if registro is None:
+            return
+        DialogoImplicados(self, self.usuario, registro)
 
     def _oficio_por_referencia(self, referencia):
         """Busca solo entre los oficios visibles para el usuario en sesión.
@@ -1167,14 +1184,17 @@ class AplicacionPrincipal(ttk.Frame):
         columnas = ("referencia", "institucion", "codigo", "accion", "causal",
                     "oficio", "recepcion", "asignacion", "respuesta",
                     "investigados", "empleado", "estado", "pdf", "observacion")
-        titulos = ("Referencia UDC", "Institución del Estado",
-                   "Referencia oficio", "Tipo de acción",
-                   "Causal oficio", "F. oficio", "F. recepción",
-                   "F. asignación", "F. respuesta", "Cant. investigados",
+        # Los títulos largos van en dos líneas (ver el `padding` del estilo
+        # "Treeview.Heading"), para que la columna la fije el ancho del DATO y
+        # no el del encabezado.
+        titulos = ("Referencia\nUDC", "Institución del\nEstado",
+                   "Referencia\noficio", "Tipo de\nacción",
+                   "Causal\noficio", "F. oficio", "F. recepción",
+                   "F.\nasignación", "F.\nrespuesta", "Cant.\ninvestigados",
                    "Responsable", "Estado", "PDF", "Observación")
-        # Referencia UDC y Referencia oficio con ancho suficiente para verse
-        # completas (p. ej. "REQ-UDC-SB-2026-0001").
-        anchos = (190, 215, 150, 150, 150, 90, 95, 100, 95, 135, 110, 90, 40, 200)
+        # Referencia UDC e Institución con ancho suficiente para verse completas
+        # (p. ej. "REQ-UDC-FGE-2026-0001", "Superintendencia de Bancos").
+        anchos = (190, 215, 150, 120, 150, 90, 95, 90, 90, 110, 110, 90, 40, 200)
         contenedor = ttk.Frame(marco)
         # Altura fija (no expand): dentro de un área desplazable la tabla debe
         # tener alto propio para que el panel inferior siga siendo alcanzable.
@@ -1281,6 +1301,8 @@ class AplicacionPrincipal(ttk.Frame):
 
         # Al seleccionar un oficio, precargar sus valores actuales.
         self.tabla.bind("<<TreeviewSelect>>", self._al_seleccionar_oficio)
+        # Doble clic: implicados (personas investigadas) del oficio.
+        self.tabla.bind("<Double-1>", self._abrir_implicados)
         # La tabla crece con la ventana: al maximizar se ven muchas más filas.
         self.oficios_lienzo.bind("<Configure>", self._ajustar_alto_tabla, add="+")
         self._refrescar_listado()
@@ -2717,6 +2739,248 @@ class DialogoMantenimiento(tk.Toplevel):
 
 
 # ============================================================================
+#  IMPLICADOS DE UN OFICIO
+# ============================================================================
+class DialogoImplicados(tk.Toplevel):
+    """Personas investigadas en un oficio: verlas, añadirlas y corregirlas.
+
+    Se abre con doble clic sobre el oficio en la pestaña *Oficios*. La lista
+    de arriba muestra a los implicados y el formulario de abajo sirve tanto
+    para añadir uno nuevo como para modificar el que esté seleccionado.
+
+    Mientras el oficio tenga implicados anotados, la *Cant. investigados* la
+    cuenta esta lista: no tendría sentido que dijeran cosas distintas.
+    """
+
+    def __init__(self, aplicacion, usuario, registro):
+        super().__init__(aplicacion)
+        self.aplicacion = aplicacion
+        self.usuario = usuario
+        self.referencia = registro["referencia"]
+        self.anulado = oficios.esta_anulado(registro)
+        # Un usuario regular solo puede tocar los oficios asignados a él; el
+        # resto los ve, pero en modo lectura.
+        self.editable = (not self.anulado) and (
+            usuario.get("rol") in ROLES_GESTORES
+            or (registro.get("id_empleado", "") or "").strip().lower()
+            == (usuario["usuario"] or "").strip().lower())
+        self.id_en_edicion = None
+
+        self.title(f"Implicados · {self.referencia}")
+        self.configure(bg=COLOR_BLANCO)
+        self.transient(aplicacion.winfo_toplevel())
+        self.grab_set()
+        self.minsize(720, 480)
+
+        marco = tk.Frame(self, bg=COLOR_BLANCO, padx=18, pady=16)
+        marco.pack(fill="both", expand=True)
+        marco.columnconfigure(0, weight=1)
+        marco.rowconfigure(2, weight=1)
+
+        tk.Label(marco, text=f"Oficio {self.referencia}", bg=COLOR_BLANCO,
+                 fg=COLOR_AZUL, font=("Helvetica", 12, "bold")).grid(
+                     row=0, column=0, sticky="w")
+        detalle = registro.get("codigo_oficio", "")
+        if registro.get("institucion"):
+            detalle += f"   ·   {registro['institucion']}"
+        if self.anulado:
+            detalle += "   ·   ANULADO (solo lectura)"
+        elif not self.editable:
+            detalle += "   ·   solo lectura"
+        tk.Label(marco, text=detalle, bg=COLOR_BLANCO, fg="#6B7280",
+                 font=("Helvetica", 9)).grid(row=1, column=0, sticky="w",
+                                             pady=(2, 10))
+
+        # --- Lista de implicados --------------------------------------------
+        lista = ttk.LabelFrame(marco, text=" Personas investigadas ",
+                               padding=(10, 6))
+        lista.grid(row=2, column=0, sticky="nsew")
+        lista.columnconfigure(0, weight=1)
+        lista.rowconfigure(0, weight=1)
+
+        columnas = ("nombre", "tipo_id", "identificacion", "implicado", "lci")
+        titulos = ("Nombre o razón social", "Tipo de\nidentificación",
+                   "Identificación", "Tipo de\nimplicado", "LCI")
+        anchos = (250, 120, 120, 130, 50)
+        self.tabla = ttk.Treeview(lista, columns=columnas, show="headings",
+                                  height=8)
+        for columna, titulo, ancho in zip(columnas, titulos, anchos):
+            self.tabla.heading(columna, text=titulo)
+            self.tabla.column(columna, width=ancho, minwidth=ancho, anchor="w",
+                              stretch=columna == "nombre")
+        barra = ttk.Scrollbar(lista, orient="vertical", command=self.tabla.yview)
+        self.tabla.configure(yscrollcommand=barra.set)
+        self.tabla.grid(row=0, column=0, sticky="nsew")
+        barra.grid(row=0, column=1, sticky="ns")
+        self.tabla.bind("<<TreeviewSelect>>", self._al_seleccionar)
+
+        botones_lista = ttk.Frame(lista)
+        botones_lista.grid(row=1, column=0, columnspan=2, sticky="w",
+                           pady=(8, 0))
+        self.btn_eliminar = ttk.Button(botones_lista, text="Eliminar",
+                                       command=self._eliminar)
+        self.btn_eliminar.pack(side="left")
+        self.lbl_total = ttk.Label(botones_lista, text="",
+                                   foreground="#6B7280", font=("Helvetica", 8))
+        self.lbl_total.pack(side="left", padx=12)
+
+        # --- Formulario -----------------------------------------------------
+        self.formulario = ttk.LabelFrame(marco, text=" Datos del implicado ",
+                                         padding=(10, 6))
+        self.formulario.grid(row=3, column=0, sticky="ew", pady=(12, 0))
+        self.formulario.columnconfigure(1, weight=1)
+        self.formulario.columnconfigure(3, weight=1)
+
+        self.entrada_nombre = ttk.Entry(self.formulario)
+        self._fila(0, 0, "Nombre o razón social *", self.entrada_nombre,
+                   columnspan=3)
+        self.combo_tipo_id = ttk.Combobox(self.formulario, state="readonly",
+                                          width=16,
+                                          values=[""] + TIPOS_IDENTIFICACION)
+        self._fila(1, 0, "Tipo de identificación", self.combo_tipo_id)
+        self.entrada_identificacion = ttk.Entry(self.formulario, width=20)
+        self._fila(1, 2, "Identificación", self.entrada_identificacion)
+        self.combo_tipo_implicado = ttk.Combobox(self.formulario,
+                                                 state="readonly", width=20,
+                                                 values=TIPOS_IMPLICADO)
+        self._fila(2, 0, "Tipo de implicado *", self.combo_tipo_implicado)
+        self.combo_lci = ttk.Combobox(self.formulario, state="readonly",
+                                      width=8, values=VALORES_LCI)
+        self.combo_lci.set("No")
+        self._fila(2, 2, "LCI", self.combo_lci)
+        ttk.Label(self.formulario,
+                  text="LCI: Lista de Control Interno.",
+                  foreground="#6B7280", font=("Helvetica", 8)).grid(
+                      row=3, column=0, columnspan=4, sticky="w", pady=(4, 0))
+
+        barra_form = ttk.Frame(marco)
+        barra_form.grid(row=4, column=0, sticky="ew", pady=(12, 0))
+        self.btn_guardar = ttk.Button(barra_form, text="Añadir",
+                                      command=self._guardar)
+        self.btn_guardar.pack(side="left")
+        self.btn_guardar.config(style="Accent.TButton")
+        ttk.Button(barra_form, text="Nuevo",
+                   command=self._nuevo).pack(side="left", padx=6)
+        ttk.Button(barra_form, text="Cerrar",
+                   command=self.destroy).pack(side="right")
+
+        if not self.editable:
+            for widget in (self.entrada_nombre, self.combo_tipo_id,
+                           self.entrada_identificacion,
+                           self.combo_tipo_implicado, self.combo_lci,
+                           self.btn_guardar, self.btn_eliminar):
+                widget.config(state="disabled")
+
+        self._refrescar()
+        self.entrada_nombre.focus_set()
+
+    def _fila(self, fila, columna, etiqueta, widget, columnspan=1):
+        ttk.Label(self.formulario, text=etiqueta).grid(
+            row=fila, column=columna, sticky="w",
+            padx=(0 if columna == 0 else 12, 6), pady=4)
+        widget.grid(row=fila, column=columna + 1, columnspan=columnspan,
+                    sticky="ew", pady=4)
+
+    # ---- Datos --------------------------------------------------------------
+    def _refrescar(self):
+        seleccion = self.id_en_edicion
+        self.tabla.delete(*self.tabla.get_children())
+        implicados = oficios.listar_implicados(self.referencia)
+        for implicado in implicados:
+            self.tabla.insert("", "end", iid=str(implicado.get("id", "")),
+                              values=(implicado.get("nombre", ""),
+                                      implicado.get("tipo_identificacion", ""),
+                                      implicado.get("identificacion", ""),
+                                      implicado.get("tipo_implicado", ""),
+                                      implicado.get("lci", "")))
+        self.lbl_total.config(
+            text=f"{len(implicados)} implicado(s) · la Cant. investigados del "
+                 f"oficio sigue a esta lista" if implicados
+                 else "Sin implicados anotados")
+        if seleccion is not None and self.tabla.exists(str(seleccion)):
+            self.tabla.selection_set(str(seleccion))
+        # La pestaña de oficios refleja el nuevo número de investigados.
+        self.aplicacion._refrescar_listado()
+
+    def _al_seleccionar(self, evento=None):
+        seleccion = self.tabla.selection()
+        if not seleccion:
+            return
+        id_implicado = int(seleccion[0])
+        implicado = next((i for i in oficios.listar_implicados(self.referencia)
+                          if int(i.get("id", 0)) == id_implicado), None)
+        if implicado is None:
+            return
+        self.id_en_edicion = id_implicado
+        self.formulario.config(text=" Modificar implicado ")
+        self.btn_guardar.config(text="Guardar cambios")
+        self.entrada_nombre.delete(0, "end")
+        self.entrada_nombre.insert(0, implicado.get("nombre", ""))
+        self.combo_tipo_id.set(implicado.get("tipo_identificacion", ""))
+        self.entrada_identificacion.delete(0, "end")
+        self.entrada_identificacion.insert(0, implicado.get("identificacion", ""))
+        self.combo_tipo_implicado.set(implicado.get("tipo_implicado", ""))
+        self.combo_lci.set(implicado.get("lci", "No"))
+
+    def _nuevo(self):
+        """Deja el formulario en blanco para añadir a otra persona."""
+        self.id_en_edicion = None
+        self.formulario.config(text=" Datos del implicado ")
+        self.btn_guardar.config(text="Añadir")
+        self.entrada_nombre.delete(0, "end")
+        self.entrada_identificacion.delete(0, "end")
+        self.combo_tipo_id.set("")
+        self.combo_tipo_implicado.set("")
+        self.combo_lci.set("No")
+        if self.tabla.selection():
+            self.tabla.selection_remove(self.tabla.selection())
+        self.entrada_nombre.focus_set()
+
+    def _guardar(self):
+        datos = dict(nombre=self.entrada_nombre.get(),
+                     tipo_identificacion=self.combo_tipo_id.get(),
+                     identificacion=self.entrada_identificacion.get(),
+                     tipo_implicado=self.combo_tipo_implicado.get(),
+                     lci=self.combo_lci.get())
+        try:
+            if self.id_en_edicion is None:
+                oficios.agregar_implicado(
+                    self.referencia, self.usuario["usuario"],
+                    self.usuario.get("rol"), **datos)
+            else:
+                oficios.actualizar_implicado(
+                    self.referencia, self.id_en_edicion,
+                    self.usuario["usuario"], self.usuario.get("rol"), **datos)
+        except ValueError as error:
+            messagebox.showerror("Error", str(error), parent=self)
+            return
+        self._nuevo()
+        self._refrescar()
+
+    def _eliminar(self):
+        seleccion = self.tabla.selection()
+        if not seleccion:
+            messagebox.showwarning("Sin selección",
+                                   "Seleccione un implicado de la lista.",
+                                   parent=self)
+            return
+        nombre = self.tabla.item(seleccion[0], "values")[0]
+        if not messagebox.askyesno("Eliminar",
+                                   f"¿Quitar a «{nombre}» de este oficio?",
+                                   parent=self):
+            return
+        try:
+            oficios.eliminar_implicado(self.referencia, int(seleccion[0]),
+                                       self.usuario["usuario"],
+                                       self.usuario.get("rol"))
+        except ValueError as error:
+            messagebox.showerror("Error", str(error), parent=self)
+            return
+        self._nuevo()
+        self._refrescar()
+
+
+# ============================================================================
 #  CARGA MASIVA DE OFICIOS
 # ============================================================================
 class DialogoCargaMasiva(tk.Toplevel):
@@ -2864,11 +3128,13 @@ class DialogoCargaMasiva(tk.Toplevel):
 #  EXPORTACIÓN DE OFICIOS
 # ============================================================================
 class DialogoExportar(tk.Toplevel):
-    """Exporta los oficios a un CSV acotando por fecha.
+    """Exporta los oficios, con o sin acotarlos por fecha.
 
-    Siempre hay que elegir un tipo de fecha y, al menos, la fecha inicial: si
-    se deja "hasta" vacío se exporta esa fecha única; si se completan las dos,
-    el rango entre ambas.
+    Sin fechas se exporta **todo** lo que el usuario alcanza a ver. Si se
+    indica solo "desde", esa fecha única; con las dos, el rango entre ambas.
+
+    El archivo lleva una fila por implicado, con todos los datos del oficio
+    repetidos a la izquierda (ver `almacen_oficios.filas_exportacion`).
     """
 
     def __init__(self, aplicacion, usuario):
@@ -2884,7 +3150,7 @@ class DialogoExportar(tk.Toplevel):
         marco = tk.Frame(self, bg=COLOR_BLANCO, padx=18, pady=16)
         marco.pack(fill="both", expand=True)
 
-        tk.Label(marco, text="Exportar oficios a CSV", bg=COLOR_BLANCO,
+        tk.Label(marco, text="Exportar oficios", bg=COLOR_BLANCO,
                  fg=COLOR_AZUL, font=("Helvetica", 12, "bold")).grid(
                      row=0, column=0, columnspan=2, sticky="w", pady=(0, 12))
 
@@ -2896,7 +3162,7 @@ class DialogoExportar(tk.Toplevel):
         self.combo_campo.current(1)      # por defecto, fecha de recepción
         self.combo_campo.grid(row=1, column=1, sticky="w", pady=4)
 
-        tk.Label(marco, text="Desde *", bg=COLOR_BLANCO,
+        tk.Label(marco, text="Desde", bg=COLOR_BLANCO,
                  fg=COLOR_TEXTO).grid(row=2, column=0, sticky="w", pady=4)
         self.fecha_desde = SelectorFecha(marco, permitir_vacio=True)
         self.fecha_desde.grid(row=2, column=1, sticky="w", pady=4)
@@ -2906,9 +3172,12 @@ class DialogoExportar(tk.Toplevel):
         self.fecha_hasta = SelectorFecha(marco, permitir_vacio=True)
         self.fecha_hasta.grid(row=3, column=1, sticky="w", pady=4)
 
-        tk.Label(marco, text="Deje \"hasta\" vacío para exportar una fecha única",
-                 bg=COLOR_BLANCO, fg="#6B7280", font=("Helvetica", 8)).grid(
-                     row=4, column=1, sticky="w")
+        tk.Label(marco,
+                 text="Deje las dos fechas vacías para exportar todos los "
+                      "oficios,\ny solo \"hasta\" vacía para exportar una fecha "
+                      "única.",
+                 bg=COLOR_BLANCO, fg="#6B7280", font=("Helvetica", 8),
+                 justify="left").grid(row=4, column=1, sticky="w")
 
         tk.Label(marco, text="Formato", bg=COLOR_BLANCO,
                  fg=COLOR_TEXTO).grid(row=5, column=0, sticky="w", pady=(10, 4))
@@ -2932,31 +3201,33 @@ class DialogoExportar(tk.Toplevel):
     def _exportar(self):
         desde = self.fecha_desde.get()
         hasta = self.fecha_hasta.get()
-        if not desde and not hasta:
-            messagebox.showerror(
-                "Falta la fecha",
-                "Indique una fecha para exportar, o un rango con las dos fechas.",
-                parent=self)
-            return
         campo = self.aplicacion._clave_por_etiqueta(
             oficios.CAMPOS_FECHA, self.combo_campo.get())
         try:
-            registros = oficios.filtrar_oficios(
-                oficios.listar_oficios_visibles(
-                    self.usuario["usuario"], self.usuario.get("rol")),
-                campo_fecha=campo, desde=desde, hasta=hasta)
+            registros = oficios.listar_oficios_visibles(
+                self.usuario["usuario"], self.usuario.get("rol"))
+            # Sin fechas no se filtra: salen todos los oficios visibles.
+            if desde or hasta:
+                registros = oficios.filtrar_oficios(
+                    registros, campo_fecha=campo, desde=desde, hasta=hasta)
         except ValueError as error:
             messagebox.showerror("Filtro no válido", str(error), parent=self)
             return
         if not registros:
             messagebox.showinfo(
                 "Sin resultados",
-                "Ningún oficio coincide con esa fecha o rango.", parent=self)
+                "No hay oficios que exportar con ese criterio." if (desde or hasta)
+                else "Todavía no hay oficios registrados.", parent=self)
             return
 
         etiqueta_formato = self.combo_formato.get()
         extension = oficios.FORMATOS_EXPORTACION[etiqueta_formato]
-        sufijo = desde if not hasta else f"{desde or 'inicio'}_a_{hasta}"
+        if not desde and not hasta:
+            sufijo = "todos"
+        elif not hasta:
+            sufijo = desde
+        else:
+            sufijo = f"{desde or 'inicio'}_a_{hasta}"
         ruta = filedialog.asksaveasfilename(
             parent=self, title="Guardar la exportación",
             defaultextension=extension,
@@ -2967,8 +3238,9 @@ class DialogoExportar(tk.Toplevel):
         try:
             cantidad = oficios.exportar_oficios(
                 registros, ruta, extension, self.usuario["usuario"],
-                f"{self.combo_campo.get()} {desde or ''}"
-                + (f"..{hasta}" if hasta else ""))
+                (f"{self.combo_campo.get()} {desde or ''}"
+                 + (f"..{hasta}" if hasta else "")) if (desde or hasta)
+                else "todos los oficios")
         except ValueError as error:
             messagebox.showerror("Error", str(error), parent=self)
             return

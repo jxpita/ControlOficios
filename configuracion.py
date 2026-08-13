@@ -139,10 +139,9 @@ ARCHIVO_ICONO = _buscar_recurso("bdp_icon_alt.ico")   # ícono de la ventana
 # --- Constantes de negocio ---------------------------------------------------
 ESTADOS = ["Por asignar", "En proceso", "Finalizado"]
 
-# Referencia UDC:  REQ-UDC-<sigla de la institución>-<secuencial de 4 dígitos>
-# Por ejemplo REQ-UDC-SB-0001 y REQ-UDC-FGE-0001. El secuencial es
-# INDEPENDIENTE para cada institución y corre de forma continua (no se
-# reinicia por año, porque el año no forma parte de la referencia).
+# Referencia UDC:  REQ-UDC-<sigla de la institución>-<año>-<secuencial de 4
+# dígitos>. Por ejemplo REQ-UDC-SB-2026-0001 y REQ-UDC-FGE-2026-0001. El
+# secuencial es INDEPENDIENTE para cada institución y se reinicia cada año.
 PREFIJO_REFERENCIA = "REQ-UDC"
 
 # Instituciones del Estado que remiten oficios: nombre -> sigla de la
@@ -165,6 +164,14 @@ TIPOS_ACCION_INICIALES = [
 ]
 
 ARCHIVO_TIPOS_ACCION = DIR_DATOS / "tipos_accion.dat"   # catálogo, cifrado
+
+# --- Implicados (personas investigadas en un oficio) -------------------------
+# Un oficio puede pedir información de varias personas. De cada una se anota
+# quién es, cómo se identifica y su relación con el banco.
+TIPOS_IDENTIFICACION = ["Cédula", "Pasaporte", "RUC"]
+TIPOS_IMPLICADO = ["Cliente", "No cliente", "Ex cliente", "Sin identificación"]
+# LCI = Lista de Control Interno.
+VALORES_LCI = ["Sí", "No"]
 
 # --- Roles de usuario --------------------------------------------------------
 # El superusuario es el primer usuario que se crea y NO puede eliminarse.

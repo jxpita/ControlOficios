@@ -24,6 +24,7 @@ from cryptography.fernet import InvalidToken
 from configuracion import (
     ARCHIVO_OFICIOS, PREFIJO_REFERENCIA, ESTADOS, ROLES_GESTORES, DIR_RESPUESTAS,
     DIR_DOCUMENTOS, EXTENSIONES_DOCUMENTO, ROL_ADMINISTRADOR, ROL_SUPERUSUARIO,
+    TIPOS_IDENTIFICACION, TIPOS_IMPLICADO, VALORES_LCI,
 )
 from cifrado import cifrar, descifrar
 import registro_actividad
@@ -506,6 +507,19 @@ def _preparar_importado(fila: Dict, registros: List[Dict], referencias: set,
         fila.get("fecha_asignacion"), fecha_recepcion)
     cantidad = _validar_cantidad_investigados(fila.get("cantidad_investigados"))
 
+    # La matriz trae una fila por investigado, así que la carga ya llega con el
+    # detalle de las personas. Si viene, es quien manda sobre la cantidad.
+    implicados = []
+    for numero, datos in enumerate(fila.get("implicados") or [], start=1):
+        implicado = _validar_implicado(
+            datos.get("nombre", ""), datos.get("tipo_identificacion", ""),
+            datos.get("identificacion", ""), datos.get("tipo_implicado", ""),
+            datos.get("lci", "No"))
+        implicado["id"] = numero
+        implicados.append(implicado)
+    if implicados:
+        cantidad = str(len(implicados))
+
     nombre_empleado = (fila.get("empleado") or "").strip()
     id_empleado = (fila.get("id_empleado") or "").strip()
     estado = fila.get("estado") or "Por asignar"
@@ -524,6 +538,7 @@ def _preparar_importado(fila: Dict, registros: List[Dict], referencias: set,
         "fecha_asignacion": fecha_asignacion,
         "fecha_respuesta": fecha_respuesta,
         "cantidad_investigados": cantidad,
+        "implicados": implicados,
         "id_empleado": id_empleado,
         "empleado": nombre_empleado,
         "estado": estado,
@@ -1088,6 +1103,8 @@ CAMPOS_FECHA = {
 }
 
 # Columnas del CSV de exportación: clave interna -> encabezado.
+# Columnas de la exportación: TODO lo que se captura del oficio, en el orden en
+# que se pide en los formularios.
 COLUMNAS_EXPORTACION = {
     "referencia": "Referencia UDC",
     "institucion": "Institución del Estado",
@@ -1099,6 +1116,7 @@ COLUMNAS_EXPORTACION = {
     "fecha_asignacion": "F. asignación",
     "fecha_respuesta": "F. respuesta",
     "cantidad_investigados": "Cant. investigados",
+    "id_empleado": "Usuario responsable",
     "empleado": "Responsable",
     "estado": "Estado",
     "archivo_oficio": "Documento del oficio",
@@ -1106,6 +1124,18 @@ COLUMNAS_EXPORTACION = {
     "observacion": "Observación",
     "registrado_por": "Registrado por",
     "fecha_registro": "Fecha de registro",
+    "origen": "Origen",
+    "anulado": "Anulado",
+    "motivo_anulacion": "Motivo de anulación",
+}
+
+# Columnas del implicado que se añaden a la derecha de las del oficio.
+COLUMNAS_IMPLICADO = {
+    "nombre": "Implicado",
+    "tipo_identificacion": "Tipo de identificación",
+    "identificacion": "Identificación",
+    "tipo_implicado": "Tipo de implicado",
+    "lci": "LCI",
 }
 
 
@@ -1123,8 +1153,39 @@ SEPARADOR_CSV = "|"
 def _fila_exportacion(registro: Dict) -> List[str]:
     """Valores de un oficio en el orden de COLUMNAS_EXPORTACION, con los saltos
     de línea de la observación colapsados en espacios."""
-    return [" ".join(str(registro.get(clave, "") or "").split())
-            for clave in COLUMNAS_EXPORTACION]
+    valores = []
+    for clave in COLUMNAS_EXPORTACION:
+        valor = registro.get(clave, "")
+        if isinstance(valor, bool):        # "anulado" se lee mejor así
+            valor = "Sí" if valor else "No"
+        valores.append(" ".join(str(valor or "").split()))
+    return valores
+
+
+def _encabezados_exportacion() -> List[str]:
+    return list(COLUMNAS_EXPORTACION.values()) + list(COLUMNAS_IMPLICADO.values())
+
+
+def filas_exportacion(registros: List[Dict]) -> List[List[str]]:
+    """Todas las filas de la exportación: **una por implicado**.
+
+    Cada oficio se repite tantas veces como personas investiga, igual que en la
+    matriz de la unidad, con los datos del oficio a la izquierda y los del
+    implicado a la derecha. Un oficio sin implicados anotados ocupa una sola
+    fila, con esas últimas columnas vacías: no se pierde del reporte.
+    """
+    filas = []
+    for registro in registros:
+        datos = _fila_exportacion(registro)
+        implicados = registro.get("implicados") or []
+        if not implicados:
+            filas.append(datos + [""] * len(COLUMNAS_IMPLICADO))
+            continue
+        for implicado in implicados:
+            filas.append(datos + [
+                " ".join(str(implicado.get(clave, "") or "").split())
+                for clave in COLUMNAS_IMPLICADO])
+    return filas
 
 
 def exportar_csv(registros: List[Dict], ruta_destino: str) -> None:
@@ -1136,9 +1197,9 @@ def exportar_csv(registros: List[Dict], ruta_destino: str) -> None:
     destino = Path(ruta_destino)
     with destino.open("w", newline="", encoding="utf-8-sig") as archivo:
         escritor = csv.writer(archivo, delimiter=SEPARADOR_CSV)
-        escritor.writerow(COLUMNAS_EXPORTACION.values())
-        for registro in registros:
-            escritor.writerow(_fila_exportacion(registro))
+        escritor.writerow(_encabezados_exportacion())
+        for fila in filas_exportacion(registros):
+            escritor.writerow(fila)
 
 
 def hay_soporte_xlsx() -> bool:
@@ -1171,7 +1232,7 @@ def exportar_xlsx(registros: List[Dict], ruta_destino: str) -> None:
     hoja = libro.active
     hoja.title = "Oficios"
 
-    encabezados = list(COLUMNAS_EXPORTACION.values())
+    encabezados = _encabezados_exportacion()
     hoja.append(encabezados)
     # Cabecera con los colores corporativos, para que se distinga de los datos.
     relleno = PatternFill("solid", fgColor="152342")
@@ -1181,15 +1242,15 @@ def exportar_xlsx(registros: List[Dict], ruta_destino: str) -> None:
         celda.fill = relleno
         celda.alignment = Alignment(vertical="center")
 
-    for registro in registros:
-        hoja.append(_fila_exportacion(registro))
+    filas = filas_exportacion(registros)
+    for fila in filas:
+        hoja.append(fila)
 
     # Ancho de columna aproximado al contenido, acotado para que la observación
     # no desborde la pantalla.
     for indice, encabezado in enumerate(encabezados, start=1):
         ancho = max([len(encabezado)]
-                    + [len(str(fila[indice - 1]))
-                       for fila in (_fila_exportacion(r) for r in registros)])
+                    + [len(str(fila[indice - 1])) for fila in filas])
         hoja.column_dimensions[get_column_letter(indice)].width = min(ancho + 2, 45)
 
     hoja.freeze_panes = "A2"          # la cabecera queda fija al desplazarse
@@ -1207,7 +1268,12 @@ FORMATOS_EXPORTACION = {
 def exportar_oficios(registros: List[Dict], ruta_destino: str,
                      formato: str = ".xlsx", exportado_por: str = "",
                      detalle: str = "") -> int:
-    """Exporta los oficios al formato indicado y devuelve cuántos escribió."""
+    """Exporta los oficios al formato indicado y devuelve cuántos escribió.
+
+    El archivo lleva una fila por implicado (ver `filas_exportacion`), pero lo
+    que se cuenta e informa son los OFICIOS: es lo que el usuario pidió
+    exportar.
+    """
     if not registros:
         raise ValueError("No hay oficios que exportar con ese criterio.")
     formato = (formato or "").lower()
@@ -1334,3 +1400,167 @@ def causales_registradas(registros: List[Dict]) -> List[str]:
                    for r in registros
                    if (r.get("causal_oficio", "") or "").strip()},
                   key=str.casefold)
+
+
+# --- Implicados (personas investigadas en un oficio) -------------------------
+# Un oficio puede pedir información sobre varias personas. Cada una se guarda
+# dentro del propio oficio, en la lista "implicados", porque no tienen vida
+# fuera de él: son el detalle de ese requerimiento.
+#
+# Cada implicado lleva un `id` propio (correlativo dentro del oficio) en vez de
+# identificarse por su posición: así, si alguien elimina uno mientras otra
+# persona edita, no se modifica al que no era.
+def _validar_implicado(nombre: str, tipo_identificacion: str,
+                       identificacion: str, tipo_implicado: str,
+                       lci: str) -> Dict:
+    """Comprueba y normaliza los datos de un implicado."""
+    nombre = " ".join(str(nombre or "").split())
+    if len(nombre) < 3:
+        raise ValueError("Debe ingresar el nombre o razón social del implicado.")
+
+    tipo_identificacion = " ".join(str(tipo_identificacion or "").split())
+    if tipo_identificacion and tipo_identificacion not in TIPOS_IDENTIFICACION:
+        raise ValueError(
+            f"El tipo de identificación «{tipo_identificacion}» no es válido. "
+            f"Opciones: {', '.join(TIPOS_IDENTIFICACION)}."
+        )
+    identificacion = " ".join(str(identificacion or "").split())
+    # La identificación es opcional: hay oficios sobre personas de las que la
+    # institución no aporta documento (de ahí el tipo "Sin identificación").
+    if identificacion and not tipo_identificacion:
+        raise ValueError(
+            "Indique el tipo de identificación (cédula, pasaporte o RUC)."
+        )
+
+    tipo_implicado = " ".join(str(tipo_implicado or "").split())
+    if tipo_implicado not in TIPOS_IMPLICADO:
+        raise ValueError(
+            f"Debe indicar el tipo de implicado. "
+            f"Opciones: {', '.join(TIPOS_IMPLICADO)}."
+        )
+    lci = " ".join(str(lci or "").split()) or "No"
+    if lci not in VALORES_LCI:
+        raise ValueError("El campo LCI solo admite «Sí» o «No».")
+
+    return {
+        "nombre": nombre,
+        "tipo_identificacion": tipo_identificacion,
+        "identificacion": identificacion,
+        "tipo_implicado": tipo_implicado,
+        "lci": lci,
+    }
+
+
+def _sincronizar_investigados(registro: Dict) -> None:
+    """La cantidad de investigados pasa a contarla el detalle.
+
+    Mientras el oficio no tenga implicados anotados, `cantidad_investigados` es
+    lo que alguien escribió a mano (o lo que dedujo la carga masiva). En cuanto
+    hay detalle, manda el detalle: no tendría sentido decir «3 investigados» y
+    listar cuatro personas.
+    """
+    implicados = registro.get("implicados") or []
+    if implicados:
+        registro["cantidad_investigados"] = str(len(implicados))
+
+
+def _oficio_editable(registros: List[Dict], referencia: str, actor: str,
+                     actor_rol: str) -> Dict:
+    """Devuelve el oficio indicado, comprobando permisos y que no esté anulado."""
+    for registro in registros:
+        if registro["referencia"] == referencia:
+            if not _puede_editar(registro, actor, actor_rol):
+                raise ValueError(
+                    "Solo puede modificar los implicados de los oficios "
+                    "asignados a usted."
+                )
+            _exigir_no_anulado(registro)
+            return registro
+    raise ValueError("No se encontró la referencia indicada.")
+
+
+def listar_implicados(referencia: str) -> List[Dict]:
+    """Implicados anotados en un oficio, en el orden en que se registraron."""
+    for registro in _leer_registros():
+        if registro["referencia"] == referencia:
+            return list(registro.get("implicados") or [])
+    return []
+
+
+@bloqueo.con_bloqueo("oficios")
+def agregar_implicado(referencia: str, actor: str, actor_rol: str,
+                      nombre: str = "", tipo_identificacion: str = "",
+                      identificacion: str = "", tipo_implicado: str = "",
+                      lci: str = "No") -> Dict:
+    """Añade una persona investigada al oficio. Devuelve el implicado guardado."""
+    registros = _leer_registros()
+    registro = _oficio_editable(registros, referencia, actor, actor_rol)
+    implicado = _validar_implicado(nombre, tipo_identificacion, identificacion,
+                                   tipo_implicado, lci)
+    implicados = registro.setdefault("implicados", [])
+    implicado["id"] = max((int(i.get("id", 0)) for i in implicados), default=0) + 1
+    implicados.append(implicado)
+    _sincronizar_investigados(registro)
+    registro.setdefault("historial", []).append({
+        "evento": f"Implicado añadido: {implicado['nombre']}",
+        "por": actor,
+        "cuando": datetime.now().isoformat(timespec="seconds"),
+    })
+    _guardar_registros(registros)
+    registro_actividad.registrar(
+        "AGREGAR_IMPLICADO",
+        f"referencia={referencia}; implicado={implicado['nombre']}", actor)
+    return implicado
+
+
+@bloqueo.con_bloqueo("oficios")
+def actualizar_implicado(referencia: str, id_implicado: int, actor: str,
+                         actor_rol: str, nombre: str = "",
+                         tipo_identificacion: str = "", identificacion: str = "",
+                         tipo_implicado: str = "", lci: str = "No") -> Dict:
+    """Corrige los datos de un implicado ya anotado."""
+    registros = _leer_registros()
+    registro = _oficio_editable(registros, referencia, actor, actor_rol)
+    nuevos = _validar_implicado(nombre, tipo_identificacion, identificacion,
+                                tipo_implicado, lci)
+    for implicado in registro.get("implicados") or []:
+        if int(implicado.get("id", 0)) == int(id_implicado):
+            anterior = implicado.get("nombre", "")
+            implicado.update(nuevos)
+            registro.setdefault("historial", []).append({
+                "evento": f"Implicado modificado: {anterior}",
+                "por": actor,
+                "cuando": datetime.now().isoformat(timespec="seconds"),
+            })
+            _guardar_registros(registros)
+            registro_actividad.registrar(
+                "ACTUALIZAR_IMPLICADO",
+                f"referencia={referencia}; implicado={nuevos['nombre']}", actor)
+            return implicado
+    raise ValueError("Ese implicado ya no existe en el oficio.")
+
+
+@bloqueo.con_bloqueo("oficios")
+def eliminar_implicado(referencia: str, id_implicado: int, actor: str,
+                       actor_rol: str) -> None:
+    """Quita a una persona de la lista de investigados del oficio."""
+    registros = _leer_registros()
+    registro = _oficio_editable(registros, referencia, actor, actor_rol)
+    implicados = registro.get("implicados") or []
+    quedan = [i for i in implicados if int(i.get("id", 0)) != int(id_implicado)]
+    if len(quedan) == len(implicados):
+        raise ValueError("Ese implicado ya no existe en el oficio.")
+    eliminado = next(i for i in implicados
+                     if int(i.get("id", 0)) == int(id_implicado))
+    registro["implicados"] = quedan
+    _sincronizar_investigados(registro)
+    registro.setdefault("historial", []).append({
+        "evento": f"Implicado eliminado: {eliminado.get('nombre', '')}",
+        "por": actor,
+        "cuando": datetime.now().isoformat(timespec="seconds"),
+    })
+    _guardar_registros(registros)
+    registro_actividad.registrar(
+        "ELIMINAR_IMPLICADO",
+        f"referencia={referencia}; implicado={eliminado.get('nombre', '')}",
+        actor)

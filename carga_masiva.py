@@ -24,6 +24,9 @@ Correspondencia con los campos de la aplicación
     Institución del Estado                   institucion (fija la sigla de la
                                              Referencia UDC, que genera el
                                              sistema)
+    Apellidos, Nombres - Razón Social        )
+    TiPASo Id / Identificación               ) implicados (uno por fila del
+    Tipo de Implicado / LCI                  ) mismo oficio)
     Tipo de Accion                           tipo_accion
     Referencia - Oficio FGE; Juzgado...      codigo_oficio (Referencia oficio)
     Delito                                   causal_oficio
@@ -37,16 +40,16 @@ Correspondencia con los campos de la aplicación
     (nº de filas con la misma Ref. oficio)   cantidad_investigados
 
 Las columnas restantes de la matriz (Mes, Prioridad, Medio Respuesta, Días,
-Canal Recepción, los datos del investigado, Expediente Fiscal, la Referencia de
-la circular de la Superintendencia, Tipo de Implicado, LCI y el bloque RCSA) no
-tienen equivalente en la aplicación y se ignoran; la carga informa de ello.
+Canal Recepción, Expediente Fiscal, la Referencia de la circular de la
+Superintendencia y el bloque RCSA) no tienen equivalente en la aplicación y se
+ignoran; la carga informa de ello.
 
 La Referencia UDC NO viene en el archivo: la genera el sistema al importar, con
 la nomenclatura que corresponda a la institución de cada fila.
 
 Varias filas con la misma Referencia oficio se entienden como el mismo oficio
-con varios investigados: se agrupan en un solo registro y la cantidad de
-investigados es el número de filas.
+con varios investigados: se agrupan en un solo registro, cada fila aporta un
+implicado y la cantidad de investigados es el número de implicados.
 """
 import csv
 from datetime import date, datetime
@@ -83,9 +86,9 @@ CABECERA_MATRIZ = [
     ("Días",                                "dias",                   None),
     ("Canal Recepc",                        "canal recepc",           None),
     ("Fecha Circular",                      "fecha circular",         "fecha_oficio"),
-    ("Apellidos, Nombres - Razón Social",   "apellidos",              None),
-    ("TiPASo Id CED; PAS; RUCUC",           "tipaso id",              None),
-    ("Identificación Ced; Pas; RUC",        "identificacion",         None),
+    ("Apellidos, Nombres - Razón Social",   "apellidos",              "implicado_nombre"),
+    ("TiPASo Id CED; PAS; RUCUC",           "tipaso id",              "implicado_tipo_id"),
+    ("Identificación Ced; Pas; RUC",        "identificacion",         "implicado_identificacion"),
     ("Referencia - Oficio FGE; Juzgado",    "referencia - oficio",    "codigo_oficio"),
     ("Número Expediente Fiscal",            "numero expediente",      None),
     ("Referencia - Circular Superintendencia Bancos",
@@ -93,8 +96,8 @@ CABECERA_MATRIZ = [
     ("Delito",                              "delito",                 "causal_oficio"),
     ("Tipo de Accion",                      "tipo de accion",         "tipo_accion"),
     ("Observación",                         "observacion",            "observacion"),
-    ("Tipo de Implicado",                   "tipo de implicado",      None),
-    ("LCI - SI o NO",                       "lci",                    None),
+    ("Tipo de Implicado",                   "tipo de implicado",      "implicado_tipo"),
+    ("LCI - SI o NO",                       "lci",                    "implicado_lci"),
     ("Fecha - Solicitud",                   "fecha - solicitud",      None),
     ("Ref Solic- No. LCI-202X-000",         "ref solic",              None),
 ]
@@ -337,6 +340,47 @@ def leer_archivo(ruta) -> Tuple[List[Dict], List[str], List[str]]:
 
 
 # --- Agrupación y preparación ------------------------------------------------
+# La matriz abrevia; la aplicación guarda el nombre completo del catálogo.
+_TIPOS_IDENTIFICACION = {
+    "ced": "Cédula", "cedula": "Cédula", "c.c": "Cédula", "cc": "Cédula",
+    "pas": "Pasaporte", "pasaporte": "Pasaporte",
+    "ruc": "RUC", "rucuc": "RUC",
+}
+_TIPOS_IMPLICADO = {
+    "cliente": "Cliente",
+    "no cliente": "No cliente", "nocliente": "No cliente",
+    "ex cliente": "Ex cliente", "excliente": "Ex cliente",
+    "sin identificacion": "Sin identificación",
+    "sin identificar": "Sin identificación",
+}
+
+
+def _implicado_de(fila: Dict) -> Optional[Dict]:
+    """Construye el implicado de una fila de la matriz, o None si no trae uno.
+
+    Lo que no se reconoce no tumba la carga: es un histórico, y perder el
+    oficio entero por un «Tipo de Implicado» mal escrito sería peor que
+    anotarlo como «Sin identificación». Los valores que no encajen se informan
+    en la vista previa para que alguien los revise después.
+    """
+    nombre = (fila.get("implicado_nombre") or "").strip()
+    if len(nombre) < 3:
+        return None
+    tipo_id = _TIPOS_IDENTIFICACION.get(normalizar(fila.get("implicado_tipo_id")), "")
+    identificacion = (fila.get("implicado_identificacion") or "").strip()
+    return {
+        "nombre": nombre,
+        "tipo_identificacion": tipo_id,
+        # Sin tipo reconocido no se puede guardar la identificación: el alta
+        # exige decir de qué documento se trata.
+        "identificacion": identificacion if tipo_id else "",
+        "tipo_implicado": _TIPOS_IMPLICADO.get(
+            normalizar(fila.get("implicado_tipo")), "Sin identificación"),
+        "lci": "Sí" if normalizar(fila.get("implicado_lci")) in ("si", "s", "x")
+               else "No",
+    }
+
+
 def agrupar_por_referencia(filas: List[Dict]) -> List[Dict]:
     """Une las filas que comparten Referencia oficio en un solo oficio.
 
@@ -351,17 +395,26 @@ def agrupar_por_referencia(filas: List[Dict]) -> List[Dict]:
     orden: List[str] = []
     for fila in filas:
         clave = (fila.get("codigo_oficio") or f"__fila_{fila['_fila']}").strip().upper()
+        implicado = _implicado_de(fila)
         if clave not in agrupados:
             copia = dict(fila)
             copia["cantidad_investigados"] = 1
+            copia["implicados"] = [implicado] if implicado else []
             agrupados[clave] = copia
             orden.append(clave)
         else:
             agrupados[clave]["cantidad_investigados"] += 1
+            if implicado:
+                agrupados[clave].setdefault("implicados", []).append(implicado)
             # Se completa lo que la primera fila hubiera dejado en blanco.
             for campo, valor in fila.items():
-                if campo != "_fila" and valor and not agrupados[clave].get(campo):
+                if (campo not in ("_fila", "implicados") and valor
+                        and not agrupados[clave].get(campo)):
                     agrupados[clave][campo] = valor
+    # Con detalle anotado, la cantidad de investigados la cuenta el detalle.
+    for oficio in agrupados.values():
+        if oficio.get("implicados"):
+            oficio["cantidad_investigados"] = len(oficio["implicados"])
     return [agrupados[c] for c in orden]
 
 

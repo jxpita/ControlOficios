@@ -1,8 +1,8 @@
 """
 Genera el archivo de datos de prueba para la carga masiva.
 
-Crea `Matriz de prueba - 55 oficios.xlsx` con el FORMATO ESTABLECIDO (cabecera
-en la fila 4, de la columna B a la AA) y 55 oficios repartidos entre las dos
+Crea `Matriz de prueba - 110 oficios.xlsx` con el FORMATO ESTABLECIDO (cabecera
+en la fila 4, de la columna B a la AA) y 110 oficios repartidos entre las dos
 instituciones.
 
 Los datos se reparten a propósito para que el TABLERO se vea con contenido:
@@ -17,8 +17,10 @@ Los datos se reparten a propósito para que el TABLERO se vea con contenido:
 - **Tiempos de respuesta** variados, para que el promedio de días sea
   representativo.
 
-Algunos oficios ocupan más de una fila (una por investigado), igual que en la
-matriz real, así que el archivo tiene más filas que oficios.
+- **Implicados**: cada oficio investiga a un número distinto de personas, de
+  una sola a ocho, y de cada una se anota nombre, identificación, tipo de
+  implicado y LCI. Como la matriz dedica una fila a cada persona, el archivo
+  tiene bastantes más filas que oficios.
 
     python datos_de_prueba/generar_datos_prueba.py
 
@@ -34,8 +36,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from carga_masiva import CABECERA_MATRIZ, FILA_CABECERA   # noqa: E402
 
-SALIDA = Path(__file__).resolve().parent / "Matriz de prueba - 55 oficios.xlsx"
-CANTIDAD_OFICIOS = 55
+SALIDA = Path(__file__).resolve().parent / "Matriz de prueba - 110 oficios.xlsx"
+CANTIDAD_OFICIOS = 110
 
 INSTITUCIONES = ["Superintendencia de Bancos", "Fiscalía General del Estado"]
 
@@ -49,13 +51,13 @@ INSTITUCIONES = ["Superintendencia de Bancos", "Fiscalía General del Estado"]
 # Cuántos oficios lleva cada uno (suman CANTIDAD_OFICIOS), para que el gráfico
 # por responsable tenga barras claramente distintas.
 CARGA_POR_USUARIO = {
-    "C. Roman": 13,
-    "J. Portero": 12,
-    "J. Rosero": 9,
-    "D. Franco": 7,
-    "J. Galecio": 5,
-    "L. Jarrin": 5,
-    "": 4,                 # oficios que llegan sin responsable
+    "C. Roman": 26,
+    "J. Portero": 22,
+    "J. Rosero": 18,
+    "D. Franco": 15,
+    "J. Galecio": 11,
+    "L. Jarrin": 10,
+    "": 8,                 # oficios que llegan sin responsable
 }
 
 TIPOS_ACCION = ["CERTIFICACIÓN", "RETENCIÓN", "INFORMACIÓN", "INMOVILIZACIÓN",
@@ -68,10 +70,28 @@ DELITOS = [
     "DEFRAUDACIÓN TRIBUTARIA", "ESTAFA", "DESAPARICIÓN INVOLUNTARIA",
 ]
 
-APELLIDOS = ["ORDOÑEZ VILLAGOMEZ DAVID MIGUEL", "ENOMENGA VARGAS ERICK LENIN",
-             "BOLAÑOS RUBIO MARCO OLGER", "ACOSTA JEREZ DIANA CAROLINA",
-             "MENDOZA SALAS LUIS ALBERTO", "PARRA NUÑEZ SOFIA ELENA",
-             "CEVALLOS MORA JORGE ANDRÉS", "TAPIA LEÓN MARIA FERNANDA"]
+# Personas investigadas. La matriz dedica una fila a cada una, así que un
+# oficio con cuatro implicados ocupa cuatro filas.
+INVESTIGADOS = [
+    "ORDOÑEZ VILLAGOMEZ DAVID MIGUEL", "ENOMENGA VARGAS ERICK LENIN",
+    "BOLAÑOS RUBIO MARCO OLGER", "ACOSTA JEREZ DIANA CAROLINA",
+    "MENDOZA SALAS LUIS ALBERTO", "PARRA NUÑEZ SOFIA ELENA",
+    "CEVALLOS MORA JORGE ANDRÉS", "TAPIA LEÓN MARIA FERNANDA",
+    "QUISPE ANDRADE PEDRO JOSÉ", "VILLACÍS ROJAS ANDREA PAOLA",
+    "ZAMBRANO LOOR KEVIN DANIEL", "INTRIAGO CEDEÑO GLORIA ISABEL",
+    "MACÍAS PALACIOS BYRON EDUARDO", "SUÁREZ VERA NATALIA CRISTINA",
+    "CHÁVEZ ARIAS RAMIRO ANTONIO", "GUERRERO PINTO LUCÍA BELÉN",
+    "COMERCIAL LOS ANDES S.A.", "IMPORTADORA DEL PACÍFICO CÍA. LTDA.",
+    "AGRÍCOLA SANTA RITA S.A.", "TRANSPORTES DEL LITORAL CÍA. LTDA.",
+]
+
+# Cuántas personas investiga cada oficio. Se recorre en orden para que el
+# archivo tenga de todo: oficios de una sola persona y otros de hasta ocho.
+PATRON_INVESTIGADOS = [1, 1, 2, 1, 3, 1, 1, 4, 2, 1, 5, 1, 2, 1, 6,
+                       3, 1, 2, 1, 8, 1, 1, 2, 7, 1, 3, 1, 1, 2, 1]
+
+TIPOS_IDENTIFICACION = ["CED", "PAS", "RUC"]
+TIPOS_IMPLICADO = ["CLIENTE", "EX CLIENTE", "NO CLIENTE", "SIN IDENTIFICACION"]
 
 MESES = ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN",
          "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"]
@@ -82,11 +102,12 @@ MESES = ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN",
 #
 # Días hacia atrás de los oficios recientes (0 = hoy). El gráfico por día cubre
 # las dos últimas semanas: se repiten unos días y se saltan otros a propósito.
-DIAS_RECIENTES = [0, 0, 1, 2, 2, 2, 3, 5, 5, 6, 8, 8, 8, 9, 11, 12, 13, 13]
+DIAS_RECIENTES = [0, 0, 0, 1, 1, 2, 2, 2, 2, 3, 3, 4, 4, 4, 5, 5, 6, 6,
+                  6, 7, 7, 8, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13, 13, 13]
 
 # Cuántos oficios llegaron en cada mes anterior, del más reciente al más
 # antiguo. Suman el resto de los oficios.
-REPARTO_MESES = [11, 4, 9, 5, 8]
+REPARTO_MESES = [20, 9, 16, 11, 18]
 
 
 def _mes_atras(fecha, meses):
@@ -153,9 +174,10 @@ def generar_filas():
             respuesta, respondido = None, False
 
         referencia_oficio = f"{sigla}-{recepcion.year}-{numero:04d}-OF"
-        # Uno de cada cinco oficios tiene entre 2 y 4 investigados.
-        investigados = random.choice([1, 1, 1, 1, 2, 3, 4])
-        for _ in range(investigados):
+        cuantos = PATRON_INVESTIGADOS[(numero - 1) % len(PATRON_INVESTIGADOS)]
+        # Sin repetir persona dentro del mismo oficio.
+        personas = random.sample(INVESTIGADOS, cuantos)
+        for persona in personas:
             filas.append({
                 "Institución del Estado": institucion,
                 "Mes": MESES[recepcion.month - 1],
@@ -172,8 +194,9 @@ def generar_filas():
                 "Canal Recepc": random.choice(["Proveedor", "Ventanilla",
                                                "Correo"]),
                 "Fecha Circular": oficio,
-                "Apellidos, Nombres - Razón Social": random.choice(APELLIDOS),
-                "TiPASo Id CED; PAS; RUCUC": random.choice(["CED", "PAS", "RUC"]),
+                "Apellidos, Nombres - Razón Social": persona,
+                "TiPASo Id CED; PAS; RUCUC": ("RUC" if persona.endswith((
+                    "S.A.", "LTDA.")) else random.choice(TIPOS_IDENTIFICACION)),
                 "Identificación Ced; Pas; RUC": str(random.randint(10 ** 9,
                                                                   10 ** 10 - 1)),
                 "Referencia - Oficio FGE; Juzgado": referencia_oficio,
@@ -185,9 +208,8 @@ def generar_filas():
                 "Observación": random.choice(
                     ["", "", "Atendido dentro del plazo",
                      "Requiere seguimiento", "Se remitió por correo"]),
-                "Tipo de Implicado": random.choice(
-                    ["CLIENTE", "EX CLIENTE", "NO CLIENTE", "SIN IDENTIFICACION"]),
-                "LCI - SI o NO": random.choice(["SI", "NO"]),
+                "Tipo de Implicado": random.choice(TIPOS_IMPLICADO),
+                "LCI - SI o NO": random.choice(["SI", "NO", "NO"]),
                 "Fecha - Solicitud": recepcion + timedelta(days=1),
                 "Ref Solic- No. LCI-202X-000": f"LCI-{recepcion.year}-"
                                                f"{random.randint(1, 99):03d}",
@@ -235,19 +257,26 @@ def _resumen(filas):
     for fila in filas:
         oficios.setdefault(fila["Referencia - Oficio FGE; Juzgado"], fila)
     estados = Counter(f["Estado"] for f in oficios.values())
+    por_oficio = Counter()
+    for fila in filas:
+        por_oficio[fila["Referencia - Oficio FGE; Juzgado"]] += 1
+    reparto = Counter(por_oficio.values())
     usuarios = Counter(f["Usuario"] or "(sin responsable)"
                        for f in oficios.values())
     entidades = Counter(f["Institución del Estado"] for f in oficios.values())
-    return oficios, estados, usuarios, entidades
+    return oficios, estados, usuarios, entidades, reparto
 
 
 if __name__ == "__main__":
     filas = generar_filas()
     escribir(filas)
-    oficios, estados, usuarios, entidades = _resumen(filas)
+    oficios, estados, usuarios, entidades, reparto = _resumen(filas)
     print(f"{SALIDA.name}: {len(filas)} filas -> {len(oficios)} oficios "
           f"(las filas que comparten Referencia oficio se agrupan).")
     print("  Estados:      " + ", ".join(f"{k}: {v}" for k, v in estados.items()))
     print("  Instituciones:" + ", ".join(f" {k}: {v}" for k, v in entidades.items()))
     print("  Responsables: " + ", ".join(f"{k}: {v}"
                                          for k, v in usuarios.most_common()))
+    print("  Implicados:   " + ", ".join(
+        f"{cuantos} implicado(s): {cuantos_oficios} oficio(s)"
+        for cuantos, cuantos_oficios in sorted(reparto.items())))

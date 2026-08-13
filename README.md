@@ -93,7 +93,7 @@ completas.
 |---|---|
 | **Ingreso** | La tarjeta se queda en `ANCHO_TARJETA_INGRESO` (430 px) y se centra. Un formulario de una sola columna estirado de lado a lado de un monitor es incómodo de leer |
 | **Registrar oficio** | Dos columnas que se reparten el ancho; el botón *Registrar* va anclado abajo, fuera del área desplazable, así que nunca queda fuera de la vista |
-| **Oficios** | La tabla **crece con la ventana** (`_ajustar_alto_tabla`): al maximizar se ven muchas más filas. La columna *Observación* absorbe el ancho sobrante |
+| **Oficios** | La tabla **crece con la ventana** (`_ajustar_alto_tabla`): al maximizar se ven muchas más filas. La columna *Observación* absorbe el ancho sobrante. Los títulos largos van **en dos líneas**, para que la columna la fije el ancho del dato y no el del encabezado (el estilo `Treeview.Heading` lleva el `padding` vertical necesario) |
 | **Usuarios** | El formulario mantiene su ancho a la izquierda y la lista se queda con todo el espacio restante, a lo ancho y a lo alto |
 | **Cabecera** | El título se acorta cuando no cabe, para no solaparse con el nombre del banco |
 
@@ -297,12 +297,60 @@ y con el estado `ANULADO`. Su Referencia oficio **queda libre**, que es
 justamente lo que permite retirar un registro mal escrito y volver a darlo de
 alta bien.
 
+### Implicados (personas investigadas)
+
+Un oficio puede pedir información sobre **varias personas**. El detalle se abre
+con **doble clic** sobre el oficio en la pestaña *Oficios* y permite verlas,
+añadirlas, corregirlas y quitarlas. De cada una se anota:
+
+| Campo | Obligatorio | Notas |
+|---|---|---|
+| Nombre o razón social | **Sí** | Persona natural o empresa |
+| Tipo de identificación | No | Cédula, pasaporte o RUC |
+| Identificación | No | Si se indica, hay que decir de qué tipo es |
+| Tipo de implicado | **Sí** | Cliente, No cliente, Ex cliente o Sin identificación |
+| LCI | **Sí** | Lista de Control Interno: Sí o No (por defecto, No) |
+
+La identificación es opcional a propósito: hay requerimientos sobre personas de
+las que la institución no aporta documento, que es justamente lo que significa
+el tipo *Sin identificación*.
+
+**La Cant. investigados la manda el detalle.** Mientras el oficio no tenga
+implicados anotados, ese número es el que alguien escribió a mano o el que
+dedujo la carga masiva; en cuanto hay detalle, se recalcula solo. No tendría
+sentido que el oficio dijera «3 investigados» y la lista mostrara cuatro
+personas.
+
+Los implicados se guardan **dentro del propio oficio** (lista `implicados`),
+porque no tienen vida fuera de él, y cada uno lleva un `id` propio en vez de
+identificarse por su posición: si alguien elimina uno mientras otra persona
+edita, no se modifica al que no era. Los permisos son los mismos que para el
+resto del trámite —gestores sobre cualquier oficio, un usuario regular solo
+sobre los suyos— y un oficio **anulado** no admite cambios. Todo queda en la
+bitácora (`AGREGAR_IMPLICADO`, `ACTUALIZAR_IMPLICADO`, `ELIMINAR_IMPLICADO`) y
+en el historial del oficio.
+
 ### Exportar oficios
 
-El botón **Exportar…** de la pestaña *Oficios* genera un archivo acotado por
-fecha: se elige el tipo de fecha (oficio, recepción, asignación o respuesta),
-una fecha única o un rango, y el **formato** de salida. Cada persona exporta
+El botón **Exportar** de la pestaña *Oficios* genera el archivo. Las fechas son
+**opcionales**:
+
+- **sin fechas**, se exporta **todo** lo que el usuario alcanza a ver;
+- con solo *desde*, esa **fecha única**;
+- con las dos, el **rango** entre ambas.
+
+El tipo de fecha (oficio, recepción, asignación o respuesta) se elige en el
+mismo diálogo, junto con el **formato** de salida. Cada persona exporta
 únicamente los oficios que puede ver.
+
+**Qué lleva el archivo:** *toda* la información capturada del oficio —incluida
+la de trazabilidad: quién lo registró, cuándo, su origen y si está anulado— y
+**una fila por implicado**, con los datos del oficio repetidos a la izquierda y
+los de la persona a la derecha (`filas_exportacion`). Es la misma forma que
+tiene la matriz de la unidad, así que un oficio con cuatro investigados ocupa
+cuatro filas. Los oficios sin implicados anotados ocupan una sola fila, con esas
+últimas columnas vacías: no se pierden del reporte. Lo que se cuenta y se
+informa al terminar son los **oficios**, que es lo que se pidió exportar.
 
 | Formato | Librería | Notas |
 |---|---|---|
@@ -345,6 +393,7 @@ corresponda a la institución de cada fila.
 | Columna de la matriz | Campo del oficio |
 |---|---|
 | Institución del Estado | `institucion` (fija la sigla de la Referencia UDC) |
+| Apellidos, Nombres - Razón Social · TiPASo Id · Identificación · Tipo de Implicado · LCI | `implicados` (uno por fila del mismo oficio) |
 | Referencia - Oficio FGE; Juzgado, Tribunal | `codigo_oficio` (Referencia oficio) |
 | Tipo de Accion | `tipo_accion` |
 | Delito | `causal_oficio` |
@@ -357,10 +406,16 @@ corresponda a la institución de cada fila.
 | Observación | `observacion` |
 | (nº de filas con la misma Referencia oficio) | `cantidad_investigados` |
 
-Las demás columnas (Mes, Prioridad, Medio Respuesta, Días, Canal Recepción, los
-datos del investigado, Expediente Fiscal, la Referencia de la circular de la
-Superintendencia, Tipo de Implicado, LCI y el bloque RCSA) no tienen equivalente
-y se ignoran; el resumen previo las enumera.
+Las demás columnas (Mes, Prioridad, Medio Respuesta, Días, Canal Recepción,
+Expediente Fiscal, la Referencia de la circular de la Superintendencia y el
+bloque RCSA) no tienen equivalente y se ignoran; el resumen previo las enumera.
+
+Como la matriz dedica **una fila a cada persona investigada**, esas filas se
+convierten en los **implicados** del oficio: las abreviaturas se traducen al
+catálogo (`CED` → Cédula, `EX CLIENTE` → Ex cliente, `SI` → Sí). Lo que no se
+reconoce no tumba la carga —es un histórico, y perder el oficio entero por un
+«Tipo de Implicado» mal escrito sería peor— sino que entra como *Sin
+identificación*.
 
 La **Institución del Estado** y el **Tipo de Accion** se reconocen con
 tolerancia: se admiten la sigla (`SB`, `FGE`), los nombres habituales de cada
@@ -372,8 +427,8 @@ filas no se importan.
 **Decisiones a tener en cuenta:**
 
 - **Varias filas con la misma Referencia oficio** se entienden como un mismo
-  oficio con varios investigados: se agrupan en un registro y la cantidad de
-  investigados es el número de filas.
+  oficio con varios investigados: se agrupan en un registro, cada fila aporta un
+  implicado y la cantidad de investigados es el número de implicados.
 - La columna *Usuario* trae la persona en formato `C. Roman`, que no es un
   nombre de cuenta. Se encaja por nombre de cuenta, por nombre completo y por la
   forma *inicial + apellido* contra **cualquiera** de las palabras del nombre
@@ -658,12 +713,14 @@ la bitácora (`AGREGAR_TIPO_ACCION`, `RENOMBRAR_TIPO_ACCION`,
 `datos_de_prueba/` contiene un archivo listo para probar la carga masiva sin
 tocar información real:
 
-- `Matriz de prueba - 55 oficios.xlsx` — **55 oficios** repartidos entre las dos
-  instituciones (unas 100 filas, porque algunos oficios tienen varios
-  investigados). Los datos se reparten a propósito para que el **Tablero** se
-  vea con contenido: fechas de recepción a lo largo de los últimos seis meses
-  con un grupo en las dos últimas semanas, cargas de trabajo distintas por
-  responsable, los tres estados presentes y tiempos de respuesta variados.
+- `Matriz de prueba - 110 oficios.xlsx` — **110 oficios** repartidos entre las
+  dos instituciones, en unas 250 filas: cada oficio investiga a un número
+  distinto de personas, de una sola a ocho, así que sirve también para ver el
+  detalle de **implicados**. Los datos se reparten a propósito para que el
+  **Tablero** se vea con contenido: fechas de recepción a lo largo de los
+  últimos seis meses con un grupo en las dos últimas semanas, cargas de trabajo
+  distintas por responsable, los tres estados presentes y tiempos de respuesta
+  variados.
 - Los responsables se escriben como en la matriz real (`C. Roman`,
   `J. Portero`, …) y corresponden a las cuentas con rol **usuario**; los
   oficios no se asignan a quien administra el sistema. Las cuentas tienen que
