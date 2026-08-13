@@ -101,6 +101,16 @@ Dentro de un área desplazable una tabla no puede "expandirse" sola, porque el
 lienzo mide el contenido y no al revés. Por eso en *Oficios* se calcula cuántas
 filas caben entre el panel de filtros y el de edición y se le fija ese alto.
 
+Las **etiquetas de los campos** de los formularios (`_campo`) llevan un ancho de
+corte que sigue al de su recuadro: el 45 % de este, para que la columna de
+etiquetas nunca se coma la del campo. Con la ventana ancha ninguna se parte; al
+estrecharla —o en un equipo con una fuente grande o DPI alto— las largas
+(«Institución del Estado», «Confirmar contraseña») pasan a dos líneas en vez de
+quedar cortadas o empujar el campo fuera de la vista. El ajuste se dispara con
+el `<Configure>` de **cada recuadro**, no con el de la ventana: la ventana deja
+de redimensionarse antes que sus hijos, y atender solo a la ventana dejaría
+anchos de corte antiguos.
+
 En *Usuarios*, el mismo formulario sirve para **crear** y para **editar**: al
 pulsar *Editar* se carga la cuenta seleccionada y el botón principal pasa a
 *Guardar cambios*. El botón **Nuevo**, a su lado, devuelve el formulario en
@@ -207,7 +217,7 @@ el resto son opcionales.
 
 | Campo | Obligatorio | Notas |
 |---|---|---|
-| Institución del Estado | **Sí \*** | Superintendencia de Bancos o Fiscalía General del Estado. Decide la nomenclatura de la Referencia UDC. **No se muestra en el listado de oficios** |
+| Institución del Estado | **Sí \*** | Superintendencia de Bancos o Fiscalía General del Estado. Decide la nomenclatura de la Referencia UDC |
 | Referencia oficio | **Sí \*** | No puede repetirse |
 | Tipo de acción | **Sí \*** | Lo que pide el oficio. Se elige del catálogo (ver 3.4) |
 | Causal oficio | No | Texto libre |
@@ -531,8 +541,8 @@ que remite el oficio** y el año es el año en curso:
 | Fiscalía General del Estado | `FGE` | `REQ-UDC-FGE-2026-0001` |
 
 Por eso la institución es un **campo obligatorio** del formulario de registro y
-de la carga masiva. **No se muestra en el listado de oficios**: su única función
-es decidir la nomenclatura de la referencia.
+de la carga masiva. En la pestaña *Oficios* tiene su propia columna y su propio
+filtro.
 
 Cada institución lleva su **propia numeración**, independiente de la otra: el
 tercer oficio de la Superintendencia es `REQ-UDC-SB-2026-0003` aunque entre
@@ -580,10 +590,10 @@ filtros, que se **acumulan** entre sí (Y lógico):
 - **Por texto**, eligiendo el campo: Referencia UDC, Institución del Estado,
   Referencia oficio, Tipo de acción o Causal oficio. La coincidencia es
   **parcial** y no distingue mayúsculas/minúsculas.
-- **Por valor exacto**, en desplegables: **Tipo de acción**, **Causal**,
-  **Estado** y —solo para administradores y superusuario— **Responsable**. A un
-  usuario regular el filtro de responsable no se le muestra: solo ve sus
-  propios oficios, así que no le aportaría nada.
+- **Por valor exacto**, en desplegables: **Institución del Estado**, **Tipo de
+  acción**, **Causal**, **Estado** y —solo para administradores y
+  superusuario— **Responsable**. A un usuario regular el filtro de responsable
+  no se le muestra: solo ve sus propios oficios, así que no le aportaría nada.
 - **Por fecha**, eligiendo el tipo (fecha de oficio, de recepción o de
   respuesta) y un rango *desde* / *hasta*. Ambos extremos aplican **siempre al
   mismo tipo de fecha**, por lo que no es posible mezclar (p. ej. desde = fecha
@@ -592,8 +602,11 @@ filtros, que se **acumulan** entre sí (Y lógico):
 
 Sobre los desplegables:
 
-- El de **Tipo de acción** se arma con el catálogo (ver 3.4) y el de **Estado**
-  con los tres estados del sistema.
+- El de **Institución del Estado** trae las dos entidades y el de **Estado**
+  los tres estados del sistema. El de **Tipo de acción** se arma con el
+  catálogo (ver 3.4). El de institución va en la fila de la búsqueda por texto,
+  donde hay sitio: su nombre es largo y en la fila de los otros desplegables
+  los estrecharía a todos.
 - El de **Causal** se arma con los causales **realmente registrados**
   (`causales_registradas`), porque es un campo de texto libre y un catálogo
   fijo se quedaría corto. Se refresca con cada listado.

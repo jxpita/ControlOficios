@@ -1231,7 +1231,8 @@ def exportar_oficios(registros: List[Dict], ruta_destino: str,
 
 def filtrar_oficios(registros: List[Dict], campo_texto: str = "", texto: str = "",
                     campo_fecha: str = "", desde: str = "", hasta: str = "",
-                    tipo_accion: str = "", causal: str = "", estado: str = "",
+                    institucion: str = "", tipo_accion: str = "",
+                    causal: str = "", estado: str = "",
                     id_empleado: str = "",
                     solo_sin_responsable: bool = False) -> List[Dict]:
     """Filtra una lista de oficios. Todos los filtros se acumulan (Y lógico).
@@ -1243,8 +1244,9 @@ def filtrar_oficios(registros: List[Dict], campo_texto: str = "", texto: str = "
       lo que no es posible mezclar tipos de fecha. Si solo se indica `desde`,
       se busca esa **fecha única**; si solo se indica `hasta`, todo lo anterior
       o igual a esa fecha.
-    - `tipo_accion`, `causal` y `estado`: coincidencia **exacta**, porque se
-      eligen de un desplegable con los valores que existen.
+    - `institucion`, `tipo_accion`, `causal` y `estado`: coincidencia
+      **exacta**, porque se eligen de un desplegable con los valores que
+      existen.
     - `id_empleado`: oficios de ese responsable. `solo_sin_responsable` los
       deja en los que aún no tienen a nadie a cargo; las dos cosas no se
       combinan (manda `solo_sin_responsable`).
@@ -1289,6 +1291,12 @@ def filtrar_oficios(registros: List[Dict], campo_texto: str = "", texto: str = "
                 continue
             filtrados.append(registro)
         resultado = filtrados
+
+    institucion = (institucion or "").strip()
+    if institucion:
+        institucion = parametros.validar_institucion(institucion)
+        resultado = [r for r in resultado
+                     if (r.get("institucion", "") or "") == institucion]
 
     tipo_accion = (tipo_accion or "").strip()
     if tipo_accion:

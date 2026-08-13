@@ -333,6 +333,10 @@ class AplicacionPrincipal(ttk.Frame):
 
         # Etiquetas de texto largo que se re-ajustan al ancho de la ventana.
         self._etiquetas_ajustables = []
+        # Etiquetas de los campos de los formularios (ver `_campo`) y los
+        # recuadros que las contienen, a cuyo tamaño se ajustan.
+        self._etiquetas_campo = []
+        self._grupos_con_etiquetas = []
 
         # --- Marco superior con logo ---
         self._crear_cabecera()
@@ -366,6 +370,9 @@ class AplicacionPrincipal(ttk.Frame):
             self._construir_configuracion()
 
         self.cuaderno.bind("<<NotebookTabChanged>>", self._al_cambiar_pestana)
+        # Las etiquetas de los formularios se recortan al ancho de su recuadro.
+        self.bind("<Configure>", self._ajustar_etiquetas_campo, add="+")
+        self._ajustar_etiquetas_campo()
 
         # Rueda del ratón: un único manejador que decide qué desplazar según
         # dónde esté el puntero (Windows/macOS usan <MouseWheel>; Linux, los
@@ -775,9 +782,21 @@ class AplicacionPrincipal(ttk.Frame):
 
         Con `estirar` el campo ocupa todo el ancho disponible de la columna, de
         modo que el formulario aprovecha el espacio cuando la ventana crece.
+
+        La etiqueta se registra en `_etiquetas_campo` para que
+        `_ajustar_etiquetas_campo` le ponga un ancho de corte acorde al del
+        recuadro: en una ventana estrecha se parte en dos líneas en vez de
+        empujar al campo fuera de la vista.
         """
-        ttk.Label(grupo, text=etiqueta).grid(row=fila, column=0, sticky="w",
-                                             padx=(0, 8), pady=4)
+        rotulo = ttk.Label(grupo, text=etiqueta, justify="left")
+        rotulo.grid(row=fila, column=0, sticky="w", padx=(0, 8), pady=4)
+        self._etiquetas_campo.append(rotulo)
+        # El aviso de cambio de tamaño tiene que venir del propio recuadro: la
+        # ventana deja de redimensionarse antes que sus hijos, así que atender
+        # solo al <Configure> de la ventana dejaría anchos de corte antiguos.
+        if grupo not in self._grupos_con_etiquetas:
+            self._grupos_con_etiquetas.append(grupo)
+            grupo.bind("<Configure>", self._ajustar_etiquetas_campo, add="+")
         widget.grid(row=fila, column=1, sticky="ew" if estirar else "w", pady=4)
         if ayuda:
             ttk.Label(grupo, text=ayuda, foreground="#6B7280",
@@ -970,8 +989,8 @@ class AplicacionPrincipal(ttk.Frame):
         """Panel de búsqueda. Tres bloques que se acumulan entre sí:
 
         - por texto, sobre uno de los campos de `CAMPOS_BUSQUEDA`;
-        - por tipo de acción, causal, estado y —solo para gestores—
-          responsable, eligiendo de un desplegable;
+        - por institución, tipo de acción, causal, estado y —solo para
+          gestores— responsable, eligiendo de un desplegable;
         - por fecha única o rango de un mismo tipo.
         """
         panel = ttk.LabelFrame(marco, text=" Buscar oficios ", padding=(8, 4))
@@ -987,8 +1006,19 @@ class AplicacionPrincipal(ttk.Frame):
         self.combo_campo_busqueda.current(0)
         self.combo_campo_busqueda.pack(side="left", padx=6)
         self.entrada_busqueda = ttk.Entry(fila1, width=28)
-        self.entrada_busqueda.pack(side="left", padx=(0, 6))
+        self.entrada_busqueda.pack(side="left", padx=(0, 16))
         self.entrada_busqueda.bind("<Return>", lambda e: self._refrescar_listado())
+
+        # La institución va en esta fila, que tiene sitio de sobra, y no con
+        # los otros desplegables: su nombre es largo y los estrecharía a todos.
+        ttk.Label(fila1, text="Institución").pack(side="left")
+        self.combo_filtro_institucion = ttk.Combobox(
+            fila1, width=26, state="readonly",
+            values=[self.TODOS] + list(INSTITUCIONES))
+        self.combo_filtro_institucion.current(0)
+        self.combo_filtro_institucion.pack(side="left", padx=(4, 0))
+        self.combo_filtro_institucion.bind("<<ComboboxSelected>>",
+                                           lambda e: self._refrescar_listado())
 
         # Fila 2: filtros de valor exacto, elegidos de un desplegable.
         #
@@ -1108,6 +1138,7 @@ class AplicacionPrincipal(ttk.Frame):
         self.combo_campo_fecha.current(0)
         self.filtro_fecha_desde.set("")
         self.filtro_fecha_hasta.set("")
+        self.combo_filtro_institucion.set(self.TODOS)
         self.combo_filtro_accion.set(self.TODOS)
         self.combo_filtro_causal.set("(Todas)")
         self.combo_filtro_estado.set(self.TODOS)
@@ -1133,16 +1164,17 @@ class AplicacionPrincipal(ttk.Frame):
         self._marco_filtros = self._construir_filtros(marco)
 
         # --- 2) Tabla de oficios (orden: oficio -> recepción -> respuesta) --
-        columnas = ("referencia", "codigo", "accion", "causal", "oficio",
-                    "recepcion", "asignacion", "respuesta", "investigados",
-                    "empleado", "estado", "pdf", "observacion")
-        titulos = ("Referencia UDC", "Referencia oficio", "Tipo de acción",
+        columnas = ("referencia", "institucion", "codigo", "accion", "causal",
+                    "oficio", "recepcion", "asignacion", "respuesta",
+                    "investigados", "empleado", "estado", "pdf", "observacion")
+        titulos = ("Referencia UDC", "Institución del Estado",
+                   "Referencia oficio", "Tipo de acción",
                    "Causal oficio", "F. oficio", "F. recepción",
                    "F. asignación", "F. respuesta", "Cant. investigados",
                    "Responsable", "Estado", "PDF", "Observación")
         # Referencia UDC y Referencia oficio con ancho suficiente para verse
-        # completas (p. ej. "REQ-UDC-SB-0001").
-        anchos = (150, 150, 150, 150, 90, 95, 100, 95, 135, 110, 90, 40, 200)
+        # completas (p. ej. "REQ-UDC-SB-2026-0001").
+        anchos = (190, 215, 150, 150, 150, 90, 95, 100, 95, 135, 110, 90, 40, 200)
         contenedor = ttk.Frame(marco)
         # Altura fija (no expand): dentro de un área desplazable la tabla debe
         # tener alto propio para que el panel inferior siga siendo alcanzable.
@@ -1307,6 +1339,8 @@ class AplicacionPrincipal(ttk.Frame):
                                              self.combo_campo_fecha.get()),
                     self.filtro_fecha_desde.get(),
                     self.filtro_fecha_hasta.get(),
+                    institucion=self._valor_filtro(
+                        self.combo_filtro_institucion),
                     tipo_accion=self._valor_filtro(self.combo_filtro_accion),
                     causal=self._valor_filtro(self.combo_filtro_causal),
                     estado=self._valor_filtro(self.combo_filtro_estado),
@@ -1319,7 +1353,9 @@ class AplicacionPrincipal(ttk.Frame):
                 anulado = oficios.esta_anulado(registro)
                 self.tabla.insert("", "end", iid=registro["referencia"],
                                   tags=("anulado",) if anulado else (), values=(
-                    registro["referencia"], registro["codigo_oficio"],
+                    registro["referencia"],
+                    registro.get("institucion", ""),
+                    registro["codigo_oficio"],
                     registro.get("tipo_accion", ""),
                     registro.get("causal_oficio", ""),
                     registro["fecha_oficio"], registro["fecha_recepcion"],
@@ -1963,6 +1999,23 @@ class AplicacionPrincipal(ttk.Frame):
         etiqueta = ttk.Label(contenedor, text=texto, justify="left", **kw)
         self._etiquetas_ajustables.append(etiqueta)
         return etiqueta
+
+    def _ajustar_etiquetas_campo(self, evento=None):
+        """Ancho de corte de las etiquetas de los formularios.
+
+        El corte se fija en el 45 % del recuadro que las contiene, de modo que
+        la columna de etiquetas nunca se coma la del campo: con la ventana
+        ancha ninguna se parte, y al estrechar (o con una fuente grande) las
+        largas —«Institución del Estado», «Confirmar contraseña»— pasan a dos
+        líneas en vez de empujar al campo fuera de la vista.
+        """
+        for etiqueta in self._etiquetas_campo:
+            try:
+                ancho = max(90, int(etiqueta.master.winfo_width() * 0.45) - 16)
+                if str(etiqueta.cget("wraplength")).strip() != str(ancho):
+                    etiqueta.config(wraplength=ancho)
+            except tk.TclError:
+                pass          # la etiqueta ya no existe
 
     def _ajustar_etiquetas(self, evento=None):
         ancho = self.configuracion_lienzo.winfo_width() - 90
