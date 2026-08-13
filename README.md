@@ -539,6 +539,14 @@ con y sin respuesta, con PDF adjunto y sin responsable.
 Todos los gráficos se dibujan con el `Canvas` de Tkinter: **no requieren
 matplotlib ni ninguna librería de gráficos**.
 
+**Título y cifras de las barras.** La barra más alta llega **siempre** hasta el
+margen superior —la escala se normaliza con el valor máximo—, así que la cifra
+que la corona se dibuja a la misma altura por muy grandes que sean los valores:
+que crezcan no puede hacer que pise el título. Lo que sí cambia de un equipo a
+otro es el tamaño del texto, de modo que el margen superior se **calcula** con
+las fuentes reales (`_medidas_grafico`: título + separación + cifra) en vez de
+ser un número fijo de píxeles.
+
 ## 2.2 Bitácora de auditoría
 
 Toda acción que **modifica datos persistentes** queda registrada en

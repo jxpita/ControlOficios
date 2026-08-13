@@ -2563,6 +2563,32 @@ class AplicacionPrincipal(ttk.Frame):
         self._dibujar_barras_meses(metricas.serie_por_mes(6, registros))
         self.tablero_lienzo.configure(scrollregion=self.tablero_lienzo.bbox("all"))
 
+    # Fuentes de los gráficos: el título, la cifra que corona cada barra y la
+    # etiqueta del eje.
+    FUENTE_TITULO_GRAFICO = ("Helvetica", 9, "bold")
+    FUENTE_VALOR_GRAFICO = ("Helvetica", 8)
+
+    @classmethod
+    def _medidas_grafico(cls):
+        """(y del título, margen superior) medidos con las fuentes de verdad.
+
+        La barra más alta siempre llega justo hasta el margen superior —la
+        escala se normaliza con el valor máximo—, así que la cifra que la
+        corona se dibuja siempre a la misma altura por muy grandes que sean los
+        valores. Lo que sí cambia de un equipo a otro es el TAMAÑO del texto,
+        de modo que el margen se calcula a partir de él y no con un número
+        fijo: título + separación + cifra.
+        """
+        try:
+            alto_titulo = tkfont.Font(
+                font=cls.FUENTE_TITULO_GRAFICO).metrics("linespace")
+            alto_valor = tkfont.Font(
+                font=cls.FUENTE_VALOR_GRAFICO).metrics("linespace")
+        except tk.TclError:
+            alto_titulo, alto_valor = 14, 12
+        y_titulo = 4 + alto_titulo / 2
+        return y_titulo, int(4 + alto_titulo + 8 + alto_valor)
+
     def _dibujar_barras(self, serie):
         """Barras verticales: oficios recibidos por día."""
         lienzo = self.lienzo
@@ -2570,14 +2596,15 @@ class AplicacionPrincipal(ttk.Frame):
         lienzo.update_idletasks()
         ancho_lienzo = lienzo.winfo_width() or 800
         alto_lienzo = 210
-        # El margen superior deja sitio al título Y a la cifra que se dibuja
-        # encima de la barra más alta: con menos, se solapan.
-        margen_izq, margen_inf, margen_sup = 30, 30, 38
+        y_titulo, margen_sup = self._medidas_grafico()
+        margen_izq, margen_inf = 30, 30
         valor_max = max([valor for _, valor in serie] + [1])
         cantidad = len(serie)
         ancho_barra = (ancho_lienzo - margen_izq - 10) / cantidad
-        lienzo.create_text(margen_izq, 12, text="Oficios recibidos por día (14 días)",
-                           anchor="w", font=("Helvetica", 9, "bold"), fill=COLOR_TEXTO)
+        lienzo.create_text(margen_izq, y_titulo,
+                           text="Oficios recibidos por día (14 días)",
+                           anchor="w", font=self.FUENTE_TITULO_GRAFICO,
+                           fill=COLOR_TEXTO)
         for indice, (dia, valor) in enumerate(serie):
             x0 = margen_izq + indice * ancho_barra + 4
             x1 = x0 + ancho_barra - 8
@@ -2587,7 +2614,7 @@ class AplicacionPrincipal(ttk.Frame):
             lienzo.create_rectangle(x0, y0, x1, y1, fill=COLOR_AZUL, outline="")
             if valor:
                 lienzo.create_text((x0 + x1) / 2, y0 - 8, text=str(valor),
-                                   font=("Helvetica", 8))
+                                   font=self.FUENTE_VALOR_GRAFICO)
             lienzo.create_text((x0 + x1) / 2, y1 + 12, text=dia[5:],
                                font=("Helvetica", 7))
 
@@ -2598,11 +2625,14 @@ class AplicacionPrincipal(ttk.Frame):
         lienzo.update_idletasks()
         ancho_lienzo = lienzo.winfo_width() or 800
         alto_lienzo = 210
-        margen_izq, margen_inf, margen_sup = 30, 30, 38
+        y_titulo, margen_sup = self._medidas_grafico()
+        margen_izq, margen_inf = 30, 30
         valor_max = max([valor for _, valor in serie] + [1])
         ancho_barra = (ancho_lienzo - margen_izq - 10) / max(len(serie), 1)
-        lienzo.create_text(margen_izq, 12, text="Oficios recibidos por mes (6 meses)",
-                           anchor="w", font=("Helvetica", 9, "bold"), fill=COLOR_TEXTO)
+        lienzo.create_text(margen_izq, y_titulo,
+                           text="Oficios recibidos por mes (6 meses)",
+                           anchor="w", font=self.FUENTE_TITULO_GRAFICO,
+                           fill=COLOR_TEXTO)
         for indice, (mes, valor) in enumerate(serie):
             x0 = margen_izq + indice * ancho_barra + 12
             x1 = x0 + ancho_barra - 24
@@ -2611,7 +2641,7 @@ class AplicacionPrincipal(ttk.Frame):
             y0 = y1 - altura
             lienzo.create_rectangle(x0, y0, x1, y1, fill="#7c3aed", outline="")
             lienzo.create_text((x0 + x1) / 2, y0 - 8, text=str(valor),
-                               font=("Helvetica", 8))
+                               font=self.FUENTE_VALOR_GRAFICO)
             lienzo.create_text((x0 + x1) / 2, y1 + 12, text=mes,
                                font=("Helvetica", 7))
 
