@@ -561,6 +561,34 @@ con y sin respuesta, con PDF adjunto y sin responsable.
 Todos los gráficos se dibujan con el `Canvas` de Tkinter: **no requieren
 matplotlib ni ninguna librería de gráficos**.
 
+### Filtros del tablero
+
+El tablero lleva su propio panel de filtros, que alcanza **a la vez a las
+tarjetas y a los cinco gráficos**: institución, tipo de acción, estado,
+prioridad, responsable (solo gestores) y un rango de fecha de recepción. Lo que
+se elija arriba recalcula el tablero entero, y la etiqueta de la derecha indica
+cuántos oficios quedan del total.
+
+Se apoya en las mismas funciones que la pestaña *Oficios*
+(`almacen_oficios.filtrar_oficios`): el tablero obtiene una sola lista de
+registros ya filtrada y se la pasa a cada métrica, que ya aceptaba recibirla.
+
+### Métricas
+
+| Gráfico | Qué mide |
+|---|---|
+| Oficios recibidos por día | Últimos 14 días |
+| Distribución por estado | Anillo con los tres estados |
+| Oficios por responsable | Barras horizontales, de mayor a menor |
+| Oficios recibidos por mes | Últimos 6 meses |
+| **Personas investigadas por mes** | Últimos 6 meses. La barra mide las **personas** y dentro lleva de cuántos **oficios** proceden |
+
+En *Personas investigadas por mes*, la cantidad de personas sale del detalle de
+implicados; para el histórico cargado sin nombres se usa la cantidad que traía
+el oficio (`metricas.personas_investigadas`). La etiqueta de los oficios va
+**dentro** de la barra, junto a su base; si la barra fuera demasiado baja para
+contenerla, pasa a dibujarse bajo el nombre del mes.
+
 **Título y cifras de las barras.** La barra más alta llega **siempre** hasta el
 margen superior —la escala se normaliza con el valor máximo—, así que la cifra
 que la corona se dibuja a la misma altura por muy grandes que sean los valores:

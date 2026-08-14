@@ -2510,6 +2510,8 @@ class AplicacionPrincipal(ttk.Frame):
                                      font=("Helvetica", 8))
         self.lbl_alcance.pack(anchor="w")
 
+        self._construir_filtros_tablero(self.tablero)
+
         # Dos filas de tarjetas de indicadores.
         self.marco_tarjetas = ttk.Frame(self.tablero)
         self.marco_tarjetas.pack(fill="x", pady=(10, 4))
@@ -2525,6 +2527,119 @@ class AplicacionPrincipal(ttk.Frame):
         self.lienzo_responsables = self._crear_lienzo(fila, 240, lado="left", expandir=True)
         # Gráfico 4: recepciones por mes.
         self.lienzo_meses = self._crear_lienzo(self.tablero, 210)
+        # Gráfico 5: personas investigadas por mes.
+        self.lienzo_investigados = self._crear_lienzo(self.tablero, 210)
+
+    def _construir_filtros_tablero(self, marco):
+        """Filtros que se aplican a TODO el tablero.
+
+        Son los mismos criterios de la pestaña Oficios, pero aquí alcanzan a la
+        vez a las tarjetas y a los cinco gráficos: lo que se elija arriba
+        recalcula el tablero entero.
+        """
+        panel = ttk.LabelFrame(marco, text=" Filtros del tablero ",
+                               padding=(8, 4))
+        panel.pack(fill="x", pady=(8, 4))
+
+        fila1 = ttk.Frame(panel)
+        fila1.pack(fill="x")
+
+        def desplegable(columna, etiqueta, valores=None, ancho=14):
+            ttk.Label(fila1, text=etiqueta).grid(
+                row=0, column=columna, sticky="w",
+                padx=(0 if columna == 0 else 10, 4))
+            combo = ttk.Combobox(fila1, width=ancho, state="readonly",
+                                 values=valores or [])
+            combo.grid(row=0, column=columna + 1, sticky="ew")
+            fila1.columnconfigure(columna + 1, weight=1)
+            combo.bind("<<ComboboxSelected>>",
+                       lambda e: self._refrescar_tablero())
+            return combo
+
+        self.combo_tablero_institucion = desplegable(
+            0, "Institución", [self.TODOS] + list(INSTITUCIONES))
+        self.combo_tablero_institucion.current(0)
+        self.combo_tablero_accion = desplegable(2, "Tipo de acción")
+        self.combo_tablero_estado = desplegable(
+            4, "Estado", [self.TODOS] + list(ESTADOS))
+        self.combo_tablero_estado.current(0)
+        self.combo_tablero_prioridad = desplegable(
+            6, "Prioridad", [self.TODOS] + list(PRIORIDADES))
+        self.combo_tablero_prioridad.current(0)
+        if self._puede_gestionar_usuarios():
+            self.combo_tablero_responsable = desplegable(8, "Responsable")
+        else:
+            self.combo_tablero_responsable = None
+
+        fila2 = ttk.Frame(panel)
+        fila2.pack(fill="x", pady=(6, 0))
+        ttk.Label(fila2, text="Fecha de recepción  desde").pack(side="left")
+        self.tablero_desde = SelectorFecha(fila2, permitir_vacio=True)
+        self.tablero_desde.pack(side="left", padx=(6, 10))
+        ttk.Label(fila2, text="hasta").pack(side="left")
+        self.tablero_hasta = SelectorFecha(fila2, permitir_vacio=True)
+        self.tablero_hasta.pack(side="left", padx=6)
+        ttk.Button(fila2, text="Aplicar",
+                   command=self._refrescar_tablero).pack(side="left", padx=(12, 4))
+        ttk.Button(fila2, text="Limpiar filtros",
+                   command=self._limpiar_filtros_tablero).pack(side="left")
+        self.lbl_filtros_tablero = ttk.Label(fila2, text="",
+                                             foreground="#6B7280",
+                                             font=("Helvetica", 8))
+        self.lbl_filtros_tablero.pack(side="right")
+        self._refrescar_desplegables_tablero()
+
+    def _refrescar_desplegables_tablero(self):
+        """Repuebla los desplegables del tablero conservando lo elegido."""
+        elegido = self.combo_tablero_accion.get()
+        tipos = self._tipos_accion()
+        self.combo_tablero_accion.config(values=[self.TODOS] + tipos)
+        self.combo_tablero_accion.set(elegido if elegido in tipos else self.TODOS)
+        if self.combo_tablero_responsable is not None:
+            elegido = self.combo_tablero_responsable.get()
+            valores = [self.SIN_RESPONSABLE] + [
+                self._display_responsable(u["usuario"], u["nombre"])
+                for u in self._usuarios_sistema()]
+            self.combo_tablero_responsable.config(values=[self.TODOS] + valores)
+            self.combo_tablero_responsable.set(
+                elegido if elegido in valores else self.TODOS)
+
+    def _limpiar_filtros_tablero(self):
+        for combo in (self.combo_tablero_institucion, self.combo_tablero_accion,
+                      self.combo_tablero_estado, self.combo_tablero_prioridad,
+                      self.combo_tablero_responsable):
+            if combo is not None:
+                combo.set(self.TODOS)
+        self.tablero_desde.set("")
+        self.tablero_hasta.set("")
+        self._refrescar_tablero()
+
+    def _registros_del_tablero(self):
+        """Oficios visibles tras aplicar los filtros del tablero."""
+        registros = oficios.listar_oficios_visibles(
+            self.usuario["usuario"], self.usuario.get("rol"))
+        if not hasattr(self, "combo_tablero_institucion"):
+            return registros, len(registros)
+        total = len(registros)
+        self._refrescar_desplegables_tablero()
+        responsable = self._valor_filtro(self.combo_tablero_responsable)
+        sin_responsable = responsable == self.SIN_RESPONSABLE
+        id_responsable = "" if sin_responsable else \
+            self._responsable_por_display(responsable)[0]
+        try:
+            registros = oficios.filtrar_oficios(
+                registros,
+                campo_fecha="fecha_recepcion",
+                desde=self.tablero_desde.get(), hasta=self.tablero_hasta.get(),
+                institucion=self._valor_filtro(self.combo_tablero_institucion),
+                tipo_accion=self._valor_filtro(self.combo_tablero_accion),
+                estado=self._valor_filtro(self.combo_tablero_estado),
+                prioridad=self._valor_filtro(self.combo_tablero_prioridad),
+                id_empleado=id_responsable,
+                solo_sin_responsable=sin_responsable)
+        except ValueError as error:
+            messagebox.showerror("Filtro no válido", str(error))
+        return registros, total
 
     def _crear_lienzo(self, contenedor, alto, lado=None, expandir=False):
         lienzo = tk.Canvas(contenedor, height=alto, background=COLOR_BLANCO,
@@ -2548,14 +2663,18 @@ class AplicacionPrincipal(ttk.Frame):
             for hijo in contenedor.winfo_children():
                 hijo.destroy()
 
-        # El tablero refleja únicamente los oficios que el usuario puede ver.
-        # Los anulados quedan fuera de las métricas: no son trabajo real.
-        registros = oficios.listar_oficios_visibles(
-            self.usuario["usuario"], self.usuario.get("rol"))
+        # El tablero refleja únicamente los oficios que el usuario puede ver,
+        # acotados por los filtros de arriba. Los anulados quedan fuera de las
+        # métricas: no son trabajo real.
+        registros, total = self._registros_del_tablero()
         datos = metricas.resumen(registros)
         self.lbl_alcance.config(
             text="Todos los oficios" if self._puede_gestionar_usuarios()
             else "Solo sus oficios (registrados o asignados a usted)")
+        if hasattr(self, "lbl_filtros_tablero"):
+            self.lbl_filtros_tablero.config(
+                text=f"{len(registros)} de {total} oficios"
+                if len(registros) != total else "")
 
         # Fila 1: volumen y estados.
         self._tarjeta(self.marco_tarjetas, "Total", datos["total"], COLOR_AZUL)
@@ -2586,6 +2705,7 @@ class AplicacionPrincipal(ttk.Frame):
         self._dibujar_anillo_estados(metricas.distribucion_estados(registros))
         self._dibujar_barras_horizontales(metricas.por_responsable(registros))
         self._dibujar_barras_meses(metricas.serie_por_mes(6, registros))
+        self._dibujar_investigados(metricas.investigados_por_mes(6, registros))
         self.tablero_lienzo.configure(scrollregion=self.tablero_lienzo.bbox("all"))
 
     # Fuentes de los gráficos: el título, la cifra que corona cada barra y la
@@ -2667,6 +2787,51 @@ class AplicacionPrincipal(ttk.Frame):
             lienzo.create_rectangle(x0, y0, x1, y1, fill="#7c3aed", outline="")
             lienzo.create_text((x0 + x1) / 2, y0 - 8, text=str(valor),
                                font=self.FUENTE_VALOR_GRAFICO)
+            lienzo.create_text((x0 + x1) / 2, y1 + 12, text=mes,
+                               font=("Helvetica", 7))
+
+    def _dibujar_investigados(self, serie):
+        """Barras verticales: personas investigadas por mes.
+
+        La barra mide las PERSONAS; dentro de cada una se indica de cuántos
+        oficios proceden, que es la comparación que interesa: un mes con pocos
+        oficios puede concentrar mucha gente.
+        """
+        lienzo = self.lienzo_investigados
+        lienzo.delete("all")
+        lienzo.update_idletasks()
+        ancho_lienzo = lienzo.winfo_width() or 800
+        alto_lienzo = 210
+        y_titulo, margen_sup = self._medidas_grafico()
+        margen_izq, margen_inf = 30, 30
+        valor_max = max([personas for _, personas, _ in serie] + [1])
+        ancho_barra = (ancho_lienzo - margen_izq - 10) / max(len(serie), 1)
+        lienzo.create_text(margen_izq, y_titulo,
+                           text="Personas investigadas por mes (6 meses)",
+                           anchor="w", font=self.FUENTE_TITULO_GRAFICO,
+                           fill=COLOR_TEXTO)
+        alto_texto = tkfont.Font(
+            font=self.FUENTE_VALOR_GRAFICO).metrics("linespace")
+        for indice, (mes, personas, cuantos) in enumerate(serie):
+            x0 = margen_izq + indice * ancho_barra + 12
+            x1 = x0 + ancho_barra - 24
+            altura = (alto_lienzo - margen_inf - margen_sup) * (personas / valor_max)
+            y1 = alto_lienzo - margen_inf
+            y0 = y1 - altura
+            lienzo.create_rectangle(x0, y0, x1, y1, fill="#0f766e", outline="")
+            lienzo.create_text((x0 + x1) / 2, y0 - 8, text=str(personas),
+                               font=self.FUENTE_VALOR_GRAFICO)
+            etiqueta = f"{cuantos} of."
+            if altura >= alto_texto + 10:
+                # Cabe dentro de la barra, junto a su base.
+                lienzo.create_text((x0 + x1) / 2, y1 - alto_texto / 2 - 4,
+                                   text=etiqueta, fill=COLOR_BLANCO,
+                                   font=self.FUENTE_VALOR_GRAFICO)
+            else:
+                # Barra demasiado baja: la etiqueta va bajo el mes.
+                lienzo.create_text((x0 + x1) / 2, y1 + 12 + alto_texto,
+                                   text=etiqueta, fill="#6B7280",
+                                   font=("Helvetica", 7))
             lienzo.create_text((x0 + x1) / 2, y1 + 12, text=mes,
                                font=("Helvetica", 7))
 

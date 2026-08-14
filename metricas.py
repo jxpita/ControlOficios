@@ -113,6 +113,52 @@ def serie_por_mes(meses: int = 6, registros: Optional[List[Dict]] = None) -> Lis
     return list(reversed(serie))
 
 
+def personas_investigadas(registro: Dict) -> int:
+    """Cuántas personas investiga un oficio.
+
+    Manda el detalle de implicados; si el oficio no lo tiene —histórico cargado
+    de la matriz sin los nombres— se usa la cantidad que traía.
+    """
+    implicados = registro.get("implicados") or []
+    if implicados:
+        return len(implicados)
+    try:
+        return int(registro.get("cantidad_investigados") or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def investigados_por_mes(meses: int = 6,
+                         registros: Optional[List[Dict]] = None
+                         ) -> List[Tuple[str, int, int]]:
+    """Personas investigadas por mes: (AAAA-MM, personas, oficios).
+
+    Se cuenta por el mes de RECEPCIÓN del oficio, igual que el resto de series,
+    y se devuelve además cuántos oficios aportaron esas personas: un mes con
+    pocos oficios puede concentrar mucha gente, y esa es justamente la
+    diferencia que interesa ver.
+    """
+    personas, oficios = Counter(), Counter()
+    for reg in _registros(registros):
+        fecha = _convertir_fecha(reg.get("fecha_recepcion", ""))
+        if not fecha:
+            continue
+        personas[(fecha.year, fecha.month)] += personas_investigadas(reg)
+        oficios[(fecha.year, fecha.month)] += 1
+
+    hoy = date.today()
+    serie = []
+    anio, mes = hoy.year, hoy.month
+    for _ in range(meses):
+        clave = (anio, mes)
+        serie.append((f"{anio:04d}-{mes:02d}", personas.get(clave, 0),
+                      oficios.get(clave, 0)))
+        mes -= 1
+        if mes == 0:
+            mes, anio = 12, anio - 1
+    return list(reversed(serie))
+
+
 def por_responsable(registros: Optional[List[Dict]] = None,
                     tope: int = 8) -> List[Tuple[str, int]]:
     """Cantidad de oficios por responsable, de mayor a menor.
