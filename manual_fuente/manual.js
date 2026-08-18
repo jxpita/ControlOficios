@@ -31,8 +31,8 @@ const LOGO_PROPORCION = 5.54;
 // Identificación del documento: la versión del manual y la de la aplicación
 // que documenta son independientes y se indican por separado.
 const VERSION_APLICACION = "1.0";
-const VERSION_DOCUMENTO = "2.0";
-const FECHA_ELABORACION = "13 de agosto de 2026";
+const VERSION_DOCUMENTO = "2.1";
+const FECHA_ELABORACION = "18 de agosto de 2026";
 
 // ---------- Ayudantes ----------
 const TEXTO_CUERPO = "232B3D";   // gris azulado, más cálido que el negro puro
@@ -409,7 +409,7 @@ const contenido = [
     [
       ["Nombre o razón social *", "Sí", "Persona natural o empresa"],
       ["Tipo de identificación", "No", "Cédula, pasaporte o RUC"],
-      ["Identificación", "No", "Si se indica, debe señalarse su tipo"],
+      ["Identificación", "No", "Si se indica, debe señalarse su tipo y cumplir su formato"],
       ["Tipo de implicado *", "Sí", "Cliente, No cliente, Ex cliente o Sin identificación"],
       ["LCI *", "Sí", "Lista de Control Interno: Sí o No; se propone No"],
     ],
@@ -419,6 +419,21 @@ const contenido = [
   p("En el formulario de registro, complete los datos de la persona y pulse Añadir persona; el registro se incorpora a la lista y el formulario queda disponible para la siguiente. El botón Quitar retira de la lista a la persona seleccionada."),
   p("Una vez registrado el oficio, las personas se consultan y se modifican con doble clic sobre el oficio, en la pestaña Oficios."),
   aviso("Cantidad de investigados:", "no se digita. La aplicación la obtiene de esta lista y la actualiza cuando se incorpora o se retira a una persona."),
+
+  h3("Formato de la identificación"),
+  p("La identificación es opcional, ya que existen requerimientos sobre personas de las que la institución no aporta documento. No obstante, cuando se registra, debe corresponder al tipo señalado:"),
+  tabla(
+    ["Tipo", "Formato exigido"],
+    [
+      ["Cédula", "10 dígitos"],
+      ["RUC", "13 dígitos"],
+      ["Pasaporte", "Letras y números"],
+    ],
+    [3100, 6260],
+  ),
+  espacio(200),
+  p("Los puntos, guiones y espacios pueden escribirse libremente: la aplicación los retira antes de comprobar el documento y guarda únicamente sus dígitos o caracteres. De este modo, 1400.349-096 y 1400349096 se registran como el mismo documento."),
+  p("Si el documento no corresponde al tipo indicado, la aplicación lo señala al añadir a la persona."),
 
   h2("3.3 Buscar oficios"),
   p("En la pestaña Oficios, el panel Buscar oficios ofrece tres bloques de filtros, que pueden combinarse entre sí."),
@@ -461,7 +476,27 @@ const contenido = [
   p("Si no se indica ninguna fecha, se exporta la totalidad de los oficios que la persona puede consultar. El archivo contiene todos los datos del oficio y dedica una fila a cada persona investigada, con los datos del oficio repetidos, de forma análoga a la matriz del área."),
 
   h2("3.7 Tablero"),
-  p("Presenta los indicadores de gestión del área: total de oficios, distribución por estado, porcentaje de finalizados, días promedio de respuesta, oficios recibidos por día y por mes, y carga por responsable. Para el rol Usuario, el tablero considera únicamente sus propios oficios."),
+  p("Presenta los indicadores de gestión del área. Las tarjetas superiores resumen el volumen y la situación de los oficios: total, distribución por estado, porcentaje de finalizados, días promedio de respuesta, recepciones del día, de la semana y del mes, y seguimiento de las respuestas. A continuación se presentan cinco gráficos:"),
+  tabla(
+    ["Gráfico", "Qué presenta"],
+    [
+      ["Oficios recibidos por día", "Los últimos catorce días"],
+      ["Distribución por estado", "Proporción de cada estado sobre el total"],
+      ["Oficios por responsable", "Carga de trabajo de cada persona"],
+      ["Oficios recibidos por mes", "Los últimos seis meses"],
+      ["Personas investigadas por mes", "Los últimos seis meses. La barra corresponde a las personas y en su interior se indica de cuántos oficios proceden"],
+    ],
+    [3100, 6260],
+  ),
+  espacio(200),
+  p("Para el rol Usuario, el tablero considera únicamente sus propios oficios."),
+
+  h3("Filtros del tablero"),
+  p("El panel Filtros del tablero acota lo que presentan las tarjetas y los cinco gráficos a la vez: al elegir un criterio, el tablero completo se recalcula."),
+  vinieta("Institución del Estado, Tipo de acción, Estado y Prioridad."),
+  vinieta("Responsable, únicamente para administradores y superusuario."),
+  vinieta("Un rango de fecha de recepción, con los campos desde y hasta."),
+  p("La opción (Todos) deja de filtrar por ese campo y el botón Limpiar filtros los restablece todos. Cuando hay algún filtro aplicado, la esquina derecha del panel indica cuántos oficios se están considerando del total."),
 
   saltoPagina(),
   h1("4. Rol Administrador"),
@@ -648,6 +683,12 @@ const contenido = [
 
   h3("No encuentro el campo Cantidad de investigados"),
   p("La cantidad no se digita. Se obtiene de las personas registradas en el bloque Personas investigadas del formulario, que también puede modificarse con doble clic sobre el oficio."),
+
+  h3("La aplicación no acepta la identificación que registro"),
+  p("Cada documento tiene su formato: la cédula, 10 dígitos; el RUC, 13; y el pasaporte, letras y números. El mensaje indica cuántos dígitos se registraron. Los puntos, guiones y espacios no suponen inconveniente: la aplicación los retira."),
+
+  h3("El tablero no presenta todos los oficios"),
+  p("Es posible que se encuentre aplicado algún filtro del tablero. El botón Limpiar filtros los restablece; mientras haya alguno activo, el panel indica cuántos oficios se están considerando del total."),
 
   h3("El tipo de acción que necesito no figura en el desplegable"),
   p("El desplegable presenta el catálogo del área. Deberá solicitarse a un administrador o al superusuario que incorpore el tipo requerido desde la pestaña Configuración."),
