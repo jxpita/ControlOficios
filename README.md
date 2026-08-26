@@ -797,8 +797,16 @@ la bitácora (`AGREGAR_TIPO_ACCION`, `RENOMBRAR_TIPO_ACCION`,
 
 ## 3.5 Datos de prueba
 
-`datos_de_prueba/` contiene un archivo listo para probar la carga masiva sin
+`datos_de_prueba/` contiene dos archivos listos para probar la carga masiva sin
 tocar información real:
+
+- `Ejemplo de carga masiva.xlsx` — el **modelo del formato**: 5 oficios en 7
+  filas, con los casos habituales (un oficio con tres personas investigadas,
+  uno sin responsable, ambas instituciones, las tres prioridades y los tres
+  tipos de identificación). Sirve de plantilla: se borra el contenido de
+  ejemplo y se escriben los oficios reales bajo la cabecera. Se regenera con
+  `python datos_de_prueba/generar_ejemplo_carga.py`.
+
 
 - `Matriz de prueba - 110 oficios.xlsx` — **110 oficios** repartidos entre las
   dos instituciones, en unas 250 filas: cada oficio investiga a un número
