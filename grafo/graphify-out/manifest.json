@@ -1,147 +1,182 @@
 {
   "almacen_oficios.py": {
-    "mtime": 1786663539.0995412,
+    "mtime": 1787774636.7474883,
+    "seen": 1787774900.3042533,
     "ast_hash": "31531c205dc25e36bf243d628cfaf549",
     "semantic_hash": ""
   },
   "aplicacion.py": {
-    "mtime": 1786743925.950823,
+    "mtime": 1787774636.7514882,
+    "seen": 1787774900.304259,
     "ast_hash": "fbd1b1d17b0f47466b8d3c3bf17f852b",
     "semantic_hash": ""
   },
   "autenticacion.py": {
-    "mtime": 1786040970.9106526,
+    "mtime": 1787774636.7514882,
+    "seen": 1787774900.3042612,
     "ast_hash": "9ff3e36a72b563871508615ddadfe9c9",
     "semantic_hash": "9ff3e36a72b563871508615ddadfe9c9"
   },
   "bloqueo.py": {
-    "mtime": 1785274390.3968794,
+    "mtime": 1787774636.7514882,
+    "seen": 1787774900.304263,
     "ast_hash": "be68dfef4ef95ed0b58e941cd5c2fd61",
     "semantic_hash": "be68dfef4ef95ed0b58e941cd5c2fd61"
   },
   "carga_masiva.py": {
-    "mtime": 1786663572.864218,
+    "mtime": 1787774636.7514882,
+    "seen": 1787774900.304265,
     "ast_hash": "ce4524a5b4c201996ce405f74dd5f441",
     "semantic_hash": ""
   },
   "cifrado.py": {
-    "mtime": 1784748971.496833,
+    "mtime": 1787774636.7514882,
+    "seen": 1787774900.3042665,
     "ast_hash": "7103051022eb6bb5483a4986a15ffba8",
     "semantic_hash": "7103051022eb6bb5483a4986a15ffba8"
   },
   "configuracion.py": {
-    "mtime": 1786634014.2372653,
+    "mtime": 1787774636.7514882,
+    "seen": 1787774900.3042684,
     "ast_hash": "9b7fbdccf1963d168b8049a737e61a2b",
     "semantic_hash": ""
   },
   "datos_de_prueba/generar_datos_prueba.py": {
-    "mtime": 1786663628.4995139,
+    "mtime": 1787774636.7639616,
+    "seen": 1787774900.3042712,
     "ast_hash": "4cb535706b06d291d4ceac3c5c497621",
     "semantic_hash": ""
   },
   "herramienta_admin.py": {
-    "mtime": 1786556358.0656388,
+    "mtime": 1787774636.9594882,
+    "seen": 1787774900.3042762,
     "ast_hash": "3a8615a50cde7472a623905e215ba56a",
     "semantic_hash": "3a8615a50cde7472a623905e215ba56a"
   },
   "metricas.py": {
-    "mtime": 1786743872.870824,
+    "mtime": 1787774636.964489,
+    "seen": 1787774900.3042877,
     "ast_hash": "f4bc4a9100448ca47c37b44ba60f3d0a",
     "semantic_hash": ""
   },
   "parametros.py": {
-    "mtime": 1786590983.557162,
+    "mtime": 1787774636.964489,
+    "seen": 1787774900.3042896,
     "ast_hash": "b42420c83dc20794fa3e3c1eff9d015b",
     "semantic_hash": ""
   },
   "permisos.py": {
-    "mtime": 1785274343.5368805,
+    "mtime": 1787774636.964489,
+    "seen": 1787774900.3042912,
     "ast_hash": "44892fcf08216b02f69ec01e0a2f1b2d",
     "semantic_hash": "44892fcf08216b02f69ec01e0a2f1b2d"
   },
   "registro_actividad.py": {
-    "mtime": 1785274358.29688,
+    "mtime": 1787774636.964489,
+    "seen": 1787774900.3042936,
     "ast_hash": "7f2c1805d64090690fa2c5d1ef2d18f3",
     "semantic_hash": "7f2c1805d64090690fa2c5d1ef2d18f3"
   },
   "respaldo.py": {
-    "mtime": 1785446571.7816238,
+    "mtime": 1787774636.964489,
+    "seen": 1787774900.3042948,
     "ast_hash": "ff60910800316b1ed4c3eeaf5ad1ba73",
     "semantic_hash": "ff60910800316b1ed4c3eeaf5ad1ba73"
   },
   "respaldo_datos.ps1": {
-    "mtime": 1785274994.1008656,
+    "mtime": 1787774636.9674883,
+    "seen": 1787774900.3042972,
     "ast_hash": "76ce06ddec5dcae388cffc70339d1f14",
     "semantic_hash": "76ce06ddec5dcae388cffc70339d1f14"
   },
   "tipos_accion.py": {
-    "mtime": 1786555923.3296127,
+    "mtime": 1787774636.9674883,
+    "seen": 1787774900.3042986,
     "ast_hash": "3e747bc95d59d153cbd203f35b83e4f4",
     "semantic_hash": "3e747bc95d59d153cbd203f35b83e4f4"
   },
   "visor_pdf.py": {
-    "mtime": 1785165331.0816433,
+    "mtime": 1787774636.9674883,
+    "seen": 1787774900.3043008,
     "ast_hash": "741bf50d7a0512c8655d199ecb347252",
     "semantic_hash": "741bf50d7a0512c8655d199ecb347252"
   },
   "CLAUDE.md": {
-    "mtime": 1785169166.0355647,
+    "mtime": 1787774636.7154882,
+    "seen": 1787774900.304303,
     "ast_hash": "3bc8c0181266fbd5c5a0f014b30222f8",
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1786744059.3525245,
-    "ast_hash": "cfd54c3210b1496069c31d5b15dc8080",
+    "mtime": 1787774859.207483,
+    "seen": 1787774900.3043046,
+    "ast_hash": "c1bc30a4b653c93d337f0426d29bde61",
     "semantic_hash": ""
   },
   "requirements.txt": {
-    "mtime": 1786123201.6330783,
+    "mtime": 1787774636.964489,
+    "seen": 1787774900.304308,
     "ast_hash": "53e38ff7e7fe3d8d4dd1e3de3e9e9bfd",
     "semantic_hash": ""
   },
-  "Manual Banco del Paci\u0301fico y PacifiCard.pdf": {
-    "mtime": 1784736350.788731,
-    "ast_hash": "ae80555368ea4d77365d70a116304dbf",
-    "semantic_hash": ""
-  },
   "datos/bdp_icon_alt.png": {
-    "mtime": 1784736350.8007312,
+    "mtime": 1787774636.7594883,
+    "seen": 1787774900.3043215,
     "ast_hash": "6e3972bf0fc64c89f2d8c55f47e97a5c",
     "semantic_hash": ""
   },
   "manual_fuente/compilar.sh": {
-    "mtime": 1786636604.9613938,
+    "mtime": 1787774636.964489,
+    "seen": 1787774900.304278,
     "ast_hash": "8cde581566764567af5595bae7cf50df",
     "semantic_hash": ""
   },
   "manual_fuente/logo.py": {
-    "mtime": 1786636604.9612784,
+    "mtime": 1787774636.964489,
+    "seen": 1787774900.30428,
     "ast_hash": "502e106434f22944c910361737b8fdaf",
     "semantic_hash": ""
   },
   "manual_fuente/manual.js": {
-    "mtime": 1787085427.7899878,
+    "mtime": 1787774636.964489,
+    "seen": 1787774900.3042817,
     "ast_hash": "9b2fd4b4a045f2295ae621a0e4beaa15",
     "semantic_hash": ""
   },
   "manual_fuente/package.json": {
-    "mtime": 1786636629.9658842,
+    "mtime": 1787774636.964489,
+    "seen": 1787774900.3042834,
     "ast_hash": "a0c0b0752c7b3027a301e04f72785e03",
     "semantic_hash": ""
   },
   "manual_fuente/paginas.py": {
-    "mtime": 1786636604.9388933,
+    "mtime": 1787774636.964489,
+    "seen": 1787774900.3042858,
     "ast_hash": "023f251f58719b312874d94a5c790401",
     "semantic_hash": ""
   },
   "manual_fuente/README.md": {
-    "mtime": 1786636604.9664328,
+    "mtime": 1787774636.9594882,
+    "seen": 1787774900.3043063,
     "ast_hash": "8abc406ea8c8cb629aaef7e2df653efe",
     "semantic_hash": ""
   },
   "manual_fuente/logo_banco.jpeg": {
-    "mtime": 1786636604.940831,
+    "mtime": 1787774636.964489,
+    "seen": 1787774900.304323,
     "ast_hash": "0d3a6e326d9cf474b06d8b15104c1786",
+    "semantic_hash": ""
+  },
+  "datos_de_prueba/generar_ejemplo_carga.py": {
+    "mtime": 1787774859.207483,
+    "seen": 1787774900.3042736,
+    "ast_hash": "1fb6fbede888a263d9b72a693d545f2b",
+    "semantic_hash": ""
+  },
+  "Manual Banco del Pac\u00edfico y PacifiCard.pdf": {
+    "mtime": 1787774636.7434883,
+    "seen": 1787774900.3043203,
+    "ast_hash": "ae80555368ea4d77365d70a116304dbf",
     "semantic_hash": ""
   }
 }
