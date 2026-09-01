@@ -2,8 +2,8 @@
 Genera el archivo de datos de prueba para la carga masiva.
 
 Crea `Matriz de prueba - 110 oficios.xlsx` con el FORMATO ESTABLECIDO (cabecera
-en la fila 4, de la columna B a la AA) y 110 oficios repartidos entre las dos
-instituciones.
+en la fila 1, de la columna A a la Z, y los datos desde la fila 2) y 110 oficios
+repartidos entre las dos instituciones.
 
 Los datos se reparten a propósito para que el TABLERO se vea con contenido:
 
@@ -34,7 +34,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from carga_masiva import CABECERA_MATRIZ, FILA_CABECERA   # noqa: E402
+from carga_masiva import (CABECERA_MATRIZ, FILA_CABECERA,   # noqa: E402
+                          PRIMERA_FILA_DATOS)
 
 SALIDA = Path(__file__).resolve().parent / "Matriz de prueba - 110 oficios.xlsx"
 CANTIDAD_OFICIOS = 110
@@ -242,26 +243,22 @@ def escribir(filas):
     hoja = libro.active
     hoja.title = "Matriz-Req-Inf"
 
-    # Rótulos de agrupación de la fila 3, como en la matriz real.
-    hoja["D3"] = "Gestión - Asignación"
-    hoja["H3"] = "BDP - Oficio de Respuesta"
-    hoja["Q3"] = "Información del Oficio .- SB; FGE, FJ; "
-    hoja["Z3"] = "Registro - RCSA"
-
+    # La cabecera es la primera fila y arranca en la A1: sin rótulos de
+    # agrupación encima ni columnas en blanco por delante.
     encabezados = [nombre for nombre, _prefijo, _campo in CABECERA_MATRIZ]
     relleno = PatternFill("solid", fgColor="152342")
-    for indice, titulo in enumerate(encabezados, start=2):   # la B es la 2
+    for indice, titulo in enumerate(encabezados, start=1):   # la A es la 1
         celda = hoja.cell(row=FILA_CABECERA, column=indice, value=titulo)
         celda.font = Font(bold=True, color="FFFFFF", size=9)
         celda.fill = relleno
         celda.alignment = Alignment(wrap_text=True, vertical="center")
 
-    for numero, fila in enumerate(filas, start=FILA_CABECERA + 1):
-        for indice, titulo in enumerate(encabezados, start=2):
+    for numero, fila in enumerate(filas, start=PRIMERA_FILA_DATOS):
+        for indice, titulo in enumerate(encabezados, start=1):
             hoja.cell(row=numero, column=indice, value=fila.get(titulo, ""))
 
-    hoja.freeze_panes = f"A{FILA_CABECERA + 1}"
-    for indice in range(2, len(encabezados) + 2):
+    hoja.freeze_panes = f"A{PRIMERA_FILA_DATOS}"
+    for indice in range(1, len(encabezados) + 1):
         hoja.column_dimensions[hoja.cell(row=FILA_CABECERA,
                                          column=indice).column_letter].width = 18
     libro.save(SALIDA)

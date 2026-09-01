@@ -4,12 +4,12 @@
 - cluster-only mode — file stats not available
 
 ## Summary
-- 687 nodes · 1360 edges · 43 communities (36 shown, 7 thin omitted)
+- 685 nodes · 1355 edges · 44 communities (37 shown, 7 thin omitted)
 - Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 30 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `995bdade`
+- Built from commit: `099a81b2`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -18,8 +18,8 @@
 - aplicacion.py
 - tipos_accion.py
 - carga_masiva.py
-- autenticacion.py
-- generar_datos_prueba.py
+- VentanaIngreso
+- .__init__
 - configuracion.py
 - AplicacionPrincipal
 - DialogoImplicados
@@ -30,7 +30,7 @@
 - Control de Oficios — Unidad de Cumplimiento
 - ._responsable_por_display
 - ._construir_configuracion
-- almacen_oficios.py
+- registrar
 - ._construir_registro
 - manual.js
 - 4. Compilar a ejecutable (lo más ligero posible)
@@ -42,20 +42,21 @@
 - 2. Ejecutar en desarrollo
 - exportar_oficios
 - ._guardar_oficio
-- registro_actividad.py
+- DialogoExportar
 - Fuente del manual de usuario
 - ._al_recuperar_foco
 - dependencies
-- herramienta_admin.py
+- respaldo.py
 - compilar.sh
 - logo.py
 - ._mostrar_pdf
 - paginas.py
 - SelectorFecha
 - 2.3 Tablero (dashboard)
-- causales_registradas
-- hay_soporte_xlsx
-- _rol_de
+- almacen_oficios.py
+- DialogoMantenimiento
+- SelectorArchivo
+- proxima_referencia
 
 ## God Nodes (most connected - your core abstractions)
 1. `AplicacionPrincipal` - 96 edges
@@ -84,31 +85,31 @@
 ## Import Cycles
 - None detected.
 
-## Communities (43 total, 7 thin omitted)
+## Communities (44 total, 7 thin omitted)
 
 ### Community 0 - "ValueError"
-Cohesion: 0.11
-Nodes (39): actualizar_estado_asignado(), actualizar_oficio(), _exigir_cantidad_coherente(), _exigir_datos_para_finalizar(), _exigir_no_anulado(), _FilaRepetida, filtrar_oficios(), _preparar_importado() (+31 more)
+Cohesion: 0.12
+Nodes (29): actualizar_estado_asignado(), actualizar_oficio(), _exigir_cantidad_coherente(), _exigir_datos_para_finalizar(), _exigir_no_anulado(), _FilaRepetida, filtrar_oficios(), _preparar_importado() (+21 more)
 
 ### Community 1 - "aplicacion.py"
-Cohesion: 0.06
-Nodes (22): anchos_de_columna(), construir_tabla_errores(), DialogoCargaMasiva, DialogoExportar, DialogoResultadoCarga, iniciar(), maximizar_ventana(), Exporta a CSV los oficios de una fecha o de un rango de fechas. (+14 more)
+Cohesion: 0.14
+Nodes (13): anchos_de_columna(), construir_tabla_errores(), DialogoCargaMasiva, DialogoResultadoCarga, iniciar(), maximizar_ventana(), Ensancha lo justo para que ningún encabezado salga cortado. El encabezado se…, Tabla de las filas del archivo que no entran, con el motivo de cada una. Se… (+5 more)
 
 ### Community 2 - "tipos_accion.py"
-Cohesion: 0.22
-Nodes (18): agregar(), eliminar(), _exigir_gestor(), existe(), _guardar(), _leer(), listar(), _normalizar() (+10 more)
+Cohesion: 0.06
+Nodes (51): _guardar_documento(), Copia un adjunto a la carpeta de datos y devuelve su nombre de archivo. El…, _cifrador(), cifrar(), descifrar(), obtener_clave(), Devuelve la clave Fernet; la genera la primera vez que se ejecuta., Descifra. Lanza cryptography.fernet.InvalidToken si el archivo fue alterado o… (+43 more)
 
 ### Community 3 - "carga_masiva.py"
 Cohesion: 0.07
-Nodes (42): _a_fecha(), _a_texto(), agrupar_por_referencia(), _claves_de(), coincidencias(), emparejar_responsables(), error_de_fila(), etiqueta_filas() (+34 more)
+Nodes (40): _a_fecha(), _a_texto(), agrupar_por_referencia(), _claves_de(), emparejar_responsables(), error_de_fila(), etiqueta_filas(), _implicado_de() (+32 more)
 
-### Community 4 - "autenticacion.py"
-Cohesion: 0.12
-Nodes (34): _buscar(), cambiar_clave_propia(), cerrar_sesion(), _contar_superusuarios(), crear_usuario(), editar_usuario(), eliminar_usuario(), existe_algun_usuario() (+26 more)
+### Community 4 - "VentanaIngreso"
+Cohesion: 0.28
+Nodes (3): Crea el banner corporativo y la tarjeta central. Devuelve el contenedor interno…, Cierra la sesión actual y vuelve a la pantalla de ingreso., VentanaIngreso
 
-### Community 5 - "generar_datos_prueba.py"
-Cohesion: 0.19
-Nodes (11): _fechas_recepcion(), generar_filas(), _identificacion(), _mes_atras(), Genera el archivo de datos de prueba para la carga masiva. Crea `Matriz de…, (año, mes) de la fecha indicada retrocediendo esa cantidad de meses., Fecha de recepción de cada oficio, repartida según los dos patrones., Una fila por investigado. Algunos oficios repiten Referencia oficio para que la… (+3 more)
+### Community 5 - ".__init__"
+Cohesion: 0.18
+Nodes (4): Ancho de corte de las etiquetas de los formularios. El corte es el 45 % del…, Marco superior con logo y título., Crea la copia del día en segundo plano. Va en un hilo aparte para que la…, `permitir_vacio=True` deja el campo en blanco y ofrece un botón "Limpiar" en el…
 
 ### Community 6 - "configuracion.py"
 Cohesion: 0.12
@@ -119,20 +120,20 @@ Cohesion: 0.10
 Nodes (8): AplicacionPrincipal, Ajusta cuántas filas muestra la tabla de oficios al alto disponible. Dentro de…, Repuebla los desplegables de tipo de acción tras cambiar el catálogo., Nombre del tipo elegido en la lista, sin el contador., Acorta el título de la cabecera cuando la ventana es estrecha. `pack` no encoge…, Diálogo para que el usuario en sesión cambie su propia contraseña. Disponible…, Desplaza el área que está bajo el puntero. Si el cursor está sobre una tabla,…, Coloca una etiqueta y su campo en una fila del grupo. Con `estirar` el campo…
 
 ### Community 8 - "DialogoImplicados"
-Cohesion: 0.12
-Nodes (8): DialogoImplicados, DialogoMantenimiento, Corrige los datos de identificación de un oficio, o lo retira., Corrige los datos de identificación de un oficio y permite retirarlo. Son los…, Personas investigadas en un oficio: verlas, añadirlas y corregirlas. Se abre…, Deja el formulario en blanco para añadir a otra persona., Abre los implicados del oficio sobre el que se hizo doble clic., Busca solo entre los oficios visibles para el usuario en sesión. Incluye los…
+Cohesion: 0.33
+Nodes (3): DialogoImplicados, Personas investigadas en un oficio: verlas, añadirlas y corregirlas. Se abre…, Deja el formulario en blanco para añadir a otra persona.
 
 ### Community 9 - "parametros.py"
-Cohesion: 0.08
-Nodes (46): _generar_referencia(), _guardar_documento(), Copia un adjunto a la carpeta de datos y devuelve su nombre de archivo. El…, Genera la Referencia UDC: REQ-UDC-<sigla>-<año>-<secuencial de 4 dígitos>. El…, _cifrador(), cifrar(), descifrar(), obtener_clave() (+38 more)
+Cohesion: 0.16
+Nodes (25): _generar_referencia(), Genera la Referencia UDC: REQ-UDC-<sigla>-<año>-<secuencial de 4 dígitos>. El…, analizar_referencia(), anio_vigente(), _clave(), definir_secuencial_inicial(), esta_configurado(), formatear_referencia() (+17 more)
 
 ### Community 10 - "VisorPDF"
 Cohesion: 0.18
 Nodes (8): abrir_con_sistema(), abrir_visor(), Visor de PDF integrado en la aplicación (para ver la respuesta de un oficio sin…, Centra horizontalmente la página dentro del lienzo (y verticalmente si sobra…, Abre el PDF dentro de la aplicación. Devuelve True si se mostró en la app;…, Abre el PDF con el lector predeterminado del sistema operativo. Alternativa…, Ventana con el PDF renderizado página a página., VisorPDF
 
 ### Community 11 - "._refrescar_listado"
-Cohesion: 0.14
-Nodes (6): Valor elegido en un desplegable de filtro, o '' si es "(Todos)"., Devuelve la clave interna a partir de la etiqueta mostrada., Guarda los cambios del panel según el rol: el gestor puede cambiar responsable,…, Sustituye el documento del oficio por si se cargó el equivocado., Carga un PDF con la respuesta del oficio seleccionado., Elimina el PDF adjunto (por si se cargó el archivo equivocado).
+Cohesion: 0.11
+Nodes (9): Valor elegido en un desplegable de filtro, o '' si es "(Todos)"., Devuelve la clave interna a partir de la etiqueta mostrada., Guarda los cambios del panel según el rol: el gestor puede cambiar responsable,…, Sustituye el documento del oficio por si se cargó el equivocado., Carga un PDF con la respuesta del oficio seleccionado., Elimina el PDF adjunto (por si se cargó el archivo equivocado)., Corrige los datos de identificación de un oficio, o lo retira., Abre los implicados del oficio sobre el que se hizo doble clic. (+1 more)
 
 ### Community 12 - "._refrescar_tablero"
 Cohesion: 0.15
@@ -150,9 +151,9 @@ Nodes (8): Repuebla los desplegables de filtro conservando lo elegido. El tipo d
 Cohesion: 0.24
 Nodes (5): Permite al superusuario o a un administrador indicar la última Referencia UDC…, Etiqueta de texto largo cuyo ancho de corte sigue al de la ventana. Con un…, Catálogo de tipos de acción, mantenible por los gestores., Panel para volcar de una vez el histórico de la matriz de Excel., Panel de copias de seguridad. Solo lo ve el superusuario.
 
-### Community 16 - "almacen_oficios.py"
-Cohesion: 0.10
-Nodes (44): actualizar_implicado(), adjuntar_respuesta(), agregar_implicado(), anular_oficio(), contar_por_tipo_accion(), corregir_oficio(), eliminar_implicado(), eliminar_respuesta() (+36 more)
+### Community 16 - "registrar"
+Cohesion: 0.06
+Nodes (71): actualizar_implicado(), adjuntar_respuesta(), agregar_implicado(), anular_oficio(), contar_por_tipo_accion(), eliminar_implicado(), eliminar_respuesta(), _guardar_registros() (+63 more)
 
 ### Community 17 - "._construir_registro"
 Cohesion: 0.13
@@ -198,9 +199,9 @@ Nodes (4): 2. Ejecutar en desarrollo, Cómo se adaptan las pantallas, Etiquetas 
 Cohesion: 0.15
 Nodes (17): _encabezados_exportacion(), exportar_csv(), exportar_oficios(), exportar_xlsx(), _fila_exportacion(), filas_exportacion(), Path, Devuelve la ruta del PDF de respuesta adjunto, o None si no hay. (+9 more)
 
-### Community 29 - "registro_actividad.py"
-Cohesion: 0.50
-Nodes (3): Registro de actividad (auditoría) en un archivo de texto plano. Guarda TODA…, Último recurso: dejar la línea en un archivo local para no perderla., _respaldar()
+### Community 29 - "DialogoExportar"
+Cohesion: 0.33
+Nodes (3): DialogoExportar, Exporta a CSV los oficios de una fecha o de un rango de fechas., Exporta los oficios, con o sin acotarlos por fecha. Sin fechas se exporta…
 
 ### Community 30 - "Fuente del manual de usuario"
 Cohesion: 0.33
@@ -214,21 +215,25 @@ Nodes (7): Restablece el formulario para crear un usuario nuevo., Diálogo modal
 Cohesion: 0.50
 Nodes (3): docx, dependencies, docx
 
-### Community 33 - "herramienta_admin.py"
-Cohesion: 0.09
-Nodes (31): bloquear(), _esta_abandonado(), Path, Bloqueo entre procesos para la carpeta de datos compartida. Problema que…, True si el bloqueo es tan antiguo que solo puede ser basura., Toma el bloqueo `nombre` mientras dure el bloque `with`. Lanza ValueError si…, _ruta_bloqueo(), date (+23 more)
+### Community 33 - "respaldo.py"
+Cohesion: 0.08
+Nodes (32): bloquear(), _esta_abandonado(), Path, True si el bloqueo es tan antiguo que solo puede ser basura., Toma el bloqueo `nombre` mientras dure el bloque `with`. Lanza ValueError si…, _ruta_bloqueo(), date, _fechas_recepcion() (+24 more)
 
 ### Community 36 - "._mostrar_pdf"
 Cohesion: 0.33
 Nodes (3): Abre el documento del oficio (PDF dentro de la aplicación; el Word, con el…, Muestra el PDF de respuesta dentro de la aplicación., Abre un PDF en el visor integrado y, si no está disponible, ofrece el lector…
 
 ### Community 38 - "SelectorFecha"
-Cohesion: 0.13
-Nodes (7): Fecha desde la que se abre el calendario (la escrita, o hoy)., Coloca el calendario junto al campo, abriéndose hacia ARRIBA si no cabe debajo,…, Campo para elegir un archivo: botón + nombre del archivo elegido. Guarda la…, Campo de fecha con calendario emergente. No requiere librerías externas.…, `permitir_vacio=True` deja el campo en blanco y ofrece un botón "Limpiar" en el…, SelectorArchivo, SelectorFecha
+Cohesion: 0.20
+Nodes (4): Fecha desde la que se abre el calendario (la escrita, o hoy)., Coloca el calendario junto al campo, abriéndose hacia ARRIBA si no cabe debajo,…, Campo de fecha con calendario emergente. No requiere librerías externas.…, SelectorFecha
 
 ### Community 39 - "2.3 Tablero (dashboard)"
 Cohesion: 0.67
 Nodes (3): 2.3 Tablero (dashboard), Filtros del tablero, Métricas
+
+### Community 40 - "almacen_oficios.py"
+Cohesion: 0.14
+Nodes (22): causales_registradas(), corregir_oficio(), esta_anulado(), hay_soporte_xlsx(), listar_oficios_visibles(), Capa de almacenamiento de OFICIOS. *** Punto clave de arquitectura *** Toda la…, ¿Está disponible openpyxl para exportar a Excel?, Rol del usuario indicado, o '' si no existe. (+14 more)
 
 ## Knowledge Gaps
 - **64 isolated node(s):** `2.2 Bitácora de auditoría`, `3.1 `herramienta_admin.py` (utilidad de consola)`, `3.2 Referencia UDC y secuencial inicial`, `3.3 Búsqueda de oficios`, `3.4 Catálogo de tipos de acción` (+59 more)
@@ -238,17 +243,17 @@ Nodes (3): 2.3 Tablero (dashboard), Filtros del tablero, Métricas
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `AplicacionPrincipal` connect `AplicacionPrincipal` to `aplicacion.py`, `._mostrar_pdf`, `DialogoImplicados`, `._refrescar_listado`, `._refrescar_tablero`, `._responsable_por_display`, `._construir_configuracion`, `._construir_registro`, `._guardar_oficio`, `._al_recuperar_foco`?**
+- **Why does `AplicacionPrincipal` connect `AplicacionPrincipal` to `aplicacion.py`, `VentanaIngreso`, `.__init__`, `._mostrar_pdf`, `._refrescar_listado`, `._refrescar_tablero`, `._responsable_por_display`, `._construir_configuracion`, `._construir_registro`, `._guardar_oficio`, `DialogoExportar`, `._al_recuperar_foco`?**
   _High betweenness centrality (0.308) - this node is a cross-community bridge._
-- **Why does `SelectorFecha` connect `SelectorFecha` to `DialogoImplicados`, `aplicacion.py`, `._construir_registro`?**
+- **Why does `SelectorFecha` connect `SelectorFecha` to `aplicacion.py`, `.__init__`, `DialogoMantenimiento`, `._construir_registro`, `DialogoExportar`?**
   _High betweenness centrality (0.041) - this node is a cross-community bridge._
 - **Are the 26 inferred relationships involving `ValueError` (e.g. with `cambiar_clave_propia()` and `crear_usuario()`) actually correct?**
   _`ValueError` has 26 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `2.2 Bitácora de auditoría`, `3.1 `herramienta_admin.py` (utilidad de consola)`, `3.2 Referencia UDC y secuencial inicial` to the rest of the system?**
   _64 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `ValueError` be split into smaller, more focused modules?**
-  _Cohesion score 0.10661268556005399 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.1206896551724138 - nodes in this community are weakly interconnected._
 - **Should `aplicacion.py` be split into smaller, more focused modules?**
-  _Cohesion score 0.06431372549019608 - nodes in this community are weakly interconnected._
-- **Should `carga_masiva.py` be split into smaller, more focused modules?**
-  _Cohesion score 0.07246376811594203 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.14210526315789473 - nodes in this community are weakly interconnected._
+- **Should `tipos_accion.py` be split into smaller, more focused modules?**
+  _Cohesion score 0.06493506493506493 - nodes in this community are weakly interconnected._

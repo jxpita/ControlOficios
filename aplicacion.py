@@ -2358,7 +2358,9 @@ class AplicacionPrincipal(ttk.Frame):
             panel,
             "Permite dar de alta de una sola vez los oficios que se venían "
             "llevando en la matriz de Excel. Se admite la propia matriz "
-            "(.xlsx) o un CSV con la misma cabecera."
+            "(.xlsx) o un CSV con la misma cabecera. La cabecera debe ser la "
+            "primera fila del archivo, desde la celda A1, y los datos empezar "
+            "en la fila 2."
         ).pack(anchor="w", pady=(0, 8))
 
         btn = ttk.Button(panel, text="Cargar archivo",
@@ -2384,7 +2386,12 @@ class AplicacionPrincipal(ttk.Frame):
         try:
             resumen = carga_masiva.preparar(ruta, autenticacion.listar_usuarios())
         except ValueError as error:
-            messagebox.showerror("No se pudo leer el archivo", str(error))
+            # El rechazo por formato lleva su propio título: es, de largo, el
+            # motivo más frecuente y conviene que se lea en la barra del aviso.
+            titulo = ("Formato incorrecto"
+                      if "formato establecido" in str(error)
+                      else "No se pudo leer el archivo")
+            messagebox.showerror(titulo, str(error))
             return
         if not resumen["filas"] and not resumen["errores"]:
             messagebox.showinfo(

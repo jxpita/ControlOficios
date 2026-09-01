@@ -426,9 +426,11 @@ solo la usan administradores y el superusuario; la restricción se valida tambi�
 en el almacenamiento (`almacen_oficios.importar_oficios`).
 
 Admite la propia matriz (`.xlsx`) o un CSV con la misma cabecera, y **exige el
-formato establecido**: la cabecera en la **fila 4**, de la columna **B** a la
-**AA**, con las **26 columnas completas y en su orden** (ver `CABECERA_MATRIZ`).
-Los datos empiezan en la fila 5.
+formato establecido**: la cabecera en la **fila 1**, de la columna **A** a la
+**Z**, con las **26 columnas completas y en su orden** (ver `CABECERA_MATRIZ`),
+y los datos desde la **fila 2**. La primera celda del archivo (A1) es
+«Institución del Estado»: no se admiten filas de rótulos de agrupación por
+encima de la cabecera ni columnas en blanco por delante.
 
 Antes de leer un solo dato se valida la cabecera. Si no cuadra, el archivo se
 rechaza con el detalle de qué columna está fuera de sitio, cuál falta o cuál

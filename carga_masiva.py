@@ -6,9 +6,10 @@ Sirve para volcar de una vez el histórico que la unidad venía llevando en la
 
 Formato establecido
 -------------------
-La cabecera ocupa la fila 4, de la columna B a la AA (la fila 3 solo lleva
-rótulos de agrupación y las filas 1-2 están vacías). Los datos empiezan en la
-fila 5.
+La cabecera ocupa la **fila 1**, de la columna **A** a la **Z**, y los datos
+empiezan en la **fila 2**. No se admiten filas de rótulos de agrupación ni
+columnas en blanco por delante: la primera celda del archivo (A1) es
+«Institución del Estado».
 
 El archivo que se cargue debe respetar ese formato: las 26 columnas, completas
 y EN SU ORDEN (ver `CABECERA_MATRIZ`). Antes de leer un solo dato se comprueba
@@ -59,11 +60,12 @@ from typing import Dict, List, Optional, Tuple
 
 from configuracion import ESTADOS, INSTITUCIONES
 
-# Fila de la cabecera y primera fila de datos en la matriz de Excel.
-FILA_CABECERA = 4
+# Fila de la cabecera y primera fila de datos: la cabecera es la primera fila
+# del archivo y los datos empiezan justo debajo.
+FILA_CABECERA = 1
 PRIMERA_FILA_DATOS = FILA_CABECERA + 1
 
-# FORMATO ESTABLECIDO de la matriz: las 26 columnas de la B a la AA, EN ESTE
+# FORMATO ESTABLECIDO de la matriz: las 26 columnas de la A a la Z, EN ESTE
 # ORDEN. El archivo que se cargue tiene que respetarlo; si no, se rechaza
 # indicando qué columna no cuadra.
 #
@@ -103,9 +105,10 @@ CABECERA_MATRIZ = [
     ("Ref Solic- No. LCI-202X-000",         "ref solic",              None),
 ]
 
-# Primera columna de la matriz (la A queda vacía) y última.
-PRIMERA_COLUMNA = "B"
-ULTIMA_COLUMNA = "AA"
+# Primera y última columna: los datos arrancan en A1, sin columnas en blanco
+# por delante.
+PRIMERA_COLUMNA = "A"
+ULTIMA_COLUMNA = "Z"
 
 # Estados de la matriz -> estados de la aplicación.
 ESTADOS_EQUIVALENTES = {
@@ -169,8 +172,8 @@ def _a_texto(valor) -> str:
 
 # --- Validación del formato --------------------------------------------------
 def _letra_columna(posicion: int) -> str:
-    """Letra de la columna de Excel para la posición indicada (0 -> 'B')."""
-    numero = posicion + 2                      # la matriz empieza en la B
+    """Letra de la columna de Excel para la posición indicada (0 -> 'A')."""
+    numero = posicion + 1                      # la cabecera empieza en la A
     letras = ""
     while numero:
         numero, resto = divmod(numero - 1, 26)
@@ -178,40 +181,59 @@ def _letra_columna(posicion: int) -> str:
     return letras
 
 
-def _recortar(celdas: List) -> Tuple[List[str], List[str], int]:
-    """Encabezados de la fila sin las columnas vacías de los extremos.
+def _recortar(celdas: List) -> Tuple[List[str], List[str]]:
+    """Encabezados de la fila, sin las columnas vacías del final.
 
-    Devuelve (normalizados, tal como vienen, desplazamiento inicial). Los
-    normalizados sirven para comparar y los originales para los mensajes, que
-    así muestran el texto exacto que tiene el archivo. El desplazamiento
-    recoge la columna A de la matriz, que va vacía.
+    Devuelve (normalizados, tal como vienen): los normalizados sirven para
+    comparar y los originales para los mensajes, que así muestran el texto
+    exacto que tiene el archivo. Solo se descartan las columnas sobrantes del
+    final, que Excel arrastra en blanco; las del principio NO, porque la
+    cabecera tiene que empezar en la A y una columna en blanco por delante es
+    justamente un archivo fuera de formato.
     """
     titulos = [normalizar(c) for c in celdas]
     originales = [" ".join(str(c).split()) if c is not None else "" for c in celdas]
-    inicio = 0
-    while inicio < len(titulos) and not titulos[inicio]:
-        inicio += 1
     fin = len(titulos)
-    while fin > inicio and not titulos[fin - 1]:
+    while fin > 0 and not titulos[fin - 1]:
         fin -= 1
-    return titulos[inicio:fin], originales[inicio:fin], inicio
+    return titulos[:fin], originales[:fin]
 
 
-def coincidencias(celdas: List) -> int:
-    """Cuántas columnas de la fila encajan, en su posición, con el formato."""
-    titulos, _originales, _inicio = _recortar(celdas)
-    return sum(1 for posicion, (_, prefijo, _campo) in enumerate(CABECERA_MATRIZ)
-               if posicion < len(titulos) and titulos[posicion].startswith(prefijo))
-
-
-def validar_cabecera(celdas: List) -> int:
+def validar_cabecera(celdas: List) -> None:
     """Comprueba que la fila sea la cabecera del formato establecido.
 
-    El orden de las columnas IMPORTA: se exige la secuencia completa de la B a
-    la AA. Devuelve el desplazamiento con el que empiezan las columnas dentro de
-    la fila; si el archivo no cumple, lanza un ValueError explicando qué falla.
+    El orden de las columnas IMPORTA: se exige la secuencia completa de la A a
+    la Z, empezando en la primera celda. Si el archivo no cumple, lanza un
+    ValueError explicando qué falla.
     """
-    titulos, originales, inicio = _recortar(celdas)
+    titulos, originales = _recortar(celdas)
+    if not titulos:
+        # Caso típico del formato antiguo (rótulos arriba y cabecera en la
+        # fila 4): la primera fila viene en blanco.
+        raise ValueError(
+            "El archivo no tiene el formato establecido: la fila "
+            f"{FILA_CABECERA} está vacía.\n\n"
+            f"La cabecera debe ser la primera fila del archivo, de la columna "
+            f"{PRIMERA_COLUMNA} a la {ULTIMA_COLUMNA}, y los datos empezar en "
+            f"la fila {PRIMERA_FILA_DATOS}. No debe haber filas de rótulos ni "
+            "columnas en blanco por delante.\n\nSuba el archivo con el formato "
+            "establecido."
+        )
+    if not titulos[0]:
+        # La cabecera está corrida a la derecha. Compararla columna por columna
+        # daría 26 diferencias encadenadas y ninguna diría lo que pasa: que
+        # sobran columnas por delante.
+        vacias = 0
+        while vacias < len(titulos) and not titulos[vacias]:
+            vacias += 1
+        raise ValueError(
+            "El archivo no tiene el formato establecido: la cabecera no "
+            f"empieza en la columna {PRIMERA_COLUMNA} (hay {vacias} columna(s) "
+            "en blanco por delante).\n\n"
+            f"Mueva los datos para que «{CABECERA_MATRIZ[0][0]}» quede en la "
+            f"celda {PRIMERA_COLUMNA}{FILA_CABECERA}.\n\nSuba el archivo con el "
+            "formato establecido."
+        )
     problemas = []
     for posicion, (nombre, prefijo, _campo) in enumerate(CABECERA_MATRIZ):
         letra = _letra_columna(posicion)
@@ -235,11 +257,11 @@ def validar_cabecera(celdas: List) -> int:
             "El archivo no tiene el formato establecido.\n\n"
             f"La cabecera debe ocupar la fila {FILA_CABECERA}, de la columna "
             f"{PRIMERA_COLUMNA} a la {ULTIMA_COLUMNA}, con las "
-            f"{len(CABECERA_MATRIZ)} columnas en su orden.\n\n"
+            f"{len(CABECERA_MATRIZ)} columnas en su orden, y los datos empezar "
+            f"en la fila {PRIMERA_FILA_DATOS}.\n\n"
             f"Diferencias encontradas:\n{detalle}\n\n"
             "Suba el archivo con el formato establecido."
         )
-    return inicio
 
 
 def _leer_xlsx(ruta: Path) -> Tuple[List[List], List[str]]:
@@ -255,35 +277,32 @@ def _leer_xlsx(ruta: Path) -> Tuple[List[List], List[str]]:
     hoja = libro.active
     filas = [list(f) for f in hoja.iter_rows(values_only=True)]
     libro.close()
-    if len(filas) < FILA_CABECERA:
+    if not filas:
         raise ValueError(
-            "El archivo no tiene el formato establecido: se esperaba la "
-            f"cabecera en la fila {FILA_CABECERA} y el archivo solo tiene "
-            f"{len(filas)} fila(s).\n\nSuba el archivo con el formato "
-            "establecido."
+            "El archivo no tiene el formato establecido: está vacío.\n\n"
+            f"La cabecera debe ocupar la fila {FILA_CABECERA}, de la columna "
+            f"{PRIMERA_COLUMNA} a la {ULTIMA_COLUMNA}.\n\nSuba el archivo con "
+            "el formato establecido."
         )
-    return filas[FILA_CABECERA - 1:], []
+    return filas, []
 
 
 def _leer_csv(ruta: Path) -> Tuple[List[List], List[str]]:
     """Lee un CSV detectando el separador (barra vertical, punto y coma o coma).
 
-    La cabecera se busca en las primeras filas, porque un CSV exportado desde la
-    matriz puede arrastrar las filas de rótulos que van encima. Se elige la fila
-    que MÁS se parezca al formato establecido; si ninguna encaja del todo, la
-    validación posterior explica en qué se diferencia.
+    La cabecera es la PRIMERA fila del archivo, igual que en la hoja de Excel:
+    no se busca más abajo. Las filas se devuelven tal cual, sin descartar las
+    vacías, para que el número de fila que se informe en los errores sea el que
+    de verdad tiene el archivo.
     """
     with ruta.open("r", encoding="utf-8-sig", newline="") as archivo:
         muestra = archivo.read(8192)
         archivo.seek(0)
         separador = max("|;,\t", key=muestra.count)
         filas = [f for f in csv.reader(archivo, delimiter=separador)]
-    filas = [f for f in filas if any(_a_texto(c) for c in f)]
     if not filas:
         raise ValueError("El archivo está vacío.")
-    candidatas = filas[:FILA_CABECERA + 4]
-    mejor = max(range(len(candidatas)), key=lambda i: coincidencias(candidatas[i]))
-    return filas[mejor:], []
+    return filas, []
 
 
 def error_de_fila(numero, codigo_oficio, motivo) -> Dict:
@@ -319,10 +338,9 @@ def leer_archivo(ruta) -> Tuple[List[Dict], List[str], List[Dict]]:
 
     # El formato es fijo: se comprueba que estén TODAS las columnas y en su
     # orden antes de leer un solo dato.
-    cabecera = crudas[0]
-    inicio = validar_cabecera(cabecera)
+    validar_cabecera(crudas[0])
     # Ya validado el orden, cada campo se toma por su posición.
-    mapa = {inicio + posicion: campo
+    mapa = {posicion: campo
             for posicion, (_nombre, _prefijo, campo) in enumerate(CABECERA_MATRIZ)
             if campo}
     ignoradas = [nombre for nombre, _prefijo, campo in CABECERA_MATRIZ if not campo]

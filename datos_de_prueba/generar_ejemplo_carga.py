@@ -2,10 +2,10 @@
 Genera el ARCHIVO DE EJEMPLO de la carga masiva.
 
 Crea `Ejemplo de carga masiva.xlsx`: un archivo pequeño, con el FORMATO
-ESTABLECIDO que exige la aplicación (cabecera en la fila 4, de la columna B a
-la AA) y unos pocos oficios que muestran los casos habituales. Sirve como
-plantilla: se borra el contenido de ejemplo y se escriben los oficios reales
-debajo de la cabecera.
+ESTABLECIDO que exige la aplicación (cabecera en la fila 1, de la columna A a
+la Z, y los datos desde la fila 2) y unos pocos oficios que muestran los casos
+habituales. Sirve como plantilla: se borra el contenido de ejemplo y se
+escriben los oficios reales debajo de la cabecera.
 
     python datos_de_prueba/generar_ejemplo_carga.py
 
@@ -18,7 +18,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from carga_masiva import CABECERA_MATRIZ, FILA_CABECERA   # noqa: E402
+from carga_masiva import (CABECERA_MATRIZ, FILA_CABECERA,   # noqa: E402
+                          PRIMERA_FILA_DATOS)
 
 SALIDA = Path(__file__).resolve().parent / "Ejemplo de carga masiva.xlsx"
 
@@ -156,29 +157,25 @@ def escribir(filas):
     hoja = libro.active
     hoja.title = "Matriz-Req-Inf"
 
-    # Rótulos de agrupación de la fila 3, como en la matriz del área.
-    hoja["D3"] = "Gestión - Asignación"
-    hoja["H3"] = "BDP - Oficio de Respuesta"
-    hoja["Q3"] = "Información del Oficio .- SB; FGE, FJ; "
-    hoja["Z3"] = "Registro - RCSA"
-
+    # La cabecera es la primera fila y arranca en la A1: sin rótulos de
+    # agrupación encima ni columnas en blanco por delante.
     encabezados = [nombre for nombre, _prefijo, _campo in CABECERA_MATRIZ]
     relleno = PatternFill("solid", fgColor="152342")
-    for indice, titulo in enumerate(encabezados, start=2):     # la B es la 2
+    for indice, titulo in enumerate(encabezados, start=1):     # la A es la 1
         celda = hoja.cell(row=FILA_CABECERA, column=indice, value=titulo)
         celda.font = Font(bold=True, color="FFFFFF", size=9)
         celda.fill = relleno
         celda.alignment = Alignment(wrap_text=True, vertical="center")
 
-    for numero, fila in enumerate(filas, start=FILA_CABECERA + 1):
+    for numero, fila in enumerate(filas, start=PRIMERA_FILA_DATOS):
         completa = dict(fila)
         for columna, calcular in RELLENO.items():
             completa.setdefault(columna, calcular(fila))
-        for indice, titulo in enumerate(encabezados, start=2):
+        for indice, titulo in enumerate(encabezados, start=1):
             hoja.cell(row=numero, column=indice, value=completa.get(titulo, ""))
 
-    hoja.freeze_panes = f"A{FILA_CABECERA + 1}"
-    for indice in range(2, len(encabezados) + 2):
+    hoja.freeze_panes = f"A{PRIMERA_FILA_DATOS}"
+    for indice in range(1, len(encabezados) + 1):
         hoja.column_dimensions[get_column_letter(indice)].width = 20
     libro.save(SALIDA)
 
@@ -187,6 +184,6 @@ if __name__ == "__main__":
     escribir(FILAS)
     oficios = {f["Referencia - Oficio FGE; Juzgado"] for f in FILAS}
     print(f"{SALIDA.name}: {len(FILAS)} filas -> {len(oficios)} oficios.")
-    print("  Cabecera en la fila 4, de la columna B a la AA.")
+    print("  Cabecera en la fila 1 (desde A1) y datos desde la fila 2.")
     print("  Las filas que comparten Referencia oficio se agrupan en un oficio, "
           "y cada una aporta una persona investigada.")
