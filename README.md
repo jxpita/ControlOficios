@@ -514,6 +514,22 @@ Antes de guardar nada se muestra una **vista previa** con lo que se va a
 importar y los avisos anteriores. La carga entera se guarda en una sola
 escritura y queda anotada en la bitácora como `CARGA_MASIVA`.
 
+**Las filas con error se listan una a una.** La vista previa tiene dos
+pestañas —*Oficios a importar* y *Filas con error*— y la segunda es una tabla
+con la **línea del archivo**, la **Referencia oficio** y el **motivo** de cada
+fila que no entra, sin recortar la lista: quien carga el archivo puede corregir
+la matriz de una sola pasada en vez de descubrir los errores de uno en uno. Se
+apartan ahí las filas con una fecha ilegible, las que no traen Referencia
+oficio y aquellas cuya institución o tipo de acción no se reconoce, de modo que
+lo que anuncia la vista previa es exactamente lo que se va a guardar. Al
+terminar la importación se muestra el mismo detalle con lo que quedó fuera, en
+dos pestañas: *Filas con error* y *Ya registrados*. Si el oficio ocupa varias
+líneas del archivo se citan todas (`10, 11`).
+
+En el código, cada entrada de esas listas la construye
+`carga_masiva.error_de_fila()` y tiene la forma `{"fila", "codigo_oficio",
+"motivo"}`; `carga_masiva.ordenar_errores()` las deja en el orden del archivo.
+
 ### Documento del oficio
 
 Todo oficio se registra con **su documento**, en `.pdf` o `.docx`. El archivo se

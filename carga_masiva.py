@@ -286,11 +286,26 @@ def _leer_csv(ruta: Path) -> Tuple[List[List], List[str]]:
     return filas[mejor:], []
 
 
-def leer_archivo(ruta) -> Tuple[List[Dict], List[str], List[str]]:
+def error_de_fila(numero, codigo_oficio, motivo) -> Dict:
+    """Describe una fila que no se puede importar.
+
+    Se devuelve en piezas —número de fila, Referencia oficio y motivo— y no
+    como una frase ya armada, para que la aplicación pueda listarlas en una
+    tabla y quien cargue el archivo sepa exactamente qué línea corregir.
+    """
+    motivo = str(motivo)
+    return {"fila": str(numero), "codigo_oficio": (codigo_oficio or "").strip(),
+            # Los motivos vienen de sitios distintos y unos empiezan en
+            # minúscula; en una columna de una tabla desentonan.
+            "motivo": motivo[:1].upper() + motivo[1:]}
+
+
+def leer_archivo(ruta) -> Tuple[List[Dict], List[str], List[Dict]]:
     """Lee la matriz y devuelve (filas, columnas_ignoradas, errores).
 
     Cada fila es un diccionario con los campos ya normalizados y una clave
     `_fila` con su número dentro del archivo, para poder señalar los errores.
+    Los errores son los que devuelve `error_de_fila`.
     """
     ruta = Path(ruta)
     if not ruta.exists():
@@ -323,7 +338,7 @@ def leer_archivo(ruta) -> Tuple[List[Dict], List[str], List[str]]:
                 try:
                     datos[campo] = _a_fecha(valor)
                 except ValueError as error:
-                    problema = f"Fila {numero}: {error}"
+                    problema = str(error)
                     datos[campo] = ""
             else:
                 datos[campo] = _a_texto(valor)
@@ -332,7 +347,8 @@ def leer_archivo(ruta) -> Tuple[List[Dict], List[str], List[str]]:
         if not datos.get("codigo_oficio") and not datos.get("institucion"):
             continue
         if problema:
-            errores.append(problema)
+            errores.append(error_de_fila(numero, datos.get("codigo_oficio"),
+                                         problema))
             continue
         datos["estado"] = ESTADOS_EQUIVALENTES.get(
             normalizar(datos.get("estado")), datos.get("estado") or "")
@@ -418,15 +434,20 @@ def agrupar_por_referencia(filas: List[Dict],
             copia = dict(fila)
             copia["cantidad_investigados"] = 1
             copia["implicados"] = [implicado] if implicado else []
+            # Todas las líneas del archivo que forman el oficio: si el oficio
+            # no se puede importar hay que poder señalarlas todas, no solo la
+            # primera.
+            copia["_filas"] = [fila["_fila"]]
             agrupados[clave] = copia
             orden.append(clave)
         else:
             agrupados[clave]["cantidad_investigados"] += 1
+            agrupados[clave]["_filas"].append(fila["_fila"])
             if implicado:
                 agrupados[clave].setdefault("implicados", []).append(implicado)
             # Se completa lo que la primera fila hubiera dejado en blanco.
             for campo, valor in fila.items():
-                if (campo not in ("_fila", "implicados") and valor
+                if (campo not in ("_fila", "_filas", "implicados") and valor
                         and not agrupados[clave].get(campo)):
                     agrupados[clave][campo] = valor
     # Con detalle anotado, la cantidad de investigados la cuenta el detalle.
@@ -562,6 +583,24 @@ def _reconocer_tipo_accion(valor: str, catalogo: List[str]) -> str:
     return ""
 
 
+def ordenar_errores(errores: List[Dict]) -> List[Dict]:
+    """Los ordena por línea del archivo.
+
+    Quien corrige la matriz la recorre de arriba abajo, no por el momento en
+    que se detectó cada problema.
+    """
+    def _primera_linea(error):
+        primera = str(error.get("fila", "")).split(",")[0].strip()
+        return int(primera) if primera.isdigit() else 0
+    return sorted(errores, key=_primera_linea)
+
+
+def etiqueta_filas(fila: Dict) -> str:
+    """Número(s) de línea del archivo que componen el oficio ('11' o '11, 12')."""
+    numeros = fila.get("_filas") or [fila.get("_fila", "?")]
+    return ", ".join(str(n) for n in numeros)
+
+
 def preparar(ruta, usuarios: List[Dict]) -> Dict:
     """Deja las filas listas para importar y resume lo que se va a hacer."""
     filas, ignoradas, errores = leer_archivo(ruta)
@@ -570,20 +609,38 @@ def preparar(ruta, usuarios: List[Dict]) -> Dict:
     emparejados = emparejar_responsables(filas, usuarios)
 
     # La institución decide la nomenclatura de la Referencia UDC y el tipo de
-    # acción es obligatorio, así que ambos se traducen aquí y lo que no se
-    # reconozca se informa: son filas que no se podrán importar.
+    # acción es obligatorio, así que ambos se traducen aquí. Lo que no se
+    # reconozca no se puede importar: esas filas se apartan ahora, con su
+    # motivo, en vez de dejar que fallen al guardar. Así lo que se anuncia en
+    # la vista previa es de verdad lo que va a entrar.
     import tipos_accion
     catalogo = tipos_accion.listar()
     instituciones_desconocidas, tipos_desconocidos = set(), set()
+    aceptadas = []
     for fila in filas:
+        motivos = []
         original = fila.get("institucion", "")
         fila["institucion"] = _reconocer_institucion(original)
         if not fila["institucion"]:
             instituciones_desconocidas.add(original or "(vacía)")
+            motivos.append(
+                f"la institución «{original or '(vacía)'}» no se reconoce")
         original = fila.get("tipo_accion", "")
         fila["tipo_accion"] = _reconocer_tipo_accion(original, catalogo)
         if not fila["tipo_accion"]:
             tipos_desconocidos.add(original or "(vacío)")
+            motivos.append(
+                f"el tipo de acción «{original or '(vacío)'}» no está en el "
+                "catálogo")
+        if not (fila.get("codigo_oficio") or "").strip():
+            motivos.append("falta la Referencia oficio")
+        if motivos:
+            errores.append(error_de_fila(etiqueta_filas(fila),
+                                         fila.get("codigo_oficio"),
+                                         "; ".join(motivos) + "."))
+        else:
+            aceptadas.append(fila)
+    filas = aceptadas
 
     sin_estado_original = 0
     for fila in filas:
@@ -599,6 +656,8 @@ def preparar(ruta, usuarios: List[Dict]) -> Dict:
             fila["fecha_respuesta"] = ""
         elif fila.get("estado") not in ESTADOS:
             fila["estado"] = "En proceso"
+
+    errores = ordenar_errores(errores)
     return {
         "filas": filas,
         "columnas_ignoradas": ignoradas,

@@ -31,8 +31,8 @@ const LOGO_PROPORCION = 5.54;
 // Identificación del documento: la versión del manual y la de la aplicación
 // que documenta son independientes y se indican por separado.
 const VERSION_APLICACION = "1.0";
-const VERSION_DOCUMENTO = "2.1";
-const FECHA_ELABORACION = "18 de agosto de 2026";
+const VERSION_DOCUMENTO = "2.2";
+const FECHA_ELABORACION = "1 de septiembre de 2026";
 
 // ---------- Ayudantes ----------
 const TEXTO_CUERPO = "232B3D";   // gris azulado, más cálido que el negro puro
@@ -587,6 +587,8 @@ const contenido = [
   vinieta("Los oficios que se incorporan sin responsable pierden su fecha de respuesta, que deberá registrarse nuevamente al asignarlos."),
   vinieta("Los oficios importados no llevan el documento del oficio ni la respuesta en PDF; pueden adjuntarse posteriormente desde la pestaña Oficios."),
   vinieta("Los oficios ya registrados no se duplican: se omiten y se informa de ello."),
+  p("La vista previa se presenta en dos pestañas. La primera, Oficios a importar, contiene aquello que se va a incorporar; la segunda, Filas con error, relaciona una por una las filas que no pueden incorporarse, indicando la línea del archivo, la Referencia oficio y el motivo. Al concluir la importación se presenta el mismo detalle de cuanto quedó fuera, distinguiendo las filas con error de los oficios ya registrados."),
+  aviso("Para corregir la matriz:", "utilice la columna Línea del archivo, que señala el número de fila que debe revisarse. Cuando un oficio ocupa varias líneas se indican todas ellas. Corregidas las filas, puede volver a cargarse el archivo completo: los oficios ya incorporados se omiten por sí solos."),
 
   saltoPagina(),
   h1("5. Rol Superusuario"),

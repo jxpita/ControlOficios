@@ -2386,11 +2386,13 @@ class AplicacionPrincipal(ttk.Frame):
         except ValueError as error:
             messagebox.showerror("No se pudo leer el archivo", str(error))
             return
-        if not resumen["filas"]:
+        if not resumen["filas"] and not resumen["errores"]:
             messagebox.showinfo(
                 "Sin oficios",
                 "El archivo no contiene ninguna fila con datos de oficios.")
             return
+        # Si no entra ninguna fila pero hay errores, el diálogo se abre igual:
+        # el motivo de cada una es justo lo que hace falta ver.
         dialogo = DialogoCargaMasiva(self, self.usuario, resumen)
         self.wait_window(dialogo)
         self._refrescar_listado()
@@ -3351,11 +3353,61 @@ class DialogoImplicados(tk.Toplevel):
 # ============================================================================
 #  CARGA MASIVA DE OFICIOS
 # ============================================================================
+def anchos_de_columna(titulos, anchos):
+    """Ensancha lo justo para que ningún encabezado salga cortado.
+
+    El encabezado se dibuja en una sola línea (hay versiones de Tk que ignoran
+    el salto de línea en un `Treeview`), así que la única forma de que se lea
+    entero es reservarle el ancho que mide con su propia fuente.
+    """
+    try:
+        fuente = tkfont.Font(font=ttk.Style().lookup("Treeview.Heading", "font")
+                             or ("Helvetica", 10, "bold"))
+        return tuple(max(ancho, fuente.measure(titulo) + 28)
+                     for ancho, titulo in zip(anchos, titulos))
+    except tk.TclError:
+        return tuple(anchos)
+
+
+def construir_tabla_errores(padre, entradas, altura=8):
+    """Tabla de las filas del archivo que no entran, con el motivo de cada una.
+
+    Se listan TODAS, sin recortar: quien corrige la matriz necesita la lista
+    completa para no tener que volver a cargar el archivo una vez por error.
+    """
+    contenedor = ttk.Frame(padre)
+    contenedor.columnconfigure(0, weight=1)
+    contenedor.rowconfigure(0, weight=1)
+    columnas = ("filas", "codigo", "motivo")
+    titulos = ("Línea del archivo", "Referencia oficio", "Motivo")
+    anchos = anchos_de_columna(titulos, (100, 190, 460))
+    tabla = ttk.Treeview(contenedor, columns=columnas, show="headings",
+                         height=altura)
+    for columna, titulo, ancho in zip(columnas, titulos, anchos):
+        tabla.heading(columna, text=titulo)
+        tabla.column(columna, width=ancho, minwidth=ancho,
+                     stretch=(columna == "motivo"))
+    for entrada in entradas:
+        tabla.insert("", "end", values=(
+            entrada.get("fila", ""),
+            entrada.get("codigo_oficio", "") or "(sin referencia)",
+            entrada.get("motivo", "")))
+    barra = ttk.Scrollbar(contenedor, orient="vertical", command=tabla.yview)
+    barra_h = ttk.Scrollbar(contenedor, orient="horizontal", command=tabla.xview)
+    tabla.configure(yscrollcommand=barra.set, xscrollcommand=barra_h.set)
+    tabla.grid(row=0, column=0, sticky="nsew")
+    barra.grid(row=0, column=1, sticky="ns")
+    barra_h.grid(row=1, column=0, sticky="ew")
+    return contenedor
+
+
 class DialogoCargaMasiva(tk.Toplevel):
     """Muestra qué se va a importar y, si se confirma, lo guarda.
 
     La carga no se hace a ciegas: primero se ve cuántos oficios entran, qué
     filas se descartan y por qué, y con qué responsables se han emparejado.
+    Las filas con error se listan una a una, con su línea del archivo, para
+    poder corregirlas en la matriz.
     """
 
     def __init__(self, aplicacion, usuario, resumen):
@@ -3367,7 +3419,7 @@ class DialogoCargaMasiva(tk.Toplevel):
         self.configure(bg=COLOR_BLANCO)
         self.transient(aplicacion.winfo_toplevel())
         self.grab_set()
-        self.minsize(720, 520)
+        self.minsize(820, 560)
 
         marco = tk.Frame(self, bg=COLOR_BLANCO, padx=18, pady=16)
         marco.pack(fill="both", expand=True)
@@ -3375,18 +3427,43 @@ class DialogoCargaMasiva(tk.Toplevel):
         marco.rowconfigure(2, weight=1)
 
         filas = resumen["filas"]
+        errores = resumen["errores"]
         tk.Label(marco, text=f"Se importarán {len(filas)} oficios",
                  bg=COLOR_BLANCO, fg=COLOR_AZUL,
                  font=("Helvetica", 12, "bold")).grid(row=0, column=0, sticky="w")
 
         avisos = self._texto_avisos(resumen)
         tk.Label(marco, text=avisos, bg=COLOR_BLANCO, fg="#6B7280",
-                 font=("Helvetica", 8), justify="left", wraplength=680).grid(
+                 font=("Helvetica", 8), justify="left", wraplength=780).grid(
                      row=1, column=0, sticky="w", pady=(4, 10))
 
-        # Vista previa de lo que se va a guardar.
-        contenedor = ttk.Frame(marco)
-        contenedor.grid(row=2, column=0, sticky="nsew")
+        # Dos vistas: lo que entra y lo que no. Separadas para que ninguna de
+        # las dos quede escondida detrás de la otra.
+        pestanas = ttk.Notebook(marco)
+        pestanas.grid(row=2, column=0, sticky="nsew")
+        pestanas.add(self._vista_previa(pestanas, filas),
+                     text=f" Oficios a importar ({len(filas)}) ")
+        if errores:
+            pestanas.add(construir_tabla_errores(pestanas, errores, altura=12),
+                         text=f" Filas con error ({len(errores)}) ")
+            if not filas:
+                # No hay nada que revisar en la otra pestaña: se abre donde está
+                # lo único que hay que mirar.
+                pestanas.select(1)
+
+        botones = tk.Frame(marco, bg=COLOR_BLANCO)
+        botones.grid(row=3, column=0, sticky="e", pady=(14, 0))
+        ttk.Button(botones, text="Cancelar", command=self.destroy).pack(side="right")
+        btn = ttk.Button(botones, text=f"Importar {len(filas)} oficios",
+                         command=self._importar)
+        btn.pack(side="right", padx=6)
+        btn.config(style="Accent.TButton")
+        if not filas:
+            btn.state(["disabled"])
+
+    def _vista_previa(self, padre, filas):
+        """Tabla con lo que se va a guardar, tal como quedará registrado."""
+        contenedor = ttk.Frame(padre)
         contenedor.columnconfigure(0, weight=1)
         contenedor.rowconfigure(0, weight=1)
         columnas = ("institucion", "codigo", "accion", "oficio", "recepcion",
@@ -3396,16 +3473,17 @@ class DialogoCargaMasiva(tk.Toplevel):
                    "Fecha de oficio", "Fecha de recepción",
                    "Fecha de asignación", "Fecha de respuesta",
                    "Investigados", "Responsable", "Estado")
+        anchos = anchos_de_columna(titulos, (110,) * len(columnas))
         tabla = ttk.Treeview(contenedor, columns=columnas, show="headings",
                              height=12)
-        for columna, titulo in zip(columnas, titulos):
+        for columna, titulo, ancho in zip(columnas, titulos, anchos):
             tabla.heading(columna, text=titulo)
-            tabla.column(columna, width=110, minwidth=80, stretch=True)
+            tabla.column(columna, width=ancho, minwidth=ancho, stretch=True)
         for fila in filas:
             tabla.insert("", "end", values=(
-                fila.get("institucion", "") or "(no reconocida)",
+                fila.get("institucion", ""),
                 fila.get("codigo_oficio", ""),
-                fila.get("tipo_accion", "") or "(no reconocido)",
+                fila.get("tipo_accion", ""),
                 fila.get("fecha_oficio", ""), fila.get("fecha_recepcion", ""),
                 fila.get("fecha_asignacion", ""), fila.get("fecha_respuesta", ""),
                 fila.get("cantidad_investigados", ""),
@@ -3417,23 +3495,15 @@ class DialogoCargaMasiva(tk.Toplevel):
         tabla.grid(row=0, column=0, sticky="nsew")
         barra.grid(row=0, column=1, sticky="ns")
         barra_h.grid(row=1, column=0, sticky="ew")
-
-        botones = tk.Frame(marco, bg=COLOR_BLANCO)
-        botones.grid(row=3, column=0, sticky="e", pady=(14, 0))
-        ttk.Button(botones, text="Cancelar", command=self.destroy).pack(side="right")
-        btn = ttk.Button(botones, text=f"Importar {len(filas)} oficios",
-                         command=self._importar)
-        btn.pack(side="right", padx=6)
-        btn.config(style="Accent.TButton")
+        return contenedor
 
     def _texto_avisos(self, resumen):
         """Resume en pocas líneas lo que conviene saber antes de confirmar."""
         lineas = []
         if resumen["errores"]:
             lineas.append(
-                f"{len(resumen['errores'])} filas se descartan por datos "
-                f"incorrectos: {resumen['errores'][0]}"
-                + (" …" if len(resumen["errores"]) > 1 else ""))
+                f"{len(resumen['errores'])} fila(s) del archivo no se pueden "
+                "importar; se detallan en la pestaña «Filas con error».")
         if resumen["responsables_sin_identificar"]:
             nombres = ", ".join(resumen["responsables_sin_identificar"][:6])
             lineas.append(
@@ -3453,9 +3523,9 @@ class DialogoCargaMasiva(tk.Toplevel):
         if resumen.get("instituciones_desconocidas"):
             nombres = ", ".join(resumen["instituciones_desconocidas"][:6])
             lineas.append(
-                f"Institución no reconocida en {nombres}. Esas filas no se "
-                "pueden importar: la institución decide la nomenclatura de la "
-                "Referencia UDC.")
+                f"Institución no reconocida: {nombres}. La institución decide "
+                "la nomenclatura de la Referencia UDC, así que sin ella el "
+                "oficio no se puede numerar.")
         if resumen.get("tipos_accion_desconocidos"):
             nombres = ", ".join(resumen["tipos_accion_desconocidos"][:6])
             lineas.append(
@@ -3486,19 +3556,73 @@ class DialogoCargaMasiva(tk.Toplevel):
         except ValueError as error:
             messagebox.showerror("Error", str(error), parent=self)
             return
-        detalle = [f"Oficios importados: {len(resultado['importados'])}"]
-        if resultado["omitidos"]:
-            detalle.append(
-                f"Omitidos por estar ya registrados: {len(resultado['omitidos'])}")
-        if resultado["fallidos"]:
-            detalle.append(f"Descartados por datos incorrectos: "
-                           f"{len(resultado['fallidos'])}")
-            detalle.append("")
-            detalle.extend(resultado["fallidos"][:10])
-            if len(resultado["fallidos"]) > 10:
-                detalle.append("…")
-        messagebox.showinfo("Carga masiva", "\n".join(detalle), parent=self)
+        descartados = resultado["fallidos"] + resultado["omitidos"]
+        if not descartados:
+            messagebox.showinfo(
+                "Carga masiva",
+                f"Oficios importados: {len(resultado['importados'])}",
+                parent=self)
+            self.destroy()
+            return
+        # Con filas fuera, un mensaje no basta: hay que poder ver cuáles y por
+        # qué, y volver a la matriz con la lista delante.
+        self.withdraw()
+        aviso = DialogoResultadoCarga(self.aplicacion, resultado,
+                                      self.resumen["errores"])
+        self.wait_window(aviso)
         self.destroy()
+
+
+class DialogoResultadoCarga(tk.Toplevel):
+    """Qué entró y qué no, con el detalle fila por fila de lo descartado."""
+
+    def __init__(self, aplicacion, resultado, errores_previos=()):
+        super().__init__(aplicacion)
+        self.title("Carga masiva de oficios")
+        self.configure(bg=COLOR_BLANCO)
+        self.transient(aplicacion.winfo_toplevel())
+        self.grab_set()
+        self.minsize(820, 460)
+
+        marco = tk.Frame(self, bg=COLOR_BLANCO, padx=18, pady=16)
+        marco.pack(fill="both", expand=True)
+        marco.columnconfigure(0, weight=1)
+        marco.rowconfigure(2, weight=1)
+
+        tk.Label(marco, text=f"Oficios importados: {len(resultado['importados'])}",
+                 bg=COLOR_BLANCO, fg=COLOR_AZUL,
+                 font=("Helvetica", 12, "bold")).grid(row=0, column=0, sticky="w")
+
+        # Las filas que ya se habían apartado al leer el archivo se suman aquí:
+        # el resumen final es de todo lo que no quedó registrado.
+        descartadas = carga_masiva.ordenar_errores(
+            list(errores_previos) + list(resultado["fallidos"]))
+        repetidas = carga_masiva.ordenar_errores(resultado["omitidos"])
+        lineas = []
+        if descartadas:
+            lineas.append(f"Descartados por datos incorrectos: {len(descartadas)}. "
+                          "Corrija esas líneas en la matriz y vuelva a cargarla; "
+                          "los oficios ya importados se omiten solos.")
+        if repetidas:
+            lineas.append(f"Omitidos por estar ya registrados: {len(repetidas)}.")
+        tk.Label(marco, text="\n".join(lineas), bg=COLOR_BLANCO, fg="#6B7280",
+                 font=("Helvetica", 8), justify="left", wraplength=780).grid(
+                     row=1, column=0, sticky="w", pady=(4, 10))
+
+        pestanas = ttk.Notebook(marco)
+        pestanas.grid(row=2, column=0, sticky="nsew")
+        if descartadas:
+            pestanas.add(construir_tabla_errores(pestanas, descartadas, altura=10),
+                         text=f" Filas con error ({len(descartadas)}) ")
+        if repetidas:
+            pestanas.add(construir_tabla_errores(pestanas, repetidas, altura=10),
+                         text=f" Ya registrados ({len(repetidas)}) ")
+
+        botones = tk.Frame(marco, bg=COLOR_BLANCO)
+        botones.grid(row=3, column=0, sticky="e", pady=(14, 0))
+        btn = ttk.Button(botones, text="Cerrar", command=self.destroy)
+        btn.pack(side="right")
+        btn.config(style="Accent.TButton")
 
 
 # ============================================================================

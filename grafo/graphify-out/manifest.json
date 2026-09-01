@@ -1,14 +1,14 @@
 {
   "almacen_oficios.py": {
-    "mtime": 1787774636.7474883,
-    "seen": 1787774900.3042533,
-    "ast_hash": "31531c205dc25e36bf243d628cfaf549",
+    "mtime": 1788279217.150943,
+    "seen": 1788279833.2019703,
+    "ast_hash": "34806c2aa0e2116165649453293e5c87",
     "semantic_hash": ""
   },
   "aplicacion.py": {
-    "mtime": 1787774636.7514882,
-    "seen": 1787774900.304259,
-    "ast_hash": "fbd1b1d17b0f47466b8d3c3bf17f852b",
+    "mtime": 1788279640.4149332,
+    "seen": 1788279833.201975,
+    "ast_hash": "8c3269820bc3f348dc6eeb21180dd29a",
     "semantic_hash": ""
   },
   "autenticacion.py": {
@@ -24,9 +24,9 @@
     "semantic_hash": "be68dfef4ef95ed0b58e941cd5c2fd61"
   },
   "carga_masiva.py": {
-    "mtime": 1787774636.7514882,
-    "seen": 1787774900.304265,
-    "ast_hash": "ce4524a5b4c201996ce405f74dd5f441",
+    "mtime": 1788279636.9309335,
+    "seen": 1788279833.2019827,
+    "ast_hash": "be9336d3d2fa1ec2f08ca7f9e1c31fd6",
     "semantic_hash": ""
   },
   "cifrado.py": {
@@ -108,9 +108,9 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1787774859.207483,
-    "seen": 1787774900.3043046,
-    "ast_hash": "c1bc30a4b653c93d337f0426d29bde61",
+    "mtime": 1788279670.1229327,
+    "seen": 1788279833.2020123,
+    "ast_hash": "037d7f636c9e400000eba3961a600f8a",
     "semantic_hash": ""
   },
   "requirements.txt": {
@@ -138,9 +138,9 @@
     "semantic_hash": ""
   },
   "manual_fuente/manual.js": {
-    "mtime": 1787774636.964489,
-    "seen": 1787774900.3042817,
-    "ast_hash": "9b2fd4b4a045f2295ae621a0e4beaa15",
+    "mtime": 1788279701.3697128,
+    "seen": 1788279833.201998,
+    "ast_hash": "fb4be118c8578fc57a8a23b36b7b55d6",
     "semantic_hash": ""
   },
   "manual_fuente/package.json": {

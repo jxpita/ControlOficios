@@ -470,7 +470,9 @@ def importar_oficios(filas: List[Dict], importado_por: str,
 
     Lo que sí se valida es la coherencia de cada fila: fechas con formato y
     orden correctos, estado válido y referencias sin repetir. Las filas que no
-    pasan se descartan y se informa de ellas, sin abortar el resto.
+    pasan se descartan y se informa de ellas, sin abortar el resto: 'omitidos'
+    y 'fallidos' llevan una entrada por oficio descartado, con la línea del
+    archivo, la Referencia oficio y el motivo (ver `carga_masiva.error_de_fila`).
 
     Se hace en una sola escritura: la carga entera se guarda de golpe.
     """
@@ -483,18 +485,24 @@ def importar_oficios(filas: List[Dict], importado_por: str,
     referencias = {r.get("referencia", "").strip().upper() for r in registros}
     codigos = {r.get("codigo_oficio", "").strip().casefold() for r in registros}
 
+    # Import diferido: quien lee la matriz sabe qué líneas del archivo componen
+    # cada oficio, y así el aviso señala la línea que hay que corregir.
+    from carga_masiva import error_de_fila, etiqueta_filas
+
     importados, omitidos, fallidos = [], [], []
     ahora = datetime.now().isoformat(timespec="seconds")
     for fila in filas:
-        numero = fila.get("_fila", "?")
+        numero = etiqueta_filas(fila)
         try:
             nuevo = _preparar_importado(fila, registros, referencias, codigos,
                                         importado_por, ahora)
         except _FilaRepetida as duplicada:
-            omitidos.append(f"Fila {numero}: {duplicada}")
+            omitidos.append(error_de_fila(numero, fila.get("codigo_oficio"),
+                                          duplicada))
             continue
         except ValueError as error:
-            fallidos.append(f"Fila {numero}: {error}")
+            fallidos.append(error_de_fila(numero, fila.get("codigo_oficio"),
+                                          error))
             continue
         registros.append(nuevo)
         referencias.add(nuevo["referencia"].upper())
