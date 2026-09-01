@@ -18,11 +18,15 @@ fuera de sitio, cuál falta o cuál sobra. Solo se toleran diferencias de
 redacción —mayúsculas, tildes, espacios de más y títulos repartidos en varias
 líneas—, nunca de orden ni de contenido.
 
+La columna A es igual de rígida en su CONTENIDO: solo admite la **sigla** de la
+institución —`SB` o `FGE`—, que es la que lleva la Referencia UDC. Las filas con
+cualquier otro valor no se importan y se informan una a una.
+
 Correspondencia con los campos de la aplicación
 -----------------------------------------------
     Matriz                                  Campo del oficio
     --------------------------------------- ----------------------
-    Institución del Estado                   institucion (fija la sigla de la
+    Institución del Estado (SB / FGE)        institucion (fija la sigla de la
                                              Referencia UDC, que genera el
                                              sistema)
     Prioridad                                prioridad
@@ -556,28 +560,21 @@ def emparejar_responsables(filas: List[Dict], usuarios: List[Dict]) -> Dict:
 
 # Formas habituales de nombrar a cada institución en la matriz, además de su
 # nombre completo y su sigla.
-_SINONIMOS_INSTITUCION = {
-    "superintendencia de bancos": "Superintendencia de Bancos",
-    "superintendencia": "Superintendencia de Bancos",
-    "sb": "Superintendencia de Bancos",
-    "sbs": "Superintendencia de Bancos",
-    "fiscalia general del estado": "Fiscalía General del Estado",
-    "fiscalia": "Fiscalía General del Estado",
-    "fge": "Fiscalía General del Estado",
-}
+# La primera columna es RÍGIDA: solo la sigla de la institución, la misma que
+# lleva la Referencia UDC. Es el dato que decide la nomenclatura del oficio, así
+# que se exige exacto en vez de interpretar nombres y abreviaturas parecidas.
+SIGLAS_INSTITUCION = {sigla.upper(): nombre
+                      for nombre, sigla in INSTITUCIONES.items()}
+SIGLAS_ADMITIDAS = " o ".join(SIGLAS_INSTITUCION)          # "SB o FGE"
 
 
 def _reconocer_institucion(valor: str) -> str:
-    """Nombre normalizado de la institución, o '' si no se reconoce."""
-    clave = normalizar(valor)
-    if not clave:
-        return ""
-    if clave in _SINONIMOS_INSTITUCION:
-        return _SINONIMOS_INSTITUCION[clave]
-    for nombre in INSTITUCIONES:
-        if clave == normalizar(nombre):
-            return nombre
-    return ""
+    """Nombre de la institución a partir de su sigla, o '' si no es válida.
+
+    Solo se admite la SIGLA (SB, FGE), en mayúsculas o minúsculas: ni el nombre
+    completo ni variantes como «SBS» o «Fiscalía».
+    """
+    return SIGLAS_INSTITUCION.get(normalizar(valor).upper(), "")
 
 
 def _reconocer_tipo_accion(valor: str, catalogo: List[str]) -> str:
@@ -642,7 +639,8 @@ def preparar(ruta, usuarios: List[Dict]) -> Dict:
         if not fila["institucion"]:
             instituciones_desconocidas.add(original or "(vacía)")
             motivos.append(
-                f"la institución «{original or '(vacía)'}» no se reconoce")
+                f"«{original or '(vacía)'}» no es una institución válida: la "
+                f"columna {PRIMERA_COLUMNA} solo admite {SIGLAS_ADMITIDAS}")
         original = fila.get("tipo_accion", "")
         fila["tipo_accion"] = _reconocer_tipo_accion(original, catalogo)
         if not fila["tipo_accion"]:

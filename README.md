@@ -438,13 +438,14 @@ sobra, y la indicación de subir el archivo con el formato establecido. Solo se
 toleran diferencias de **redacción** —mayúsculas, tildes, espacios de más y
 títulos repartidos en varias líneas—, nunca de orden ni de contenido.
 
-La **primera columna es «Institución del Estado»** y la Referencia UDC **no
-viene en el archivo**: la genera el sistema al importar, con la nomenclatura que
-corresponda a la institución de cada fila.
+La **primera columna es «Institución del Estado»**, que se escribe con la
+**sigla** (`SB` o `FGE`), y la Referencia UDC **no viene en el archivo**: la
+genera el sistema al importar, con la nomenclatura que corresponda a la
+institución de cada fila.
 
 | Columna de la matriz | Campo del oficio |
 |---|---|
-| Institución del Estado | `institucion` (fija la sigla de la Referencia UDC) |
+| Institución del Estado (`SB` / `FGE`) | `institucion` (fija la sigla de la Referencia UDC) |
 | Prioridad | `prioridad` |
 | Apellidos, Nombres - Razón Social · TiPASo Id · Identificación · Tipo de Implicado · LCI | `implicados` (uno por fila del mismo oficio) |
 | Referencia - Oficio FGE; Juzgado, Tribunal | `codigo_oficio` (Referencia oficio) |
@@ -470,10 +471,16 @@ reconoce no tumba la carga —es un histórico, y perder el oficio entero por un
 «Tipo de Implicado» mal escrito sería peor— sino que entra como *Sin
 identificación*.
 
-La **Institución del Estado** y el **Tipo de Accion** se reconocen con
-tolerancia: se admiten la sigla (`SB`, `FGE`), los nombres habituales de cada
-entidad y las variantes de redacción del tipo de acción (mayúsculas, tildes y
-textos más largos que empiezan igual, como «LEVANTAMIENTO DE MEDIDAS» →
+La **Institución del Estado** es rígida: la columna A **solo admite la sigla**
+—`SB` o `FGE`, en mayúsculas o minúsculas—, que es la que lleva la Referencia
+UDC. El nombre completo («Superintendencia de Bancos») y las variantes
+parecidas («SBS», «Fiscalía») ya **no** se aceptan: la aplicación guarda el
+nombre completo, pero el archivo lo indica por su sigla. Las siglas salen de
+`configuracion.INSTITUCIONES`, así que añadir una institución al sistema añade
+también su sigla al archivo.
+
+El **Tipo de Accion**, en cambio, sí se reconoce con tolerancia: mayúsculas,
+tildes y textos más largos que empiezan igual («LEVANTAMIENTO DE MEDIDAS» →
 *Levantamiento*). Lo que no se reconoce se informa en la vista previa y esas
 filas no se importan.
 

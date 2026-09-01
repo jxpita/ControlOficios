@@ -31,7 +31,7 @@ const LOGO_PROPORCION = 5.54;
 // Identificación del documento: la versión del manual y la de la aplicación
 // que documenta son independientes y se indican por separado.
 const VERSION_APLICACION = "1.0";
-const VERSION_DOCUMENTO = "2.3";
+const VERSION_DOCUMENTO = "2.4";
 const FECHA_ELABORACION = "1 de septiembre de 2026";
 
 // ---------- Ayudantes ----------
@@ -579,6 +579,7 @@ const contenido = [
     "Pulse Importar para confirmar.",
   ]),
   aviso("El archivo debe respetar el formato establecido:", "la cabecera en la fila 1, de la columna A a la Z, con todas sus columnas y en su orden, y los datos a partir de la fila 2. La primera celda del archivo (A1) corresponde a la Institución del Estado; no se admiten filas de rótulos por encima de la cabecera ni columnas en blanco por delante. Si el formato no coincide, la aplicación rechaza el archivo e indica qué columna no corresponde."),
+  aviso("La Institución del Estado se escribe con su sigla:", "la primera columna admite únicamente SB, para la Superintendencia de Bancos, y FGE, para la Fiscalía General del Estado. Es la sigla con la que se numera la Referencia UDC. Las filas que consignen cualquier otro valor —el nombre completo de la entidad incluido— no se incorporan y se relacionan en la pestaña Filas con error.", { tono: "aviso" }),
   espacio(160),
   p("Antes de guardar información alguna se presenta una vista previa con los oficios que se van a incorporar y los avisos pertinentes. Conviene tener en cuenta lo siguiente:"),
   vinieta("La Referencia UDC no se toma del archivo: la asigna la aplicación según la institución de cada fila."),
@@ -708,7 +709,7 @@ const contenido = [
   p("Un administrador o el superusuario pueden anularlo desde Mantenimiento. El oficio se retira de la lista y de los indicadores, si bien se conserva; además, su Referencia oficio queda nuevamente disponible."),
 
   h3("La carga masiva rechaza mi archivo"),
-  p("El archivo debe respetar el formato establecido, con la cabecera en la primera fila, a partir de la celda A1, y todas sus columnas en su orden, siendo la primera la Institución del Estado. Los datos comienzan en la fila 2. El mensaje señala qué columna no corresponde."),
+  p("El archivo debe respetar el formato establecido, con la cabecera en la primera fila, a partir de la celda A1, y todas sus columnas en su orden, siendo la primera la Institución del Estado, que se consigna con su sigla (SB o FGE). Los datos comienzan en la fila 2. El mensaje señala qué columna no corresponde."),
 
   h3("Aparece el mensaje «Otro usuario está guardando cambios en este momento»"),
   p("Dos personas han guardado de forma simultánea. Deberá esperarse unos segundos y repetir la operación; el mensaje evita que una modificación se sobreponga a la otra."),

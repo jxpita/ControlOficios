@@ -3530,9 +3530,9 @@ class DialogoCargaMasiva(tk.Toplevel):
         if resumen.get("instituciones_desconocidas"):
             nombres = ", ".join(resumen["instituciones_desconocidas"][:6])
             lineas.append(
-                f"Institución no reconocida: {nombres}. La institución decide "
-                "la nomenclatura de la Referencia UDC, así que sin ella el "
-                "oficio no se puede numerar.")
+                f"Institución no válida: {nombres}. La primera columna solo "
+                f"admite {carga_masiva.SIGLAS_ADMITIDAS}, que es la sigla con "
+                "la que se numera la Referencia UDC.")
         if resumen.get("tipos_accion_desconocidos"):
             nombres = ", ".join(resumen["tipos_accion_desconocidos"][:6])
             lineas.append(

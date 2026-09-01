@@ -23,8 +23,9 @@ from carga_masiva import (CABECERA_MATRIZ, FILA_CABECERA,   # noqa: E402
 
 SALIDA = Path(__file__).resolve().parent / "Ejemplo de carga masiva.xlsx"
 
-SB = "Superintendencia de Bancos"
-FGE = "Fiscalía General del Estado"
+# La primera columna solo admite la sigla de la institución.
+SB = "SB"
+FGE = "FGE"
 
 # Fechas relativas a hoy: el ejemplo no envejece y ninguna queda en el futuro,
 # que es algo que la aplicación no admite.
@@ -40,8 +41,8 @@ def _dia(dias_atras):
 # agrupa la aplicación, y de ahí sale la cantidad de investigados.
 #
 # Los casos que se muestran:
-#   1) Oficio de la Superintendencia, finalizado, con una sola persona.
-#   2) Oficio de la Fiscalía, en proceso, con TRES personas investigadas.
+#   1) Oficio de la Superintendencia (SB), finalizado, con una sola persona.
+#   2) Oficio de la Fiscalía (FGE), en proceso, con TRES personas investigadas.
 #   3) Oficio sin responsable: entra como "Por asignar".
 #   4) Oficio de una empresa, identificada con RUC.
 #   5) Oficio con pasaporte y sin fecha de respuesta.

@@ -40,7 +40,8 @@ from carga_masiva import (CABECERA_MATRIZ, FILA_CABECERA,   # noqa: E402
 SALIDA = Path(__file__).resolve().parent / "Matriz de prueba - 110 oficios.xlsx"
 CANTIDAD_OFICIOS = 110
 
-INSTITUCIONES = ["Superintendencia de Bancos", "Fiscalía General del Estado"]
+# La primera columna del archivo solo admite la SIGLA de la institución.
+SIGLAS = ["SB", "FGE"]
 
 # Los nombres se escriben como en la matriz real: inicial y apellido. Al
 # importar, la aplicación los empareja con las cuentas del sistema.
@@ -165,8 +166,7 @@ def generar_filas():
     random.shuffle(responsables)
     filas = []
     for numero in range(1, CANTIDAD_OFICIOS + 1):
-        institucion = INSTITUCIONES[numero % 2]      # mitad y mitad
-        sigla = "SB" if institucion.startswith("Super") else "FGE"
+        sigla = SIGLAS[numero % 2]                   # mitad y mitad
 
         recepcion = fechas[numero - 1]
         oficio = recepcion - timedelta(days=random.randint(1, 20))
@@ -199,7 +199,7 @@ def generar_filas():
             tipo_id = ("RUC" if persona.endswith(("S.A.", "LTDA."))
                        else random.choice(TIPOS_IDENTIFICACION))
             filas.append({
-                "Institución del Estado": institucion,
+                "Institución del Estado": sigla,
                 "Mes": MESES[recepcion.month - 1],
                 "Fecha Asignación": asignacion if usuario else None,
                 "Usuario": usuario,
