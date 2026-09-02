@@ -42,7 +42,7 @@ pip install cryptography pymupdf pillow openpyxl
 | **cryptography** | `cryptography` | **Sí** | Cifrado Fernet de `oficios.dat` y `credenciales.dat`; hashing PBKDF2 de contraseñas | La app **no arranca** |
 | **PyMuPDF** | `fitz` | No | Visor de PDF integrado: renderiza cada página de la respuesta | "Ver respuesta (PDF)" ofrece abrirlo con el lector del sistema |
 | **Pillow** | `PIL` | No | 1) Logo del banco en la cabecera y el login. 2) Mejora la nitidez del visor de PDF (renderiza a 2× y reduce con LANCZOS) | Sin logo; el visor usa el modo PPM nativo de Tk (funciona, algo menos nítido) |
-| **openpyxl** | `openpyxl` | No | 1) Exportar los oficios a Excel (`.xlsx`). 2) Leer la matriz `.xlsx` en la carga masiva | Exportar se queda en CSV y la carga masiva solo admite CSV; ninguna de las dos necesita librerías |
+| **openpyxl** | `openpyxl` | No | 1) Exportar los oficios a Excel (`.xlsx`). 2) Leer el `.xlsx` en la carga masiva | Exportar se queda en CSV y la carga masiva solo admite CSV; ninguna de las dos necesita librerías |
 
 Las dependencias opcionales se importan con `try/except ImportError` y siempre
 tienen una alternativa, así que **la aplicación funciona sin ellas**.
@@ -368,8 +368,9 @@ Por eso el número no se teclea en ninguna parte:
   donde venga la llamada (`_exigir_cantidad_coherente`).
 
 El único caso en que el número existe sin detalle es el **histórico cargado
-desde la matriz** cuyas filas no traían el nombre del investigado: ahí se
-conserva el número de filas agrupadas, hasta que alguien anote a las personas.
+desde un archivo** cuyas filas no traían el nombre del investigado: ahí se
+conserva la cantidad que indique el archivo, hasta que alguien anote a las
+personas.
 
 Los implicados se guardan **dentro del propio oficio** (lista `implicados`),
 porque no tienen vida fuera de él, y cada uno lleva un `id` propio en vez de
@@ -399,7 +400,9 @@ la de trazabilidad: quién lo registró, cuándo, su origen y si está anulado�
 los de la persona a la derecha (`filas_exportacion`). Es la misma forma que
 tiene la matriz de la unidad, así que un oficio con cuatro investigados ocupa
 cuatro filas. Los oficios sin implicados anotados ocupan una sola fila, con esas
-últimas columnas vacías: no se pierden del reporte. Lo que se cuenta y se
+últimas columnas vacías: no se pierden del reporte. **Es también el formato que
+admite la carga masiva**, así que un archivo exportado sirve de plantilla para
+importar. Lo que se cuenta y se
 informa al terminar son los **oficios**, que es lo que se pidió exportar.
 
 | Formato | Librería | Notas |
@@ -420,124 +423,86 @@ detalle interno del formato: **la interfaz no lo menciona**.
 
 ### Carga masiva de oficios
 
-`carga_masiva.py` vuelca de una vez el histórico que la unidad llevaba en la
-matriz de Excel ("Matriz-Req-Inf"). Está en la pestaña *Configuración*, así que
-solo la usan administradores y el superusuario; la restricción se valida también
-en el almacenamiento (`almacen_oficios.importar_oficios`).
+`carga_masiva.py` da de alta de una vez los oficios que se venían llevando
+fuera del sistema. Está en la pestaña *Configuración*, así que solo la usan
+administradores y el superusuario; la restricción se valida también en el
+almacenamiento (`almacen_oficios.importar_oficios`).
 
-Admite la propia matriz (`.xlsx`) o un CSV con la misma cabecera, y **exige el
-formato establecido**: la cabecera en la **fila 1**, de la columna **A** a la
-**Z**, con las **26 columnas completas y en su orden** (ver `CABECERA_MATRIZ`),
-y los datos desde la **fila 2**. La primera celda del archivo (A1) es
-«Institución del Estado»: no se admiten filas de rótulos de agrupación por
-encima de la cabecera ni columnas en blanco por delante.
+**El formato de importación es el mismo de la exportación.** No hay dos
+formatos que mantener: lo que sale de *Exportar oficios* sirve de plantilla
+para lo que entra. Las columnas se **derivan** de
+`almacen_oficios.COLUMNAS_EXPORTACION` y `COLUMNAS_IMPLICADO`, de modo que
+añadir una columna a la exportación la añade a la carga sola. La cabecera
+ocupa la **fila 1** desde la celda **A1**, los datos empiezan en la **fila 2**
+y se admiten `.xlsx` y `.csv`.
 
-Antes de leer un solo dato se valida la cabecera. Si no cuadra, el archivo se
-rechaza con el detalle de qué columna está fuera de sitio, cuál falta o cuál
-sobra, y la indicación de subir el archivo con el formato establecido. Solo se
-toleran diferencias de **redacción** —mayúsculas, tildes, espacios de más y
-títulos repartidos en varias líneas—, nunca de orden ni de contenido.
+Como en la exportación, **cada fila es una persona investigada**: las filas que
+comparten *Referencia oficio* son el mismo oficio y de ellas sale su detalle de
+implicados. Los datos del oficio se repiten en todas sus filas y **tienen que
+coincidir**; si una línea contradice a la primera del oficio, se dice en qué
+columna.
 
-La **primera columna es «Institución del Estado»**, que se escribe con la
-**sigla** (`SB` o `FGE`), y la Referencia UDC **no viene en el archivo**: la
-genera el sistema al importar, con la nomenclatura que corresponda a la
-institución de cada fila.
+Seis columnas están en el archivo para que el formato sea el mismo, pero su
+contenido **se ignora** porque lo pone el sistema: *Referencia UDC* (la numera
+el sistema con la nomenclatura de la institución), *Documento del oficio*,
+*Respuesta en PDF*, *Registrado por*, *Fecha de registro* y *Origen*.
 
-| Columna de la matriz | Campo del oficio |
+#### Todo o nada
+
+Antes de guardar nada se valida el archivo **entero**, con las mismas reglas
+que aplica el sistema al registrar un oficio a mano. Si queda una sola fila con
+error, **el botón de importar no se ofrece** y no se guarda nada: se corrige el
+archivo y se vuelve a cargar. La comprobación previa
+(`almacen_oficios.validar_importacion`) es la misma que hace la importación, así
+que la vista previa no puede prometer algo distinto de lo que ocurrirá.
+
+Lo que se valida en cada oficio:
+
+| Regla | Qué exige |
 |---|---|
-| Institución del Estado (`SB` / `FGE`) | `institucion` (fija la sigla de la Referencia UDC) |
-| Prioridad | `prioridad` |
-| Apellidos, Nombres - Razón Social · TiPASo Id · Identificación · Tipo de Implicado · LCI | `implicados` (uno por fila del mismo oficio) |
-| Referencia - Oficio FGE; Juzgado, Tribunal | `codigo_oficio` (Referencia oficio) |
-| Tipo de Accion | `tipo_accion` |
-| Delito | `causal_oficio` |
-| Fecha Circular | `fecha_oficio` |
-| Fecha Emisión | `fecha_recepcion` |
-| Fecha Asignación | `fecha_asignacion` |
-| Fecha Envío | `fecha_respuesta` |
-| Usuario | responsable |
-| Estado | `estado` |
-| Observación | `observacion` |
-| (nº de filas con la misma Referencia oficio) | `cantidad_investigados` |
+| Institución | `SB`/`FGE` o su nombre completo (`parametros.validar_institucion`) |
+| Referencia oficio | obligatoria y sin repetirse, ni en el sistema ni dentro del archivo |
+| Tipo de acción | del catálogo mantenible (`tipos_accion`) |
+| Fechas de oficio y de recepción | obligatorias, con formato, no futuras, y la de oficio no posterior a la de recepción |
+| Fecha de asignación | no anterior a la de recepción y **exige responsable** |
+| Fecha de respuesta | no anterior a la de recepción y exige responsable |
+| Usuario responsable | cuenta **existente** del sistema; un administrador no puede asignar a un superusuario |
+| Responsable (nombre) | no se puede indicar sin su usuario; el nombre que se guarda es el de la cuenta |
+| Estado | coherente con el responsable y la respuesta: sin responsable solo cabe *Por asignar*; con responsable, *En proceso*; con fecha de respuesta, *Finalizado*. Si el archivo dice otra cosa **se avisa**, no se corrige en silencio |
+| Finalizado | exige fecha de asignación y de respuesta |
+| Prioridad | Baja, Media o Alta |
+| Cantidad de investigados | entero no negativo; con detalle de personas debe coincidir con el número de filas |
+| Implicados | `validar_implicado`: nombre, tipo de implicado del catálogo, LCI Sí/No e identificación bien formada (cédula 10 dígitos, RUC 13, pasaporte alfanumérico) |
+| Anulado / Motivo de anulación | *Sí* exige motivo; un motivo sin *Sí* es un error. Un oficio anulado entra ya anulado |
 
-Las demás columnas (Mes, Prioridad, Medio Respuesta, Días, Canal Recepción,
-Expediente Fiscal, la Referencia de la circular de la Superintendencia y el
-bloque RCSA) no tienen equivalente y se ignoran; el resumen previo las enumera.
+Lo único que no se exige, porque un archivo no puede aportarlo, es el
+**documento del oficio** y la **respuesta en PDF**: se adjuntan después desde la
+pestaña *Oficios*. Un oficio que llegue como *Finalizado* sí tiene que traer sus
+dos fechas.
 
-Como la matriz dedica **una fila a cada persona investigada**, esas filas se
-convierten en los **implicados** del oficio: las abreviaturas se traducen al
-catálogo (`CED` → Cédula, `EX CLIENTE` → Ex cliente, `SI` → Sí). Lo que no se
-reconoce no tumba la carga —es un histórico, y perder el oficio entero por un
-«Tipo de Implicado» mal escrito sería peor— sino que entra como *Sin
-identificación*.
+El **responsable se indica por su nombre de cuenta** (columna *Usuario
+responsable*), en minúsculas y sin espacios (`cmroman`, `jportero`…). Si esa
+cuenta no existe, el motivo lo dice con todas las letras —«el usuario «X» no
+existe en el sistema. Créelo primero en la pestaña Usuarios»— y no se carga
+nada: la importación no inventa usuarios.
 
-La **Institución del Estado** es rígida: la columna A **solo admite la sigla**
-—`SB` o `FGE`, en mayúsculas o minúsculas—, que es la que lleva la Referencia
-UDC. El nombre completo («Superintendencia de Bancos») y las variantes
-parecidas («SBS», «Fiscalía») ya **no** se aceptan: la aplicación guarda el
-nombre completo, pero el archivo lo indica por su sigla. Las siglas salen de
-`configuracion.INSTITUCIONES`, así que añadir una institución al sistema añade
-también su sigla al archivo.
+#### Las filas con error se listan una a una
 
-El **Tipo de Accion**, en cambio, sí se reconoce con tolerancia: mayúsculas,
-tildes y textos más largos que empiezan igual («LEVANTAMIENTO DE MEDIDAS» →
-*Levantamiento*). Lo que no se reconoce se informa en la vista previa y esas
-filas no se importan.
+La vista previa tiene dos pestañas —*Oficios del archivo* y *Filas con error*—
+y la segunda es una tabla con la **línea del archivo**, la **Referencia
+oficio** y el **motivo** de cada fila que no entra, sin recortar la lista: se
+corrige el archivo de una sola pasada en vez de descubrir los errores de uno en
+uno. Si el oficio ocupa varias líneas se citan todas (`10, 11`).
 
-**Decisiones a tener en cuenta:**
+En el código, cada entrada la construye `carga_masiva.error_de_fila()` y tiene
+la forma `{"fila", "codigo_oficio", "motivo"}`;
+`carga_masiva.ordenar_errores()` las deja en el orden del archivo.
 
-- **Varias filas con la misma Referencia oficio** se entienden como un mismo
-  oficio con varios investigados: se agrupan en un registro, cada fila aporta un
-  implicado y la cantidad de investigados es el número de implicados.
-- La columna *Usuario* trae la persona en formato `C. Roman`, que no es un
-  nombre de cuenta. Se encaja por nombre de cuenta, por nombre completo y por la
-  forma *inicial + apellido* contra **cualquiera** de las palabras del nombre
-  (`_claves_de`), porque no se sabe de antemano cuál de los apellidos usaron:
+La carga entera se guarda en una sola escritura y queda anotada en la bitácora
+como `CARGA_MASIVA`; un archivo rechazado queda como `CARGA_MASIVA_RECHAZADA`.
+Las Referencias UDC se generan siguiendo la numeración de cada institución, así
+que la carga continúa la serie en vez de crear huecos.
 
-  | En la matriz | Cuenta del sistema |
-  |---|---|
-  | `C. Roman` | Camila Maria **Roman** Townsed |
-  | `J. Portero` | Joel Tyrone **Portero** Cervantes |
-  | `J. Rosero` | Juan Pablo **Rosero** Rodríguez |
-
-  Se toleran mayúsculas, tildes, el punto de la inicial y los espacios de más.
-- Si una forma apunta a **dos personas distintas** (dos `J. Rosero`) se
-  considera ambigua y **no se asigna**: es preferible dejar el oficio por
-  asignar que atribuírselo a quien no fue.
-- **Sin coincidencia, el oficio entra sin responsable y en "Por asignar"**, sea
-  cual sea el estado que traiga el archivo. Se le retira además la fecha de
-  respuesta, porque las reglas del sistema no admiten un oficio respondido sin
-  nadie a cargo y con ella puesta el estado saltaría a "Finalizado"; quien lo
-  asigne la vuelve a poner. La vista previa dice cuántos oficios quedan así.
-- **No se exige el documento del oficio ni la respuesta en PDF**: no existen
-  para lo ya tramitado. Se pueden adjuntar después.
-- **Se respeta el estado del archivo, incluido "Finalizado"**, porque es el
-  estado real de un expediente cerrado. Las exigencias para *finalizar* siguen
-  vigentes para cualquier cambio posterior hecho desde la aplicación.
-- No se duplican oficios: las filas cuya Referencia oficio ya esté registrada se
-  omiten y se informa de ellas. Las Referencias UDC se generan siguiendo la
-  numeración de cada institución, así que la carga masiva continúa la serie en
-  vez de crear huecos.
-
-Antes de guardar nada se muestra una **vista previa** con lo que se va a
-importar y los avisos anteriores. La carga entera se guarda en una sola
-escritura y queda anotada en la bitácora como `CARGA_MASIVA`.
-
-**Las filas con error se listan una a una.** La vista previa tiene dos
-pestañas —*Oficios a importar* y *Filas con error*— y la segunda es una tabla
-con la **línea del archivo**, la **Referencia oficio** y el **motivo** de cada
-fila que no entra, sin recortar la lista: quien carga el archivo puede corregir
-la matriz de una sola pasada en vez de descubrir los errores de uno en uno. Se
-apartan ahí las filas con una fecha ilegible, las que no traen Referencia
-oficio y aquellas cuya institución o tipo de acción no se reconoce, de modo que
-lo que anuncia la vista previa es exactamente lo que se va a guardar. Al
-terminar la importación se muestra el mismo detalle con lo que quedó fuera, en
-dos pestañas: *Filas con error* y *Ya registrados*. Si el oficio ocupa varias
-líneas del archivo se citan todas (`10, 11`).
-
-En el código, cada entrada de esas listas la construye
-`carga_masiva.error_de_fila()` y tiene la forma `{"fila", "codigo_oficio",
-"motivo"}`; `carga_masiva.ordenar_errores()` las deja en el orden del archivo.
 
 ### Documento del oficio
 
@@ -652,10 +617,10 @@ oficios_tracker/
 ├── metricas.py           # Cálculo de métricas del tablero
 ├── herramienta_admin.py  # Utilidad de consola para el administrador (ver 3.1)
 ├── requirements.txt      # Dependencias del proyecto
-├── carga_masiva.py       # Lectura y mapeo de la matriz de Excel/CSV
+├── carga_masiva.py       # Importación: lee el formato de la exportación
 ├── respaldo.py           # Copia de seguridad automática (una por día)
 ├── respaldo_datos.ps1    # Copia de seguridad programable de datos/ (Windows)
-├── datos_de_prueba/      # Matriz de ejemplo para probar la carga (ver 3.5)
+├── datos_de_prueba/      # Archivos de ejemplo para probar la carga (ver 3.5)
 └── datos/                # Se crea sola; contiene:
     ├── clave_maestra.key   (clave de cifrado — PROTEGER / RESPALDAR)
     ├── credenciales.dat    (usuarios del sistema, cifrado)
@@ -825,11 +790,12 @@ la bitácora (`AGREGAR_TIPO_ACCION`, `RENOMBRAR_TIPO_ACCION`,
 `datos_de_prueba/` contiene dos archivos listos para probar la carga masiva sin
 tocar información real:
 
-- `Ejemplo de carga masiva.xlsx` — el **modelo del formato**: 5 oficios en 7
-  filas, con los casos habituales (un oficio con tres personas investigadas,
-  uno sin responsable, ambas instituciones, las tres prioridades y los tres
-  tipos de identificación). Sirve de plantilla: se borra el contenido de
-  ejemplo y se escriben los oficios reales bajo la cabecera. Se regenera con
+- `Ejemplo de carga masiva.xlsx` — el **modelo del formato**: 6 oficios en 9
+  filas, con los casos habituales (uno finalizado con sus dos fechas, uno con
+  tres personas investigadas, uno sin responsable en *Por asignar*, una empresa
+  con RUC, uno de prioridad alta con dos personas y uno sin detalle de personas
+  pero con la cantidad). Sirve de plantilla: se borra el contenido de ejemplo y
+  se escriben los oficios reales bajo la cabecera. Se regenera con
   `python datos_de_prueba/generar_ejemplo_carga.py`.
 
 
@@ -841,17 +807,18 @@ tocar información real:
   últimos seis meses con un grupo en las dos últimas semanas, cargas de trabajo
   distintas por responsable, los tres estados presentes y tiempos de respuesta
   variados.
-- Los responsables se escriben como en la matriz real (`C. Roman`,
-  `J. Portero`, …) y corresponden a las cuentas con rol **usuario**; los
-  oficios no se asignan a quien administra el sistema. Las cuentas tienen que
-  existir antes de cargar el archivo para que el emparejamiento funcione; las
-  que no encajen entran como *Por asignar*.
+- Los responsables se escriben con su **nombre de cuenta** (`cmroman`,
+  `jportero`, `dtfranco`, `lgjarrin`) y corresponden a cuentas con rol
+  **usuario**; los oficios no se asignan a quien administra el sistema. Esas
+  cuentas tienen que **existir antes** de cargar el archivo: si falta una, la
+  carga lo dice y no importa nada.
 - `generar_datos_prueba.py` — lo vuelve a generar (`python
   datos_de_prueba/generar_datos_prueba.py`). Usa una semilla fija, así que
   produce siempre el mismo archivo.
 
-Se carga como cualquier otra matriz: **Configuración → Carga masiva de oficios →
-Cargar archivo**. El archivo puede estar en cualquier carpeta a la que se llegue
+Los dos los escribe la propia exportación de la aplicación
+(`almacen_oficios.exportar_xlsx`), de modo que no pueden desviarse del formato.
+Se cargan desde **Configuración → Carga masiva de oficios → Cargar archivo**. El archivo puede estar en cualquier carpeta a la que se llegue
 desde el explorador; la aplicación no lo lee de una ruta fija.
 
 ## 4. Compilar a ejecutable (lo más ligero posible)

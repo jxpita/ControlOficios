@@ -1,13 +1,20 @@
 """
 Genera el ARCHIVO DE EJEMPLO de la carga masiva.
 
-Crea `Ejemplo de carga masiva.xlsx`: un archivo pequeño, con el FORMATO
-ESTABLECIDO que exige la aplicación (cabecera en la fila 1, de la columna A a
-la Z, y los datos desde la fila 2) y unos pocos oficios que muestran los casos
-habituales. Sirve como plantilla: se borra el contenido de ejemplo y se
-escriben los oficios reales debajo de la cabecera.
+Crea `Ejemplo de carga masiva.xlsx`: seis oficios con los casos habituales,
+escrito con el MISMO formato que produce «Exportar oficios», que es el que
+exige la importación. Sirve como plantilla: se borra el contenido de ejemplo y
+se escriben los oficios reales debajo de la cabecera.
 
     python datos_de_prueba/generar_ejemplo_carga.py
+
+El archivo lo escribe la propia exportación de la aplicación
+(`almacen_oficios.exportar_xlsx`), de modo que el ejemplo no puede desviarse
+del formato: si se añade una columna a la exportación, aparece aquí sola.
+
+Los responsables se indican con su NOMBRE DE CUENTA, en minúsculas y sin
+espacios (cmroman, jportero…). Esas cuentas tienen que existir en el sistema
+antes de cargar el archivo; si no, la importación lo dice y no carga nada.
 
 Se diferencia de `generar_datos_prueba.py` en el propósito: aquel produce un
 volumen grande para ver el tablero con contenido; este es el modelo del formato.
@@ -18,14 +25,21 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from carga_masiva import (CABECERA_MATRIZ, FILA_CABECERA,   # noqa: E402
-                          PRIMERA_FILA_DATOS)
+import almacen_oficios                                    # noqa: E402
 
 SALIDA = Path(__file__).resolve().parent / "Ejemplo de carga masiva.xlsx"
 
-# La primera columna solo admite la sigla de la institución.
-SB = "SB"
-FGE = "FGE"
+SB = "Superintendencia de Bancos"
+FGE = "Fiscalía General del Estado"
+
+# Cuentas de la unidad. El archivo las nombra por su usuario; el nombre completo
+# es informativo (al importar se toma el de la cuenta).
+RESPONSABLES = {
+    "cmroman": "Camila Maria Roman Townsed",
+    "jportero": "Joel Tyrone Portero Cervantes",
+    "dtfranco": "Damara Tais Franco Pacheco",
+    "lgjarrin": "Lizzi Gabriela Jarrin Aguilar",
+}
 
 # Fechas relativas a hoy: el ejemplo no envejece y ninguna queda en el futuro,
 # que es algo que la aplicación no admite.
@@ -33,158 +47,115 @@ HOY = date.today()
 
 
 def _dia(dias_atras):
-    return HOY - timedelta(days=dias_atras)
+    return (HOY - timedelta(days=dias_atras)).isoformat()
 
 
-# Cada entrada es una FILA del archivo. Los oficios con varias personas
-# investigadas ocupan varias filas y repiten la Referencia oficio: así los
-# agrupa la aplicación, y de ahí sale la cantidad de investigados.
-#
-# Los casos que se muestran:
-#   1) Oficio de la Superintendencia (SB), finalizado, con una sola persona.
-#   2) Oficio de la Fiscalía (FGE), en proceso, con TRES personas investigadas.
-#   3) Oficio sin responsable: entra como "Por asignar".
-#   4) Oficio de una empresa, identificada con RUC.
-#   5) Oficio con pasaporte y sin fecha de respuesta.
-FILAS = [
-    {
-        "Institución del Estado": SB,
-        "Fecha Asignación": _dia(40), "Usuario": "C. Roman", "Prioridad": "Alta",
-        "Fecha Emisión": _dia(41), "Fecha Envío": _dia(30), "Estado": "Finalizado",
-        "Fecha Circular": _dia(45),
-        "Apellidos, Nombres - Razón Social": "ORDOÑEZ VILLAGOMEZ DAVID MIGUEL",
-        "TiPASo Id CED; PAS; RUCUC": "CED",
-        "Identificación Ced; Pas; RUC": "1400349096",
-        "Referencia - Oficio FGE; Juzgado": "SB-2026-0101-OF",
-        "Delito": "LAVADO DE ACTIVOS", "Tipo de Accion": "CERTIFICACIÓN",
-        "Observación": "Atendido dentro del plazo",
-        "Tipo de Implicado": "CLIENTE", "LCI - SI o NO": "SI",
-    },
-    {
-        "Institución del Estado": FGE,
-        "Fecha Asignación": _dia(20), "Usuario": "J. Portero", "Prioridad": "Media",
-        "Fecha Emisión": _dia(21), "Estado": "En proceso", "Fecha Circular": _dia(25),
-        "Apellidos, Nombres - Razón Social": "ACOSTA JEREZ DIANA CAROLINA",
-        "TiPASo Id CED; PAS; RUCUC": "CED",
-        "Identificación Ced; Pas; RUC": "0923847561",
-        "Referencia - Oficio FGE; Juzgado": "FPP-FED4-2026-000123-O",
-        "Delito": "COHECHO", "Tipo de Accion": "RETENCIÓN",
-        "Tipo de Implicado": "CLIENTE", "LCI - SI o NO": "NO",
-    },
-    {   # misma Referencia oficio: segunda persona del oficio anterior
-        "Institución del Estado": FGE,
-        "Fecha Asignación": _dia(20), "Usuario": "J. Portero", "Prioridad": "Media",
-        "Fecha Emisión": _dia(21), "Estado": "En proceso", "Fecha Circular": _dia(25),
-        "Apellidos, Nombres - Razón Social": "MENDOZA SALAS LUIS ALBERTO",
-        "TiPASo Id CED; PAS; RUCUC": "CED",
-        "Identificación Ced; Pas; RUC": "1712345678",
-        "Referencia - Oficio FGE; Juzgado": "FPP-FED4-2026-000123-O",
-        "Delito": "COHECHO", "Tipo de Accion": "RETENCIÓN",
-        "Tipo de Implicado": "EX CLIENTE", "LCI - SI o NO": "NO",
-    },
-    {   # tercera persona del mismo oficio
-        "Institución del Estado": FGE,
-        "Fecha Asignación": _dia(20), "Usuario": "J. Portero", "Prioridad": "Media",
-        "Fecha Emisión": _dia(21), "Estado": "En proceso", "Fecha Circular": _dia(25),
-        "Apellidos, Nombres - Razón Social": "PARRA NUÑEZ SOFIA ELENA",
-        "TiPASo Id CED; PAS; RUCUC": "CED",
-        "Identificación Ced; Pas; RUC": "0102938475",
-        "Referencia - Oficio FGE; Juzgado": "FPP-FED4-2026-000123-O",
-        "Delito": "COHECHO", "Tipo de Accion": "RETENCIÓN",
-        "Tipo de Implicado": "NO CLIENTE", "LCI - SI o NO": "SI",
-    },
-    {   # sin responsable: la aplicación lo deja en "Por asignar"
-        "Institución del Estado": SB,
-        "Fecha Emisión": _dia(5), "Prioridad": "Baja", "Estado": "Por asignar",
-        "Fecha Circular": _dia(8),
-        "Apellidos, Nombres - Razón Social": "CEVALLOS MORA JORGE ANDRÉS",
-        "TiPASo Id CED; PAS; RUCUC": "CED",
-        "Identificación Ced; Pas; RUC": "1309876543",
-        "Referencia - Oficio FGE; Juzgado": "SB-2026-0118-OF",
-        "Delito": "DEFRAUDACIÓN TRIBUTARIA", "Tipo de Accion": "INFORMACIÓN",
-        "Observación": "Pendiente de asignar",
-        "Tipo de Implicado": "SIN IDENTIFICACION", "LCI - SI o NO": "NO",
-    },
-    {   # empresa: se identifica con RUC (13 dígitos)
-        "Institución del Estado": SB,
-        "Fecha Asignación": _dia(12), "Usuario": "L. Jarrin", "Prioridad": "Alta",
-        "Fecha Emisión": _dia(12), "Fecha Envío": _dia(3), "Estado": "Finalizado",
-        "Fecha Circular": _dia(15),
-        "Apellidos, Nombres - Razón Social": "COMERCIAL LOS ANDES S.A.",
-        "TiPASo Id CED; PAS; RUCUC": "RUC",
-        "Identificación Ced; Pas; RUC": "1791234567001",
-        "Referencia - Oficio FGE; Juzgado": "SB-2026-0125-OF",
-        "Delito": "ENRIQUECIMIENTO ILÍCITO", "Tipo de Accion": "BLOQUEO Y RETENCIÓN",
-        "Observación": "Se remitió por correo",
-        "Tipo de Implicado": "CLIENTE", "LCI - SI o NO": "SI",
-    },
-    {   # pasaporte: letras y números
-        "Institución del Estado": FGE,
-        "Fecha Asignación": _dia(9), "Usuario": "D. Franco", "Prioridad": "Media",
-        "Fecha Emisión": _dia(10), "Estado": "En proceso", "Fecha Circular": _dia(14),
-        "Apellidos, Nombres - Razón Social": "QUISPE ANDRADE PEDRO JOSÉ",
-        "TiPASo Id CED; PAS; RUCUC": "PAS",
-        "Identificación Ced; Pas; RUC": "AB123456",
-        "Referencia - Oficio FGE; Juzgado": "FPP-FED4-2026-000188-O",
-        "Delito": "TRAFICO ILÍCITO DE SUSTANCIAS CATALOGADAS SUJETAS A FISCALIZACIÓN",
-        "Tipo de Accion": "LEVANTAMIENTO DE MEDIDAS",
-        "Tipo de Implicado": "NO CLIENTE", "LCI - SI o NO": "NO",
-    },
+def _persona(nombre, tipo_id, identificacion, tipo, lci="No"):
+    return {"nombre": nombre, "tipo_identificacion": tipo_id,
+            "identificacion": identificacion, "tipo_implicado": tipo, "lci": lci}
+
+
+def _oficio(institucion, codigo, accion, causal, oficio, recepcion,
+            usuario="", asignacion="", respuesta="", estado="Por asignar",
+            prioridad="Media", observacion="", implicados=(),
+            cantidad_investigados=""):
+    """Un oficio con la forma con la que lo guarda el sistema.
+
+    La Referencia UDC, el documento del oficio, quién lo registró y cuándo son
+    columnas que rellena el sistema al importar: aquí van vacías a propósito,
+    para que se vea que su contenido no se toma del archivo.
+    """
+    implicados = list(implicados)
+    return {
+        "referencia": "",
+        "institucion": institucion,
+        "codigo_oficio": codigo,
+        "tipo_accion": accion,
+        "causal_oficio": causal,
+        "fecha_oficio": oficio,
+        "fecha_recepcion": recepcion,
+        "fecha_asignacion": asignacion,
+        "fecha_respuesta": respuesta,
+        "cantidad_investigados": (str(len(implicados)) if implicados
+                                  else str(cantidad_investigados or "")),
+        "prioridad": prioridad,
+        "id_empleado": usuario,
+        "empleado": RESPONSABLES.get(usuario, ""),
+        "estado": estado,
+        "archivo_oficio": "",
+        "archivo_respuesta": "",
+        "observacion": observacion,
+        "registrado_por": "",
+        "fecha_registro": "",
+        "origen": "",
+        "anulado": "",
+        "motivo_anulacion": "",
+        "implicados": implicados,
+    }
+
+
+# Los seis casos que muestra el ejemplo:
+#   1) Finalizado con una sola persona: trae sus dos fechas, como exige el
+#      sistema para dar un oficio por finalizado.
+#   2) En proceso con TRES personas investigadas: ocupa tres filas que repiten
+#      la Referencia oficio y los datos del oficio.
+#   3) Por asignar: sin responsable, sin fecha de asignación y sin respuesta.
+#   4) Empresa identificada con RUC, finalizado.
+#   5) En proceso, prioridad alta, con dos personas y una en la lista de
+#      control interno (LCI).
+#   6) Por asignar sin detalle de personas: solo la cantidad de investigados.
+OFICIOS = [
+    _oficio(SB, "SB-2026-0101-OF", "Certificación", "LAVADO DE ACTIVOS",
+            _dia(41), _dia(40), usuario="cmroman", asignacion=_dia(39),
+            respuesta=_dia(30), estado="Finalizado", prioridad="Alta",
+            observacion="Atendido dentro del plazo",
+            implicados=[_persona("ORDOÑEZ VILLAGOMEZ DAVID MIGUEL", "Cédula",
+                                 "1400349096", "Cliente", "Sí")]),
+    _oficio(FGE, "FPP-FED4-2026-000123-O", "Retención", "COHECHO",
+            _dia(21), _dia(20), usuario="jportero", asignacion=_dia(20),
+            estado="En proceso",
+            implicados=[
+                _persona("ACOSTA JEREZ DIANA CAROLINA", "Cédula",
+                         "0923847561", "Cliente"),
+                _persona("MENDOZA SALAS LUIS ALBERTO", "Cédula",
+                         "1712345678", "Ex cliente"),
+                _persona("QUISPE ANDRADE PEDRO JOSÉ", "Pasaporte",
+                         "AB123456", "No cliente")]),
+    _oficio(SB, "SB-2026-0118-OF", "Información", "DEFRAUDACIÓN TRIBUTARIA",
+            _dia(8), _dia(5), prioridad="Baja",
+            observacion="Pendiente de asignar",
+            implicados=[_persona("CEVALLOS MORA JORGE ANDRÉS", "Cédula",
+                                 "1309876543", "Sin identificación")]),
+    _oficio(SB, "SB-2026-0125-OF", "Bloqueo y retención",
+            "ENRIQUECIMIENTO ILÍCITO", _dia(15), _dia(12), usuario="lgjarrin",
+            asignacion=_dia(12), respuesta=_dia(3), estado="Finalizado",
+            prioridad="Alta", observacion="Se remitió por correo",
+            implicados=[_persona("COMERCIAL LOS ANDES S.A.", "RUC",
+                                 "1791234567001", "Cliente", "Sí")]),
+    _oficio(FGE, "FPP-FED4-2026-000188-O", "Levantamiento",
+            "TRAFICO ILÍCITO DE SUSTANCIAS CATALOGADAS SUJETAS A FISCALIZACIÓN",
+            _dia(14), _dia(10), usuario="dtfranco", asignacion=_dia(9),
+            estado="En proceso", prioridad="Alta",
+            implicados=[
+                _persona("VILLACÍS ROJAS ANDREA PAOLA", "Cédula",
+                         "0102938475", "No cliente", "Sí"),
+                _persona("ZAMBRANO LOOR KEVIN DANIEL", "Cédula",
+                         "1301122334", "Cliente")]),
+    _oficio(FGE, "FPP-FED2-2026-000204-O", "Inmovilización", "PECULADO",
+            _dia(4), _dia(2), prioridad="Media",
+            observacion="Llegó sin el detalle de las personas",
+            cantidad_investigados=2),
 ]
-
-# Columnas que la aplicación no guarda pero que forman parte del formato: se
-# rellenan con un valor de muestra para que el archivo se vea como el real.
-RELLENO = {
-    "Mes": lambda fila: ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO",
-                         "SEP", "OCT", "NOV", "DIC"][fila["Fecha Emisión"].month - 1],
-    "Referencia": lambda fila: "",
-    "Medio Repuesta": lambda fila: "Electrónico",
-    "Días": lambda fila: (fila["Fecha Envío"] - fila["Fecha Asignación"]).days
-                         if fila.get("Fecha Envío") and fila.get("Fecha Asignación") else "",
-    "Canal Recepc": lambda fila: "Proveedor",
-    "Número Expediente Fiscal": lambda fila: "-",
-    "Referencia - Circular Superintendencia Bancos": lambda fila: "-",
-    "Fecha - Solicitud": lambda fila: fila["Fecha Emisión"] + timedelta(days=1),
-    "Ref Solic- No. LCI-202X-000": lambda fila: f"LCI-{HOY.year}-001",
-}
-
-
-def escribir(filas):
-    from openpyxl import Workbook
-    from openpyxl.styles import Alignment, Font, PatternFill
-    from openpyxl.utils import get_column_letter
-
-    libro = Workbook()
-    hoja = libro.active
-    hoja.title = "Matriz-Req-Inf"
-
-    # La cabecera es la primera fila y arranca en la A1: sin rótulos de
-    # agrupación encima ni columnas en blanco por delante.
-    encabezados = [nombre for nombre, _prefijo, _campo in CABECERA_MATRIZ]
-    relleno = PatternFill("solid", fgColor="152342")
-    for indice, titulo in enumerate(encabezados, start=1):     # la A es la 1
-        celda = hoja.cell(row=FILA_CABECERA, column=indice, value=titulo)
-        celda.font = Font(bold=True, color="FFFFFF", size=9)
-        celda.fill = relleno
-        celda.alignment = Alignment(wrap_text=True, vertical="center")
-
-    for numero, fila in enumerate(filas, start=PRIMERA_FILA_DATOS):
-        completa = dict(fila)
-        for columna, calcular in RELLENO.items():
-            completa.setdefault(columna, calcular(fila))
-        for indice, titulo in enumerate(encabezados, start=1):
-            hoja.cell(row=numero, column=indice, value=completa.get(titulo, ""))
-
-    hoja.freeze_panes = f"A{PRIMERA_FILA_DATOS}"
-    for indice in range(1, len(encabezados) + 1):
-        hoja.column_dimensions[get_column_letter(indice)].width = 20
-    libro.save(SALIDA)
 
 
 if __name__ == "__main__":
-    escribir(FILAS)
-    oficios = {f["Referencia - Oficio FGE; Juzgado"] for f in FILAS}
-    print(f"{SALIDA.name}: {len(FILAS)} filas -> {len(oficios)} oficios.")
-    print("  Cabecera en la fila 1 (desde A1) y datos desde la fila 2.")
-    print("  Las filas que comparten Referencia oficio se agrupan en un oficio, "
-          "y cada una aporta una persona investigada.")
+    # Lo escribe la exportación de la aplicación: el ejemplo y el formato real
+    # no pueden separarse.
+    almacen_oficios.exportar_xlsx(OFICIOS, str(SALIDA))
+    filas = sum(max(len(o["implicados"]), 1) for o in OFICIOS)
+    print(f"{SALIDA.name}: {len(OFICIOS)} oficios en {filas} filas.")
+    print("  Mismo formato que «Exportar oficios»: cabecera en la fila 1 y "
+          "una fila por persona investigada.")
+    print("  Responsables por nombre de cuenta: "
+          + ", ".join(sorted(RESPONSABLES)) + ".")
+    print("  Esas cuentas deben existir en el sistema antes de cargar.")

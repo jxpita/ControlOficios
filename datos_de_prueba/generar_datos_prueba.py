@@ -1,8 +1,8 @@
 """
 Genera el archivo de datos de prueba para la carga masiva.
 
-Crea `Matriz de prueba - 110 oficios.xlsx` con el FORMATO ESTABLECIDO (cabecera
-en la fila 1, de la columna A a la Z, y los datos desde la fila 2) y 110 oficios
+Crea `Matriz de prueba - 110 oficios.xlsx` con el MISMO formato que produce
+«Exportar oficios» —que es el que exige la importación— y 110 oficios
 repartidos entre las dos instituciones.
 
 Los datos se reparten a propósito para que el TABLERO se vea con contenido:
@@ -16,13 +16,15 @@ Los datos se reparten a propósito para que el TABLERO se vea con contenido:
   asignar.
 - **Tiempos de respuesta** variados, para que el promedio de días sea
   representativo.
-
 - **Implicados**: cada oficio investiga a un número distinto de personas, de
   una sola a ocho, y de cada una se anota nombre, identificación, tipo de
-  implicado y LCI. Como la matriz dedica una fila a cada persona, el archivo
-  tiene bastantes más filas que oficios.
+  implicado y LCI. Como el archivo dedica una fila a cada persona, tiene
+  bastantes más filas que oficios.
 
     python datos_de_prueba/generar_datos_prueba.py
+
+Los responsables se indican con su NOMBRE DE CUENTA (cmroman, jportero…), que
+tiene que existir en el sistema antes de cargar el archivo.
 
 No forma parte de la aplicación: es una utilidad para preparar una demostración
 o para probar la carga masiva sin arriesgar datos reales.
@@ -34,37 +36,39 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from carga_masiva import (CABECERA_MATRIZ, FILA_CABECERA,   # noqa: E402
-                          PRIMERA_FILA_DATOS)
+import almacen_oficios                                    # noqa: E402
 
 SALIDA = Path(__file__).resolve().parent / "Matriz de prueba - 110 oficios.xlsx"
 CANTIDAD_OFICIOS = 110
 
-# La primera columna del archivo solo admite la SIGLA de la institución.
-SIGLAS = ["SB", "FGE"]
+INSTITUCIONES = ["Superintendencia de Bancos", "Fiscalía General del Estado"]
 
-# Los nombres se escriben como en la matriz real: inicial y apellido. Al
-# importar, la aplicación los empareja con las cuentas del sistema.
-#
-# Son las cuentas con rol "usuario": los oficios se asignan a quien los
-# tramita, no a quien administra el sistema. La cadena vacía es el oficio que
-# llega sin responsable, que entra como "Por asignar".
+# Cuentas de la unidad, por su nombre de usuario. Son cuentas con rol
+# "usuario": los oficios se asignan a quien los tramita, no a quien administra
+# el sistema. La cadena vacía es el oficio que llega sin responsable, que entra
+# como "Por asignar".
 #
 # Cuántos oficios lleva cada uno (suman CANTIDAD_OFICIOS), para que el gráfico
 # por responsable tenga barras claramente distintas.
 CARGA_POR_USUARIO = {
-    "C. Roman": 26,
-    "J. Portero": 22,
-    "J. Rosero": 18,
-    "D. Franco": 15,
-    "J. Galecio": 11,
-    "L. Jarrin": 10,
-    "": 8,                 # oficios que llegan sin responsable
+    "cmroman": 30,
+    "jportero": 26,
+    "dtfranco": 22,
+    "lgjarrin": 18,
+    "": 14,                # oficios que llegan sin responsable
 }
 
-TIPOS_ACCION = ["CERTIFICACIÓN", "RETENCIÓN", "INFORMACIÓN", "INMOVILIZACIÓN",
-                "LEVANTAMIENTO DE MEDIDAS", "BLOQUEO Y RETENCIÓN",
-                "RECTIFICACIÓN"]
+# Nombre completo de cada cuenta. Es informativo: al importar, el nombre se
+# toma de la cuenta del sistema.
+NOMBRES = {
+    "cmroman": "Camila Maria Roman Townsed",
+    "jportero": "Joel Tyrone Portero Cervantes",
+    "dtfranco": "Damara Tais Franco Pacheco",
+    "lgjarrin": "Lizzi Gabriela Jarrin Aguilar",
+}
+
+TIPOS_ACCION = ["Certificación", "Retención", "Información", "Inmovilización",
+                "Levantamiento", "Bloqueo y retención", "Rectificación"]
 
 DELITOS = [
     "TRAFICO ILÍCITO DE SUSTANCIAS CATALOGADAS SUJETAS A FISCALIZACIÓN",
@@ -72,7 +76,7 @@ DELITOS = [
     "DEFRAUDACIÓN TRIBUTARIA", "ESTAFA", "DESAPARICIÓN INVOLUNTARIA",
 ]
 
-# Personas investigadas. La matriz dedica una fila a cada una, así que un
+# Personas investigadas. El archivo dedica una fila a cada una, así que un
 # oficio con cuatro implicados ocupa cuatro filas.
 INVESTIGADOS = [
     "ORDOÑEZ VILLAGOMEZ DAVID MIGUEL", "ENOMENGA VARGAS ERICK LENIN",
@@ -92,7 +96,8 @@ INVESTIGADOS = [
 PATRON_INVESTIGADOS = [1, 1, 2, 1, 3, 1, 1, 4, 2, 1, 5, 1, 2, 1, 6,
                        3, 1, 2, 1, 8, 1, 1, 2, 7, 1, 3, 1, 1, 2, 1]
 
-TIPOS_IDENTIFICACION = ["CED", "PAS", "RUC"]
+TIPOS_IDENTIFICACION = ["Cédula", "Pasaporte", "RUC"]
+TIPOS_IMPLICADO = ["Cliente", "Ex cliente", "No cliente", "Sin identificación"]
 
 
 def _identificacion(tipo, aleatorio):
@@ -101,17 +106,13 @@ def _identificacion(tipo, aleatorio):
     La aplicación valida la cédula con 10 dígitos, el RUC con 13 y el pasaporte
     con letras y números, así que el archivo de prueba los genera ya válidos.
     """
-    if tipo == "CED":
+    if tipo == "Cédula":
         return str(aleatorio.randint(10 ** 9, 10 ** 10 - 1))
     if tipo == "RUC":
         # Los RUC de persona natural son la cédula seguida de "001".
         return f"{aleatorio.randint(10 ** 9, 10 ** 10 - 1)}001"
     letras = "".join(aleatorio.choice("ABCDEFGHJKLMNPRSTUVWXYZ") for _ in range(2))
     return f"{letras}{aleatorio.randint(100000, 999999)}"
-TIPOS_IMPLICADO = ["CLIENTE", "EX CLIENTE", "NO CLIENTE", "SIN IDENTIFICACION"]
-
-MESES = ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN",
-         "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"]
 
 
 # Cómo se reparten las fechas de recepción, para que los gráficos del tablero
@@ -152,9 +153,11 @@ def _fechas_recepcion(cantidad, hoy):
     return fechas[:cantidad]
 
 
-def generar_filas():
-    """Una fila por investigado. Algunos oficios repiten Referencia oficio para
-    que la carga los agrupe y calcule la cantidad de investigados."""
+def generar_oficios():
+    """Los oficios con la forma con la que los guarda el sistema.
+
+    De ahí los escribe la exportación, que es el formato que exige la carga.
+    """
     random.seed(2026)          # mismo archivo en cada ejecución
     hoy = date.today()
     fechas = _fechas_recepcion(CANTIDAD_OFICIOS, hoy)
@@ -164,129 +167,97 @@ def generar_filas():
                     for usuario, cantidad in CARGA_POR_USUARIO.items()
                     for _ in range(cantidad)]
     random.shuffle(responsables)
-    filas = []
+
+    oficios = []
     for numero in range(1, CANTIDAD_OFICIOS + 1):
-        sigla = SIGLAS[numero % 2]                   # mitad y mitad
+        institucion = INSTITUCIONES[numero % 2]      # mitad y mitad
+        sigla = "SB" if institucion.startswith("Super") else "FGE"
 
         recepcion = fechas[numero - 1]
         oficio = recepcion - timedelta(days=random.randint(1, 20))
-        # Ninguna fecha puede ser futura: la aplicación las rechaza.
-        asignacion = min(recepcion + timedelta(days=random.randint(0, 3)), hoy)
-
         usuario = responsables[numero - 1]
+        # Ninguna fecha puede ser futura: la aplicación las rechaza.
+        asignacion = (min(recepcion + timedelta(days=random.randint(0, 3)), hoy)
+                      if usuario else None)
+
         # Lo recién llegado suele estar en proceso y lo antiguo ya respondido,
         # que es como se ve una carga real.
         antiguo = (hoy - recepcion).days > 20
-        respondido = usuario and (antiguo or numero % 4 == 0)
         respuesta = None
-        if respondido:
+        if usuario and (antiguo or numero % 4 == 0):
             # Tiempos de respuesta variados: de 1 a 30 días.
             respuesta = asignacion + timedelta(days=1 + (numero * 7) % 30)
             if respuesta > hoy:
-                respuesta, respondido = None, False
-        if not usuario:
-            # Sin responsable no puede haber respuesta: la aplicación lo dejaría
-            # "Por asignar" y le quitaría la fecha; se genera ya coherente.
-            respuesta, respondido = None, False
+                respuesta = None
+        # Sin responsable el oficio queda "Por asignar", sin asignación ni
+        # respuesta: son las reglas que valida la propia carga.
+        estado = ("Finalizado" if respuesta else
+                  "En proceso" if usuario else "Por asignar")
 
-        referencia_oficio = f"{sigla}-{recepcion.year}-{numero:04d}-OF"
         cuantos = PATRON_INVESTIGADOS[(numero - 1) % len(PATRON_INVESTIGADOS)]
-        # Sin repetir persona dentro del mismo oficio.
-        personas = random.sample(INVESTIGADOS, cuantos)
-        for persona in personas:
+        implicados = []
+        for persona in random.sample(INVESTIGADOS, cuantos):
             # Las empresas se identifican con RUC; las personas, con cualquiera
             # de los tres documentos.
             tipo_id = ("RUC" if persona.endswith(("S.A.", "LTDA."))
                        else random.choice(TIPOS_IDENTIFICACION))
-            filas.append({
-                "Institución del Estado": sigla,
-                "Mes": MESES[recepcion.month - 1],
-                "Fecha Asignación": asignacion if usuario else None,
-                "Usuario": usuario,
-                "Prioridad": random.choice(["Alta", "Media", "Baja"]),
-                "Fecha Emisión": recepcion,
-                "Referencia": f"{str(recepcion.year)[2:]}-{numero:04d}-UDC",
-                "Medio Repuesta": random.choice(["Electrónico", "Físico"]),
-                "Fecha Envío": respuesta,
-                "Estado": "Finalizado" if respondido else (
-                    "En proceso" if usuario else "Por asignar"),
-                "Días": (respuesta - asignacion).days if respuesta else "",
-                "Canal Recepc": random.choice(["Proveedor", "Ventanilla",
-                                               "Correo"]),
-                "Fecha Circular": oficio,
-                "Apellidos, Nombres - Razón Social": persona,
-                "TiPASo Id CED; PAS; RUCUC": tipo_id,
-                "Identificación Ced; Pas; RUC": _identificacion(tipo_id, random),
-                "Referencia - Oficio FGE; Juzgado": referencia_oficio,
-                "Número Expediente Fiscal": "-",
-                "Referencia - Circular Superintendencia Bancos":
-                    f"SB-SG-{recepcion.year}-{random.randint(10000, 99999)}-C",
-                "Delito": DELITOS[numero % len(DELITOS)],
-                "Tipo de Accion": TIPOS_ACCION[numero % len(TIPOS_ACCION)],
-                "Observación": random.choice(
-                    ["", "", "Atendido dentro del plazo",
-                     "Requiere seguimiento", "Se remitió por correo"]),
-                "Tipo de Implicado": random.choice(TIPOS_IMPLICADO),
-                "LCI - SI o NO": random.choice(["SI", "NO", "NO"]),
-                "Fecha - Solicitud": recepcion + timedelta(days=1),
-                "Ref Solic- No. LCI-202X-000": f"LCI-{recepcion.year}-"
-                                               f"{random.randint(1, 99):03d}",
+            implicados.append({
+                "nombre": persona,
+                "tipo_identificacion": tipo_id,
+                "identificacion": _identificacion(tipo_id, random),
+                "tipo_implicado": random.choice(TIPOS_IMPLICADO),
+                "lci": random.choice(["Sí", "No", "No"]),
             })
-    return filas
+
+        oficios.append({
+            "referencia": "",              # la numera el sistema al importar
+            "institucion": institucion,
+            "codigo_oficio": f"{sigla}-{recepcion.year}-{numero:04d}-OF",
+            "tipo_accion": TIPOS_ACCION[numero % len(TIPOS_ACCION)],
+            "causal_oficio": DELITOS[numero % len(DELITOS)],
+            "fecha_oficio": oficio.isoformat(),
+            "fecha_recepcion": recepcion.isoformat(),
+            "fecha_asignacion": asignacion.isoformat() if asignacion else "",
+            "fecha_respuesta": respuesta.isoformat() if respuesta else "",
+            "cantidad_investigados": str(len(implicados)),
+            "prioridad": random.choice(["Alta", "Media", "Baja"]),
+            "id_empleado": usuario,
+            "empleado": NOMBRES.get(usuario, ""),
+            "estado": estado,
+            "archivo_oficio": "",
+            "archivo_respuesta": "",
+            "observacion": random.choice(
+                ["", "", "Atendido dentro del plazo", "Requiere seguimiento",
+                 "Se remitió por correo"]),
+            "registrado_por": "",
+            "fecha_registro": "",
+            "origen": "",
+            "anulado": "",
+            "motivo_anulacion": "",
+            "implicados": implicados,
+        })
+    return oficios
 
 
-def escribir(filas):
-    from openpyxl import Workbook
-    from openpyxl.styles import Alignment, Font, PatternFill
-
-    libro = Workbook()
-    hoja = libro.active
-    hoja.title = "Matriz-Req-Inf"
-
-    # La cabecera es la primera fila y arranca en la A1: sin rótulos de
-    # agrupación encima ni columnas en blanco por delante.
-    encabezados = [nombre for nombre, _prefijo, _campo in CABECERA_MATRIZ]
-    relleno = PatternFill("solid", fgColor="152342")
-    for indice, titulo in enumerate(encabezados, start=1):   # la A es la 1
-        celda = hoja.cell(row=FILA_CABECERA, column=indice, value=titulo)
-        celda.font = Font(bold=True, color="FFFFFF", size=9)
-        celda.fill = relleno
-        celda.alignment = Alignment(wrap_text=True, vertical="center")
-
-    for numero, fila in enumerate(filas, start=PRIMERA_FILA_DATOS):
-        for indice, titulo in enumerate(encabezados, start=1):
-            hoja.cell(row=numero, column=indice, value=fila.get(titulo, ""))
-
-    hoja.freeze_panes = f"A{PRIMERA_FILA_DATOS}"
-    for indice in range(1, len(encabezados) + 1):
-        hoja.column_dimensions[hoja.cell(row=FILA_CABECERA,
-                                         column=indice).column_letter].width = 18
-    libro.save(SALIDA)
-
-
-def _resumen(filas):
+def _resumen(oficios):
     """Cómo quedó repartido lo generado (para verlo al ejecutar el script)."""
     from collections import Counter
-    oficios = {}
-    for fila in filas:
-        oficios.setdefault(fila["Referencia - Oficio FGE; Juzgado"], fila)
-    estados = Counter(f["Estado"] for f in oficios.values())
-    por_oficio = Counter()
-    for fila in filas:
-        por_oficio[fila["Referencia - Oficio FGE; Juzgado"]] += 1
-    reparto = Counter(por_oficio.values())
-    usuarios = Counter(f["Usuario"] or "(sin responsable)"
-                       for f in oficios.values())
-    entidades = Counter(f["Institución del Estado"] for f in oficios.values())
-    return oficios, estados, usuarios, entidades, reparto
+    estados = Counter(o["estado"] for o in oficios)
+    usuarios = Counter(o["id_empleado"] or "(sin responsable)" for o in oficios)
+    entidades = Counter(o["institucion"] for o in oficios)
+    reparto = Counter(len(o["implicados"]) for o in oficios)
+    return estados, usuarios, entidades, reparto
 
 
 if __name__ == "__main__":
-    filas = generar_filas()
-    escribir(filas)
-    oficios, estados, usuarios, entidades, reparto = _resumen(filas)
-    print(f"{SALIDA.name}: {len(filas)} filas -> {len(oficios)} oficios "
-          f"(las filas que comparten Referencia oficio se agrupan).")
+    oficios = generar_oficios()
+    # Lo escribe la exportación de la aplicación: los datos de prueba y el
+    # formato real no pueden separarse.
+    almacen_oficios.exportar_xlsx(oficios, str(SALIDA))
+    estados, usuarios, entidades, reparto = _resumen(oficios)
+    filas = sum(max(len(o["implicados"]), 1) for o in oficios)
+    print(f"{SALIDA.name}: {len(oficios)} oficios en {filas} filas "
+          f"(una por persona investigada).")
     print("  Estados:      " + ", ".join(f"{k}: {v}" for k, v in estados.items()))
     print("  Instituciones:" + ", ".join(f" {k}: {v}" for k, v in entidades.items()))
     print("  Responsables: " + ", ".join(f"{k}: {v}"

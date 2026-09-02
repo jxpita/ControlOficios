@@ -1,131 +1,82 @@
 """
-Carga masiva de oficios desde la matriz de Excel (.xlsx) o desde un CSV.
+Carga masiva de oficios (importación) desde un archivo .xlsx o .csv.
 
-Sirve para volcar de una vez el histórico que la unidad venía llevando en la
-"Matriz-Req-Inf", sin tener que reescribir oficio por oficio.
+Formato establecido: EL MISMO DE LA EXPORTACIÓN
+------------------------------------------------
+El archivo que se importa tiene exactamente las columnas que produce
+*Exportar oficios*, en su mismo orden (ver `almacen_oficios.COLUMNAS_EXPORTACION`
+y `COLUMNAS_IMPLICADO`): la cabecera ocupa la fila 1, desde la celda A1, y los
+datos empiezan en la fila 2. Así lo que sale del sistema sirve de plantilla para
+lo que entra, y no hay dos formatos que mantener.
 
-Formato establecido
--------------------
-La cabecera ocupa la **fila 1**, de la columna **A** a la **Z**, y los datos
-empiezan en la **fila 2**. No se admiten filas de rótulos de agrupación ni
-columnas en blanco por delante: la primera celda del archivo (A1) es
-«Institución del Estado».
+Como en la exportación, **cada fila es una persona investigada**: las filas que
+comparten la misma *Referencia oficio* son el mismo oficio, y de ellas sale su
+detalle de implicados. Los datos del oficio se repiten en cada una de sus filas
+y tienen que coincidir; si no, se avisa.
 
-El archivo que se cargue debe respetar ese formato: las 26 columnas, completas
-y EN SU ORDEN (ver `CABECERA_MATRIZ`). Antes de leer un solo dato se comprueba
-la cabecera y, si no cuadra, se rechaza el archivo indicando qué columna está
-fuera de sitio, cuál falta o cuál sobra. Solo se toleran diferencias de
-redacción —mayúsculas, tildes, espacios de más y títulos repartidos en varias
-líneas—, nunca de orden ni de contenido.
+Columnas que **rellena el sistema** y cuyo contenido se ignora al importar
+(están en el archivo para que el formato sea el mismo): Referencia UDC —la
+numera el sistema con la nomenclatura de la institución—, Documento del oficio,
+Respuesta en PDF, Registrado por, Fecha de registro y Origen.
 
-La columna A es igual de rígida en su CONTENIDO: solo admite la **sigla** de la
-institución —`SB` o `FGE`—, que es la que lleva la Referencia UDC. Las filas con
-cualquier otro valor no se importan y se informan una a una.
+Todo o nada
+-----------
+Antes de guardar nada se valida el archivo ENTERO con las mismas reglas que
+aplica el sistema al registrar un oficio a mano (`almacen_oficios`): fechas
+coherentes, estado acorde al responsable, responsable existente, tipo de acción
+del catálogo, implicados con su identificación bien formada, referencias sin
+repetir… Si una sola fila falla, **no se importa nada**: se muestran todas las
+filas con error, con su línea del archivo y su motivo, para corregirlas de una
+pasada y volver a cargar.
 
-Correspondencia con los campos de la aplicación
------------------------------------------------
-    Matriz                                  Campo del oficio
-    --------------------------------------- ----------------------
-    Institución del Estado (SB / FGE)        institucion (fija la sigla de la
-                                             Referencia UDC, que genera el
-                                             sistema)
-    Prioridad                                prioridad
-    Apellidos, Nombres - Razón Social        )
-    TiPASo Id / Identificación               ) implicados (uno por fila del
-    Tipo de Implicado / LCI                  ) mismo oficio)
-    Tipo de Accion                           tipo_accion
-    Referencia - Oficio FGE; Juzgado...      codigo_oficio (Referencia oficio)
-    Delito                                   causal_oficio
-    Fecha Circular                           fecha_oficio
-    Fecha Emisión                            fecha_recepcion
-    Fecha Asignación                         fecha_asignacion
-    Fecha Envío                              fecha_respuesta
-    Usuario                                  responsable
-    Estado                                   estado
-    Observación                              observacion
-    (nº de filas con la misma Ref. oficio)   cantidad_investigados
-
-Las columnas restantes de la matriz (Mes, Medio Respuesta, Días,
-Canal Recepción, Expediente Fiscal, la Referencia de la circular de la
-Superintendencia y el bloque RCSA) no tienen equivalente en la aplicación y se
-ignoran; la carga informa de ello.
-
-La Referencia UDC NO viene en el archivo: la genera el sistema al importar, con
-la nomenclatura que corresponda a la institución de cada fila.
-
-Varias filas con la misma Referencia oficio se entienden como el mismo oficio
-con varios investigados: se agrupan en un solo registro, cada fila aporta un
-implicado y la cantidad de investigados es el número de implicados.
+Diferencias con el alta manual, por lo que un archivo no puede aportar:
+  - No se exige el documento del oficio ni la respuesta en PDF; se adjuntan
+    después desde la pestaña Oficios. Un oficio ya finalizado sí exige sus
+    fechas de asignación y de respuesta.
+  - El responsable se indica por su **nombre de cuenta** (columna «Usuario
+    responsable»), que debe existir en el sistema.
 """
 import csv
 from datetime import date, datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
-from configuracion import ESTADOS, INSTITUCIONES
+import almacen_oficios
 
-# Fila de la cabecera y primera fila de datos: la cabecera es la primera fila
-# del archivo y los datos empiezan justo debajo.
+# --- Formato del archivo -----------------------------------------------------
+# La cabecera es la primera fila y los datos empiezan en la segunda, igual que
+# en el archivo que produce la exportación.
 FILA_CABECERA = 1
 PRIMERA_FILA_DATOS = FILA_CABECERA + 1
 
-# FORMATO ESTABLECIDO de la matriz: las 26 columnas de la A a la Z, EN ESTE
-# ORDEN. El archivo que se cargue tiene que respetarlo; si no, se rechaza
-# indicando qué columna no cuadra.
-#
-# Cada entrada es (nombre que se muestra, texto por el que se reconoce, campo
-# del oficio). El reconocimiento se hace sobre el encabezado normalizado (sin
-# tildes, en minúsculas y con los espacios colapsados) y basta con que EMPIECE
-# por ese texto, para que encajen los títulos largos repartidos en varias
-# líneas ("Referencia - Oficio\nFGE; Juzgado, Tribunal"). Un campo en None es
-# una columna de la matriz que la aplicación no guarda.
-CABECERA_MATRIZ = [
-    ("Institución del Estado",              "institucion",            "institucion"),
-    ("Mes",                                 "mes",                    None),
-    ("Fecha Asignación",                    "fecha asignacion",       "fecha_asignacion"),
-    ("Usuario",                             "usuario",                "empleado"),
-    ("Prioridad",                           "prioridad",              "prioridad"),
-    ("Fecha Emisión",                       "fecha emision",          "fecha_recepcion"),
-    ("Referencia",                          "referencia",             None),
-    ("Medio Repuesta",                      "medio repuesta",         None),
-    ("Fecha Envío",                         "fecha envio",            "fecha_respuesta"),
-    ("Estado",                              "estado",                 "estado"),
-    ("Días",                                "dias",                   None),
-    ("Canal Recepc",                        "canal recepc",           None),
-    ("Fecha Circular",                      "fecha circular",         "fecha_oficio"),
-    ("Apellidos, Nombres - Razón Social",   "apellidos",              "implicado_nombre"),
-    ("TiPASo Id CED; PAS; RUCUC",           "tipaso id",              "implicado_tipo_id"),
-    ("Identificación Ced; Pas; RUC",        "identificacion",         "implicado_identificacion"),
-    ("Referencia - Oficio FGE; Juzgado",    "referencia - oficio",    "codigo_oficio"),
-    ("Número Expediente Fiscal",            "numero expediente",      None),
-    ("Referencia - Circular Superintendencia Bancos",
-                                            "referencia - circular",  None),
-    ("Delito",                              "delito",                 "causal_oficio"),
-    ("Tipo de Accion",                      "tipo de accion",         "tipo_accion"),
-    ("Observación",                         "observacion",            "observacion"),
-    ("Tipo de Implicado",                   "tipo de implicado",      "implicado_tipo"),
-    ("LCI - SI o NO",                       "lci",                    "implicado_lci"),
-    ("Fecha - Solicitud",                   "fecha - solicitud",      None),
-    ("Ref Solic- No. LCI-202X-000",         "ref solic",              None),
-]
+# Columnas del implicado: se les pone prefijo para que no choquen con las del
+# oficio (por ejemplo "identificacion") al leer la fila.
+PREFIJO_IMPLICADO = "implicado_"
 
-# Primera y última columna: los datos arrancan en A1, sin columnas en blanco
-# por delante.
-PRIMERA_COLUMNA = "A"
-ULTIMA_COLUMNA = "Z"
+# El formato se DERIVA de la exportación, no se copia: si allí se añade una
+# columna, aquí aparece sola y sigue habiendo un único formato.
+COLUMNAS = (
+    [(clave, titulo, "oficio")
+     for clave, titulo in almacen_oficios.COLUMNAS_EXPORTACION.items()]
+    + [(PREFIJO_IMPLICADO + clave, titulo, "implicado")
+       for clave, titulo in almacen_oficios.COLUMNAS_IMPLICADO.items()]
+)
+CABECERA = [titulo for _clave, titulo, _ambito in COLUMNAS]
 
-# Estados de la matriz -> estados de la aplicación.
-ESTADOS_EQUIVALENTES = {
-    "finalizado": "Finalizado",
-    "finalizada": "Finalizado",
-    "atendido": "Finalizado",
-    "cerrado": "Finalizado",
-    "en proceso": "En proceso",
-    "en tramite": "En proceso",
-    "pendiente": "En proceso",
-    "por asignar": "Por asignar",
-    "sin asignar": "Por asignar",
+# Columnas que el sistema rellena por su cuenta al importar. Se leen para que el
+# formato sea el mismo que el de la exportación, pero su contenido se ignora.
+CAMPOS_ASIGNADOS = {
+    "referencia": "la numera el sistema",
+    "archivo_oficio": "se adjunta después",
+    "archivo_respuesta": "se adjunta después",
+    "registrado_por": "es quien importa el archivo",
+    "fecha_registro": "es la de la importación",
+    "origen": "queda como «carga masiva»",
 }
+
+# Columnas cuyo valor es una fecha (AAAA-MM-DD en la exportación).
+CAMPOS_FECHA = {"fecha_oficio", "fecha_recepcion",
+                "fecha_asignacion", "fecha_respuesta"}
 
 _ACENTOS = str.maketrans("áéíóúàèìòùäëïöüâêîôûÁÉÍÓÚÄËÏÖÜÂÊÎÔÛ",
                          "aeiouaeiouaeiouaeiouAEIOUAEIOUAEIOU")
@@ -164,8 +115,8 @@ def _a_fecha(valor) -> str:
 
 
 def _a_texto(valor) -> str:
-    """Contenido de una celda como texto limpio. Los guiones sueltos que la
-    matriz usa para 'sin dato' se tratan como vacío."""
+    """Contenido de una celda como texto limpio. Los guiones sueltos que se usan
+    para 'sin dato' se tratan como vacío."""
     if valor is None:
         return ""
     if isinstance(valor, float) and valor.is_integer():
@@ -174,15 +125,19 @@ def _a_texto(valor) -> str:
     return "" if texto in {"-", "--", "N/A", "n/a"} else texto
 
 
-# --- Validación del formato --------------------------------------------------
+# --- Validación de la cabecera -----------------------------------------------
 def _letra_columna(posicion: int) -> str:
     """Letra de la columna de Excel para la posición indicada (0 -> 'A')."""
-    numero = posicion + 1                      # la cabecera empieza en la A
+    numero = posicion + 1
     letras = ""
     while numero:
         numero, resto = divmod(numero - 1, 26)
         letras = chr(65 + resto) + letras
     return letras
+
+
+PRIMERA_COLUMNA = _letra_columna(0)
+ULTIMA_COLUMNA = _letra_columna(len(COLUMNAS) - 1)
 
 
 def _recortar(celdas: List) -> Tuple[List[str], List[str]]:
@@ -192,8 +147,7 @@ def _recortar(celdas: List) -> Tuple[List[str], List[str]]:
     comparar y los originales para los mensajes, que así muestran el texto
     exacto que tiene el archivo. Solo se descartan las columnas sobrantes del
     final, que Excel arrastra en blanco; las del principio NO, porque la
-    cabecera tiene que empezar en la A y una columna en blanco por delante es
-    justamente un archivo fuera de formato.
+    cabecera tiene que empezar en la A.
     """
     titulos = [normalizar(c) for c in celdas]
     originales = [" ".join(str(c).split()) if c is not None else "" for c in celdas]
@@ -203,52 +157,48 @@ def _recortar(celdas: List) -> Tuple[List[str], List[str]]:
     return titulos[:fin], originales[:fin]
 
 
+def _error_formato(detalle: str) -> ValueError:
+    """Rechazo del archivo por no tener el formato establecido."""
+    return ValueError(
+        f"El archivo no tiene el formato establecido: {detalle}\n\n"
+        f"Debe ser el mismo archivo que produce «Exportar oficios»: la cabecera "
+        f"en la fila {FILA_CABECERA}, de la columna {PRIMERA_COLUMNA} a la "
+        f"{ULTIMA_COLUMNA}, con las {len(COLUMNAS)} columnas en su orden, y los "
+        f"datos a partir de la fila {PRIMERA_FILA_DATOS}.\n\n"
+        "Exporte los oficios para obtener la plantilla y vuelva a intentarlo."
+    )
+
+
 def validar_cabecera(celdas: List) -> None:
     """Comprueba que la fila sea la cabecera del formato establecido.
 
-    El orden de las columnas IMPORTA: se exige la secuencia completa de la A a
-    la Z, empezando en la primera celda. Si el archivo no cumple, lanza un
-    ValueError explicando qué falla.
+    El orden de las columnas IMPORTA: se exige la secuencia completa, empezando
+    en la primera celda. Solo se toleran diferencias de redacción (mayúsculas,
+    tildes y espacios de más). Si el archivo no cumple, lanza un ValueError
+    explicando qué falla.
     """
     titulos, originales = _recortar(celdas)
     if not titulos:
-        # Caso típico del formato antiguo (rótulos arriba y cabecera en la
-        # fila 4): la primera fila viene en blanco.
-        raise ValueError(
-            "El archivo no tiene el formato establecido: la fila "
-            f"{FILA_CABECERA} está vacía.\n\n"
-            f"La cabecera debe ser la primera fila del archivo, de la columna "
-            f"{PRIMERA_COLUMNA} a la {ULTIMA_COLUMNA}, y los datos empezar en "
-            f"la fila {PRIMERA_FILA_DATOS}. No debe haber filas de rótulos ni "
-            "columnas en blanco por delante.\n\nSuba el archivo con el formato "
-            "establecido."
-        )
+        raise _error_formato(f"la fila {FILA_CABECERA} está vacía.")
     if not titulos[0]:
-        # La cabecera está corrida a la derecha. Compararla columna por columna
-        # daría 26 diferencias encadenadas y ninguna diría lo que pasa: que
-        # sobran columnas por delante.
         vacias = 0
         while vacias < len(titulos) and not titulos[vacias]:
             vacias += 1
-        raise ValueError(
-            "El archivo no tiene el formato establecido: la cabecera no "
-            f"empieza en la columna {PRIMERA_COLUMNA} (hay {vacias} columna(s) "
-            "en blanco por delante).\n\n"
-            f"Mueva los datos para que «{CABECERA_MATRIZ[0][0]}» quede en la "
-            f"celda {PRIMERA_COLUMNA}{FILA_CABECERA}.\n\nSuba el archivo con el "
-            "formato establecido."
-        )
+        raise _error_formato(
+            f"la cabecera no empieza en la columna {PRIMERA_COLUMNA} (hay "
+            f"{vacias} columna(s) en blanco por delante).")
+
     problemas = []
-    for posicion, (nombre, prefijo, _campo) in enumerate(CABECERA_MATRIZ):
+    for posicion, (_clave, titulo, _ambito) in enumerate(COLUMNAS):
         letra = _letra_columna(posicion)
         if posicion >= len(titulos):
-            problemas.append(f"falta la columna {letra} «{nombre}»")
-        elif not titulos[posicion].startswith(prefijo):
+            problemas.append(f"falta la columna {letra} «{titulo}»")
+        elif titulos[posicion] != normalizar(titulo):
             encontrado = originales[posicion][:40] or "(vacía)"
             problemas.append(
-                f"la columna {letra} debería ser «{nombre}» y contiene "
+                f"la columna {letra} debería ser «{titulo}» y contiene "
                 f"«{encontrado}»")
-    sobran = len(titulos) - len(CABECERA_MATRIZ)
+    sobran = len(titulos) - len(COLUMNAS)
     if sobran > 0:
         problemas.append(
             f"hay {sobran} columna(s) de más después de la {ULTIMA_COLUMNA}")
@@ -257,56 +207,43 @@ def validar_cabecera(celdas: List) -> None:
         detalle = "\n".join(f"  · {p}" for p in problemas[:8])
         if len(problemas) > 8:
             detalle += f"\n  · … y {len(problemas) - 8} diferencia(s) más"
-        raise ValueError(
-            "El archivo no tiene el formato establecido.\n\n"
-            f"La cabecera debe ocupar la fila {FILA_CABECERA}, de la columna "
-            f"{PRIMERA_COLUMNA} a la {ULTIMA_COLUMNA}, con las "
-            f"{len(CABECERA_MATRIZ)} columnas en su orden, y los datos empezar "
-            f"en la fila {PRIMERA_FILA_DATOS}.\n\n"
-            f"Diferencias encontradas:\n{detalle}\n\n"
-            "Suba el archivo con el formato establecido."
-        )
+        raise _error_formato(f"las columnas no coinciden.\n\n{detalle}")
 
 
-def _leer_xlsx(ruta: Path) -> Tuple[List[List], List[str]]:
+# --- Lectura del archivo -----------------------------------------------------
+def _leer_xlsx(ruta: Path) -> List[List]:
     try:
         from openpyxl import load_workbook
     except ImportError:
         raise ValueError(
             "Para leer archivos de Excel hace falta la librería openpyxl:\n\n"
             "    pip install openpyxl\n\n"
-            "También puede guardar la matriz como CSV y cargarla así."
+            "También puede guardar el archivo como CSV y cargarlo así."
         )
     libro = load_workbook(ruta, data_only=True, read_only=True)
     hoja = libro.active
     filas = [list(f) for f in hoja.iter_rows(values_only=True)]
     libro.close()
     if not filas:
-        raise ValueError(
-            "El archivo no tiene el formato establecido: está vacío.\n\n"
-            f"La cabecera debe ocupar la fila {FILA_CABECERA}, de la columna "
-            f"{PRIMERA_COLUMNA} a la {ULTIMA_COLUMNA}.\n\nSuba el archivo con "
-            "el formato establecido."
-        )
-    return filas, []
+        raise _error_formato("el archivo está vacío.")
+    return filas
 
 
-def _leer_csv(ruta: Path) -> Tuple[List[List], List[str]]:
+def _leer_csv(ruta: Path) -> List[List]:
     """Lee un CSV detectando el separador (barra vertical, punto y coma o coma).
 
-    La cabecera es la PRIMERA fila del archivo, igual que en la hoja de Excel:
-    no se busca más abajo. Las filas se devuelven tal cual, sin descartar las
-    vacías, para que el número de fila que se informe en los errores sea el que
-    de verdad tiene el archivo.
+    La cabecera es la PRIMERA línea, igual que en la hoja de Excel. Las líneas
+    se devuelven todas, sin descartar las vacías, para que el número de fila que
+    se informe en los errores sea el que de verdad tiene el archivo.
     """
     with ruta.open("r", encoding="utf-8-sig", newline="") as archivo:
         muestra = archivo.read(8192)
         archivo.seek(0)
-        separador = max("|;,\t", key=muestra.count)
+        separador = max(almacen_oficios.SEPARADOR_CSV + ";,\t", key=muestra.count)
         filas = [f for f in csv.reader(archivo, delimiter=separador)]
     if not filas:
-        raise ValueError("El archivo está vacío.")
-    return filas, []
+        raise _error_formato("el archivo está vacío.")
+    return filas
 
 
 def error_de_fila(numero, codigo_oficio, motivo) -> Dict:
@@ -323,285 +260,10 @@ def error_de_fila(numero, codigo_oficio, motivo) -> Dict:
             "motivo": motivo[:1].upper() + motivo[1:]}
 
 
-def leer_archivo(ruta) -> Tuple[List[Dict], List[str], List[Dict]]:
-    """Lee la matriz y devuelve (filas, columnas_ignoradas, errores).
-
-    Cada fila es un diccionario con los campos ya normalizados y una clave
-    `_fila` con su número dentro del archivo, para poder señalar los errores.
-    Los errores son los que devuelve `error_de_fila`.
-    """
-    ruta = Path(ruta)
-    if not ruta.exists():
-        raise ValueError("No se encontró el archivo seleccionado.")
-    if ruta.suffix.lower() in (".xlsx", ".xlsm"):
-        crudas, _ = _leer_xlsx(ruta)
-    elif ruta.suffix.lower() == ".csv":
-        crudas, _ = _leer_csv(ruta)
-    else:
-        raise ValueError("El archivo debe ser una hoja de Excel (.xlsx) o un CSV.")
-
-    # El formato es fijo: se comprueba que estén TODAS las columnas y en su
-    # orden antes de leer un solo dato.
-    validar_cabecera(crudas[0])
-    # Ya validado el orden, cada campo se toma por su posición.
-    mapa = {posicion: campo
-            for posicion, (_nombre, _prefijo, campo) in enumerate(CABECERA_MATRIZ)
-            if campo}
-    ignoradas = [nombre for nombre, _prefijo, campo in CABECERA_MATRIZ if not campo]
-
-    filas, errores = [], []
-    for desplazamiento, cruda in enumerate(crudas[1:], start=1):
-        numero = FILA_CABECERA + desplazamiento
-        datos = {"_fila": numero}
-        problema = None
-        for indice, campo in mapa.items():
-            valor = cruda[indice] if indice < len(cruda) else None
-            if campo.startswith("fecha_"):
-                try:
-                    datos[campo] = _a_fecha(valor)
-                except ValueError as error:
-                    problema = str(error)
-                    datos[campo] = ""
-            else:
-                datos[campo] = _a_texto(valor)
-        # Una fila sin referencia de oficio ni institución es una fila en
-        # blanco del final.
-        if not datos.get("codigo_oficio") and not datos.get("institucion"):
-            continue
-        if problema:
-            errores.append(error_de_fila(numero, datos.get("codigo_oficio"),
-                                         problema))
-            continue
-        datos["estado"] = ESTADOS_EQUIVALENTES.get(
-            normalizar(datos.get("estado")), datos.get("estado") or "")
-        filas.append(datos)
-    return filas, ignoradas, errores
-
-
-# --- Agrupación y preparación ------------------------------------------------
-# La matriz abrevia; la aplicación guarda el nombre completo del catálogo.
-_TIPOS_IDENTIFICACION = {
-    "ced": "Cédula", "cedula": "Cédula", "c.c": "Cédula", "cc": "Cédula",
-    "pas": "Pasaporte", "pasaporte": "Pasaporte",
-    "ruc": "RUC", "rucuc": "RUC",
-}
-_TIPOS_IMPLICADO = {
-    "cliente": "Cliente",
-    "no cliente": "No cliente", "nocliente": "No cliente",
-    "ex cliente": "Ex cliente", "excliente": "Ex cliente",
-    "sin identificacion": "Sin identificación",
-    "sin identificar": "Sin identificación",
-}
-
-
-def _implicado_de(fila: Dict, no_validas: Optional[set] = None) -> Optional[Dict]:
-    """Construye el implicado de una fila de la matriz, o None si no trae uno.
-
-    Lo que no se reconoce no tumba la carga: es un histórico, y perder el
-    oficio entero por un «Tipo de Implicado» mal escrito sería peor que
-    anotarlo como «Sin identificación». Los valores que no encajen se informan
-    en la vista previa para que alguien los revise después.
-
-    Lo mismo vale para la identificación: si no cumple lo que exige su tipo
-    —10 dígitos la cédula, 13 el RUC, letras y números el pasaporte— la
-    persona entra SIN identificación en lugar de rechazar el oficio, y el
-    documento se anota en `no_validas` para poder corregirlo luego.
-    """
-    nombre = (fila.get("implicado_nombre") or "").strip()
-    if len(nombre) < 3:
-        return None
-    tipo_id = _TIPOS_IDENTIFICACION.get(normalizar(fila.get("implicado_tipo_id")), "")
-    # Sin tipo reconocido no se puede guardar la identificación: el alta exige
-    # decir de qué documento se trata.
-    identificacion = (fila.get("implicado_identificacion") or "").strip() \
-        if tipo_id else ""
-    if identificacion:
-        # Import diferido: la regla vive donde se validan los oficios.
-        import almacen_oficios
-        try:
-            identificacion = almacen_oficios.validar_identificacion(
-                tipo_id, identificacion)
-        except ValueError:
-            if no_validas is not None:
-                no_validas.add(f"{tipo_id} {identificacion}")
-            tipo_id, identificacion = "", ""
-    return {
-        "nombre": nombre,
-        "tipo_identificacion": tipo_id,
-        "identificacion": identificacion,
-        "tipo_implicado": _TIPOS_IMPLICADO.get(
-            normalizar(fila.get("implicado_tipo")), "Sin identificación"),
-        "lci": "Sí" if normalizar(fila.get("implicado_lci")) in ("si", "s", "x")
-               else "No",
-    }
-
-
-def agrupar_por_referencia(filas: List[Dict],
-                           no_validas: Optional[set] = None) -> List[Dict]:
-    """Une las filas que comparten Referencia oficio en un solo oficio.
-
-    En la matriz cada fila es un investigado, así que un mismo requerimiento
-    puede ocupar varias. Se conserva la primera fila y la cantidad de
-    investigados pasa a ser el número de filas agrupadas.
-
-    Se agrupa por Referencia oficio porque la Referencia UDC ya no viene en el
-    archivo: la genera el sistema al importar.
-    """
-    agrupados: Dict[str, Dict] = {}
-    orden: List[str] = []
-    for fila in filas:
-        clave = (fila.get("codigo_oficio") or f"__fila_{fila['_fila']}").strip().upper()
-        implicado = _implicado_de(fila, no_validas)
-        if clave not in agrupados:
-            copia = dict(fila)
-            copia["cantidad_investigados"] = 1
-            copia["implicados"] = [implicado] if implicado else []
-            # Todas las líneas del archivo que forman el oficio: si el oficio
-            # no se puede importar hay que poder señalarlas todas, no solo la
-            # primera.
-            copia["_filas"] = [fila["_fila"]]
-            agrupados[clave] = copia
-            orden.append(clave)
-        else:
-            agrupados[clave]["cantidad_investigados"] += 1
-            agrupados[clave]["_filas"].append(fila["_fila"])
-            if implicado:
-                agrupados[clave].setdefault("implicados", []).append(implicado)
-            # Se completa lo que la primera fila hubiera dejado en blanco.
-            for campo, valor in fila.items():
-                if (campo not in ("_fila", "_filas", "implicados") and valor
-                        and not agrupados[clave].get(campo)):
-                    agrupados[clave][campo] = valor
-    # Con detalle anotado, la cantidad de investigados la cuenta el detalle.
-    for oficio in agrupados.values():
-        if oficio.get("implicados"):
-            oficio["cantidad_investigados"] = len(oficio["implicados"])
-    return [agrupados[c] for c in orden]
-
-
-def _claves_de(nombre: str, cuenta: str):
-    """Formas con las que se puede nombrar a una persona en la matriz.
-
-    La matriz la anota como "C. Roman": la inicial del primer nombre y UNO de
-    sus apellidos. Como no se sabe cuál de las palabras del nombre completo es
-    el apellido que usaron, se generan todas las combinaciones posibles de
-    inicial + cada una de las palabras siguientes:
-
-        "Camila Maria Roman Townsed"  ->  c. maria / c. roman / c. townsed
-                                          (y las mismas sin el punto)
-
-    Así "C. Roman" encaja con Camila Maria Roman Townsed, "J. Portero" con Joel
-    Tyrone Portero Cervantes y "J. Rosero" con Juan Pablo Rosero Rodríguez.
-    """
-    claves = set()
-    if cuenta:
-        claves.add(normalizar(cuenta))
-    nombre = normalizar(nombre)
-    if not nombre:
-        return claves
-    claves.add(nombre)
-    partes = nombre.split()
-    if len(partes) >= 2:
-        inicial = partes[0][0]
-        for palabra in partes[1:]:
-            claves.add(f"{inicial}. {palabra}")
-            claves.add(f"{inicial} {palabra}")
-        # "Roman Townsed", "Camila Roman"... por si la matriz usa dos palabras.
-        claves.add(f"{partes[0]} {partes[-1]}")
-        claves.add(" ".join(partes[-2:]))
-    return claves
-
-
-def emparejar_responsables(filas: List[Dict], usuarios: List[Dict]) -> Dict:
-    """Traduce la columna "Usuario" de la matriz a cuentas del sistema.
-
-    Se prueba con el nombre de cuenta, el nombre completo y la forma
-    "inicial. apellido" contra CUALQUIERA de los apellidos de la persona (ver
-    `_claves_de`).
-
-    Si una misma forma apunta a dos personas distintas (dos "J. Rosero", por
-    ejemplo) se considera AMBIGUA y no se empareja: es preferible dejar el
-    oficio por asignar que atribuírselo a quien no fue.
-
-    Lo que no se consigue emparejar se deja SIN responsable; de eso se encarga
-    `preparar`, que además lo pone en "Por asignar". Devuelve un diccionario con
-    los nombres no reconocidos y los ambiguos, para poder informarlos.
-    """
-    indice: Dict[str, Optional[Dict]] = {}
-    for usuario in usuarios:
-        for clave in _claves_de(usuario.get("nombre", ""), usuario["usuario"]):
-            if clave in indice and indice[clave] is not usuario:
-                indice[clave] = None          # ambigua: apunta a más de uno
-            else:
-                indice.setdefault(clave, usuario)
-
-    sin_identificar, ambiguos = [], []
-    for fila in filas:
-        original = fila.get("empleado", "")
-        buscado = normalizar(original)
-        fila["id_empleado"] = ""
-        if not buscado:
-            fila["empleado"] = ""
-            continue
-        # Se prueba tal cual y sin el punto de la inicial ("J Rosero").
-        encontrado = indice.get(buscado, "sin clave")
-        if encontrado == "sin clave":
-            encontrado = indice.get(" ".join(buscado.replace(".", " ").split()),
-                                    "sin clave")
-        if encontrado not in (None, "sin clave"):
-            fila["id_empleado"] = encontrado["usuario"]
-            fila["empleado"] = encontrado["nombre"]
-        else:
-            (ambiguos if encontrado is None else sin_identificar).append(original)
-            fila["empleado"] = ""
-    return {"sin_identificar": sorted(set(sin_identificar)),
-            "ambiguos": sorted(set(ambiguos))}
-
-
-# Formas habituales de nombrar a cada institución en la matriz, además de su
-# nombre completo y su sigla.
-# La primera columna es RÍGIDA: solo la sigla de la institución, la misma que
-# lleva la Referencia UDC. Es el dato que decide la nomenclatura del oficio, así
-# que se exige exacto en vez de interpretar nombres y abreviaturas parecidas.
-SIGLAS_INSTITUCION = {sigla.upper(): nombre
-                      for nombre, sigla in INSTITUCIONES.items()}
-SIGLAS_ADMITIDAS = " o ".join(SIGLAS_INSTITUCION)          # "SB o FGE"
-
-
-def _reconocer_institucion(valor: str) -> str:
-    """Nombre de la institución a partir de su sigla, o '' si no es válida.
-
-    Solo se admite la SIGLA (SB, FGE), en mayúsculas o minúsculas: ni el nombre
-    completo ni variantes como «SBS» o «Fiscalía».
-    """
-    return SIGLAS_INSTITUCION.get(normalizar(valor).upper(), "")
-
-
-def _reconocer_tipo_accion(valor: str, catalogo: List[str]) -> str:
-    """Tipo de acción del catálogo que corresponde al texto de la matriz.
-
-    La matriz los escribe en mayúsculas y a veces con más palabras
-    ("LEVANTAMIENTO DE MEDIDAS"), así que además de la coincidencia exacta se
-    admite que el texto EMPIECE por un tipo del catálogo. Devuelve '' si no se
-    reconoce.
-    """
-    clave = normalizar(valor)
-    if not clave:
-        return ""
-    for tipo in catalogo:
-        if clave == normalizar(tipo):
-            return tipo
-    # "levantamiento de medidas" -> "Levantamiento"
-    candidatos = [t for t in catalogo if clave.startswith(normalizar(t))]
-    if len(candidatos) == 1:
-        return candidatos[0]
-    return ""
-
-
 def ordenar_errores(errores: List[Dict]) -> List[Dict]:
     """Los ordena por línea del archivo.
 
-    Quien corrige la matriz la recorre de arriba abajo, no por el momento en
+    Quien corrige el archivo lo recorre de arriba abajo, no por el momento en
     que se detectó cada problema.
     """
     def _primera_linea(error):
@@ -616,72 +278,137 @@ def etiqueta_filas(fila: Dict) -> str:
     return ", ".join(str(n) for n in numeros)
 
 
-def preparar(ruta, usuarios: List[Dict]) -> Dict:
-    """Deja las filas listas para importar y resume lo que se va a hacer."""
-    filas, ignoradas, errores = leer_archivo(ruta)
-    identificaciones_no_validas = set()
-    filas = agrupar_por_referencia(filas, identificaciones_no_validas)
-    emparejados = emparejar_responsables(filas, usuarios)
+def leer_archivo(ruta) -> Tuple[List[Dict], List[Dict]]:
+    """Lee el archivo y devuelve (filas, errores).
 
-    # La institución decide la nomenclatura de la Referencia UDC y el tipo de
-    # acción es obligatorio, así que ambos se traducen aquí. Lo que no se
-    # reconozca no se puede importar: esas filas se apartan ahora, con su
-    # motivo, en vez de dejar que fallen al guardar. Así lo que se anuncia en
-    # la vista previa es de verdad lo que va a entrar.
-    import tipos_accion
-    catalogo = tipos_accion.listar()
-    instituciones_desconocidas, tipos_desconocidos = set(), set()
-    aceptadas = []
+    Cada fila es un diccionario con los campos ya normalizados y una clave
+    `_fila` con su número dentro del archivo, para poder señalar los errores.
+    Los errores son los que devuelve `error_de_fila`.
+    """
+    ruta = Path(ruta)
+    if not ruta.exists():
+        raise ValueError("No se encontró el archivo seleccionado.")
+    if ruta.suffix.lower() in (".xlsx", ".xlsm"):
+        crudas = _leer_xlsx(ruta)
+    elif ruta.suffix.lower() == ".csv":
+        crudas = _leer_csv(ruta)
+    else:
+        raise ValueError("El archivo debe ser una hoja de Excel (.xlsx) o un CSV.")
+
+    # El formato es fijo: se comprueba la cabecera antes de leer un solo dato.
+    validar_cabecera(crudas[0])
+
+    filas, errores = [], []
+    for desplazamiento, cruda in enumerate(crudas[1:], start=1):
+        numero = FILA_CABECERA + desplazamiento
+        datos = {"_fila": numero}
+        problema = None
+        for posicion, (clave, _titulo, _ambito) in enumerate(COLUMNAS):
+            valor = cruda[posicion] if posicion < len(cruda) else None
+            if clave in CAMPOS_FECHA:
+                try:
+                    datos[clave] = _a_fecha(valor)
+                except ValueError as error:
+                    problema = str(error)
+                    datos[clave] = ""
+            else:
+                datos[clave] = _a_texto(valor)
+        if not any(datos[clave] for clave, _t, _a in COLUMNAS):
+            continue                      # fila en blanco
+        if problema:
+            errores.append(error_de_fila(numero, datos.get("codigo_oficio"),
+                                         problema))
+            continue
+        filas.append(datos)
+    return filas, errores
+
+
+# --- Agrupación: una fila por implicado --------------------------------------
+def _implicado_de(fila: Dict) -> Optional[Dict]:
+    """Datos del implicado de una fila, o None si la fila no trae ninguno.
+
+    No se valida aquí: de eso se encarga el almacén con la misma regla que usa
+    el alta manual, para que el archivo y el formulario exijan lo mismo.
+    """
+    datos = {clave[len(PREFIJO_IMPLICADO):]: fila.get(clave, "")
+             for clave, _titulo, ambito in COLUMNAS if ambito == "implicado"}
+    return datos if any(datos.values()) else None
+
+
+# Columnas del oficio que se repiten en cada una de sus filas y tienen que
+# decir lo mismo. Se excluyen las que rellena el sistema (su contenido se
+# ignora) y la cantidad de investigados, que la cuenta el propio detalle.
+def _campos_comparables() -> List[Tuple[str, str]]:
+    return [(clave, titulo) for clave, titulo, ambito in COLUMNAS
+            if ambito == "oficio" and clave not in CAMPOS_ASIGNADOS
+            and clave != "cantidad_investigados"]
+
+
+def agrupar_por_referencia(filas: List[Dict]) -> Tuple[List[Dict], List[Dict]]:
+    """Une las filas que comparten Referencia oficio en un solo oficio.
+
+    Cada fila aporta una persona investigada, así que un oficio con cuatro
+    implicados ocupa cuatro filas con los mismos datos de oficio repetidos. Si
+    esas copias no coinciden, el archivo se contradice y se informa: se devuelve
+    (oficios, errores).
+    """
+    agrupados: Dict[str, Dict] = {}
+    orden: List[str] = []
+    errores: List[Dict] = []
+    comparables = _campos_comparables()
+
     for fila in filas:
-        motivos = []
-        original = fila.get("institucion", "")
-        fila["institucion"] = _reconocer_institucion(original)
-        if not fila["institucion"]:
-            instituciones_desconocidas.add(original or "(vacía)")
-            motivos.append(
-                f"«{original or '(vacía)'}» no es una institución válida: la "
-                f"columna {PRIMERA_COLUMNA} solo admite {SIGLAS_ADMITIDAS}")
-        original = fila.get("tipo_accion", "")
-        fila["tipo_accion"] = _reconocer_tipo_accion(original, catalogo)
-        if not fila["tipo_accion"]:
-            tipos_desconocidos.add(original or "(vacío)")
-            motivos.append(
-                f"el tipo de acción «{original or '(vacío)'}» no está en el "
-                "catálogo")
-        if not (fila.get("codigo_oficio") or "").strip():
-            motivos.append("falta la Referencia oficio")
-        if motivos:
-            errores.append(error_de_fila(etiqueta_filas(fila),
-                                         fila.get("codigo_oficio"),
-                                         "; ".join(motivos) + "."))
-        else:
-            aceptadas.append(fila)
-    filas = aceptadas
+        codigo = (fila.get("codigo_oficio") or "").strip()
+        # Sin Referencia oficio no hay con qué agrupar: la fila va sola y el
+        # almacén la rechazará por no tenerla.
+        clave = codigo.upper() or f"__fila_{fila['_fila']}"
+        implicado = _implicado_de(fila)
+        if clave not in agrupados:
+            copia = dict(fila)
+            copia["implicados"] = [implicado] if implicado else []
+            # Todas las líneas del archivo que forman el oficio: si el oficio
+            # no se puede importar hay que poder señalarlas todas.
+            copia["_filas"] = [fila["_fila"]]
+            agrupados[clave] = copia
+            orden.append(clave)
+            continue
 
-    sin_estado_original = 0
-    for fila in filas:
-        if not fila.get("empleado"):
-            # Sin responsable identificado el oficio entra POR ASIGNAR, sea
-            # cual sea el estado que traiga el archivo. Se retira también la
-            # fecha de respuesta: las reglas del sistema no admiten un oficio
-            # respondido sin nadie a cargo, y con ella puesta el estado saltaría
-            # a "Finalizado". Quien lo asigne la vuelve a poner.
-            if fila.get("estado") != "Por asignar" or fila.get("fecha_respuesta"):
-                sin_estado_original += 1
-            fila["estado"] = "Por asignar"
-            fila["fecha_respuesta"] = ""
-        elif fila.get("estado") not in ESTADOS:
-            fila["estado"] = "En proceso"
+        oficio = agrupados[clave]
+        oficio["_filas"].append(fila["_fila"])
+        if implicado:
+            oficio["implicados"].append(implicado)
+        discrepan = [titulo for campo, titulo in comparables
+                     if normalizar(fila.get(campo)) != normalizar(oficio.get(campo))]
+        if discrepan:
+            errores.append(error_de_fila(
+                fila["_fila"], codigo,
+                f"esta línea contradice a la línea {oficio['_filas'][0]} del "
+                f"mismo oficio en: {', '.join(discrepan[:4])}"
+                + (" …" if len(discrepan) > 4 else "") + "."))
+    return [agrupados[c] for c in orden], errores
 
-    errores = ordenar_errores(errores)
+
+# --- Preparación -------------------------------------------------------------
+def preparar(ruta, actor: str = "", actor_rol: str = "") -> Dict:
+    """Deja los oficios listos para importar y resume lo que se va a hacer.
+
+    Valida el archivo entero por adelantado —con las reglas del propio
+    almacén—, de modo que la vista previa dice exactamente lo que va a pasar y
+    la importación solo se ofrece si no queda ninguna fila con error.
+    """
+    filas, errores = leer_archivo(ruta)
+    oficios, incoherencias = agrupar_por_referencia(filas)
+    errores += incoherencias
+    # Los oficios que ya se contradicen entre sus propias líneas no se vuelven
+    # a validar: bastante ruido hay con señalar la contradicción.
+    contradictorios = {e["fila"] for e in incoherencias}
+    revisables = [o for o in oficios
+                  if not contradictorios & {str(n) for n in o["_filas"]}]
+    errores += almacen_oficios.validar_importacion(revisables, actor, actor_rol)
+
     return {
-        "filas": filas,
-        "columnas_ignoradas": ignoradas,
-        "errores": errores,
-        "responsables_sin_identificar": emparejados["sin_identificar"],
-        "responsables_ambiguos": emparejados["ambiguos"],
-        "puestos_por_asignar": sin_estado_original,
-        "instituciones_desconocidas": sorted(instituciones_desconocidas),
-        "tipos_accion_desconocidos": sorted(tipos_desconocidos),
-        "identificaciones_no_validas": sorted(identificaciones_no_validas),
+        "filas": oficios,
+        "errores": ordenar_errores(errores),
+        "campos_asignados": [almacen_oficios.COLUMNAS_EXPORTACION[clave]
+                             for clave in CAMPOS_ASIGNADOS],
     }

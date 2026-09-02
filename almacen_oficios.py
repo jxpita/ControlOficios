@@ -17,7 +17,7 @@ import json
 import shutil
 from datetime import datetime, date
 from pathlib import Path
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Tuple
 
 from cryptography.fernet import InvalidToken
 
@@ -453,26 +453,54 @@ def registrar_oficio(codigo_oficio: str, fecha_recepcion: str, fecha_oficio: str
     return referencia
 
 
+def validar_importacion(filas: List[Dict], actor: str = "",
+                        actor_rol: str = None) -> List[Dict]:
+    """Comprueba TODAS las filas como si se fueran a guardar, sin guardar nada.
+
+    Es la misma comprobación que hace `importar_oficios`, hecha por adelantado
+    para que la vista previa pueda mostrar las filas con error ANTES de tocar
+    los datos. Devuelve una entrada por oficio que no pasa (ver
+    `carga_masiva.error_de_fila`); lista vacía significa que el archivo entero
+    se puede importar.
+    """
+    from carga_masiva import error_de_fila, etiqueta_filas
+
+    registros = _leer_registros()
+    codigos = {r.get("codigo_oficio", "").strip().casefold() for r in registros}
+    ahora = datetime.now().isoformat(timespec="seconds")
+    errores = []
+    for fila in filas:
+        try:
+            nuevo = _preparar_importado(fila, registros, codigos, actor,
+                                        ahora, actor_rol)
+        except ValueError as error:
+            errores.append(error_de_fila(etiqueta_filas(fila),
+                                         fila.get("codigo_oficio"), error))
+            continue
+        # Se anota lo ya validado para que el resto del archivo choque con ello:
+        # dos oficios con la misma referencia también son un error.
+        registros.append(nuevo)
+        codigos.add(nuevo["codigo_oficio"].casefold())
+    return errores
+
+
 @bloqueo.con_bloqueo("oficios")
 def importar_oficios(filas: List[Dict], importado_por: str,
                      actor_rol: str = None) -> Dict:
-    """Da de alta en bloque los oficios de una carga masiva.
+    """Da de alta en bloque los oficios de una carga masiva. **Todo o nada.**
 
-    Pensado para volcar el histórico que se llevaba en la matriz de Excel, así
-    que es más permisivo que el alta manual, y a propósito:
+    Cada oficio se valida con las mismas reglas que el alta manual (fechas
+    coherentes, estado acorde al responsable, responsable existente, tipo de
+    acción del catálogo, implicados bien formados, referencias sin repetir). Si
+    UNA sola fila falla no se guarda nada y se devuelven todas las que fallan,
+    con su línea del archivo y su motivo: un archivo se importa entero o se
+    corrige entero, para no dejar una carga a medias que nadie sabe dónde
+    quedó.
 
-    - No exige el documento del oficio ni la respuesta en PDF: esos archivos no
-      existen para lo ya tramitado. Los registros importados quedan igual que
-      los anteriores a esas exigencias, y se les puede adjuntar después.
-    - Respeta el estado que traiga el archivo, incluido "Finalizado", porque es
-      el estado real de un expediente ya cerrado. Las exigencias para FINALIZAR
-      siguen vigentes para cualquier cambio posterior hecho desde la aplicación.
-
-    Lo que sí se valida es la coherencia de cada fila: fechas con formato y
-    orden correctos, estado válido y referencias sin repetir. Las filas que no
-    pasan se descartan y se informa de ellas, sin abortar el resto: 'omitidos'
-    y 'fallidos' llevan una entrada por oficio descartado, con la línea del
-    archivo, la Referencia oficio y el motivo (ver `carga_masiva.error_de_fila`).
+    Lo único que no se exige, porque un archivo no puede aportarlo, es el
+    documento del oficio y la respuesta en PDF; se adjuntan después desde la
+    pestaña Oficios. Un oficio que llegue como "Finalizado" sí tiene que traer
+    sus fechas de asignación y de respuesta.
 
     Se hace en una sola escritura: la carga entera se guarda de golpe.
     """
@@ -481,58 +509,95 @@ def importar_oficios(filas: List[Dict], importado_por: str,
             "La carga masiva de oficios está reservada a administradores y al "
             "superusuario."
         )
-    registros = _leer_registros()
-    referencias = {r.get("referencia", "").strip().upper() for r in registros}
-    codigos = {r.get("codigo_oficio", "").strip().casefold() for r in registros}
-
-    # Import diferido: quien lee la matriz sabe qué líneas del archivo componen
-    # cada oficio, y así el aviso señala la línea que hay que corregir.
+    # Import diferido: quien lee el archivo sabe qué líneas componen cada
+    # oficio, y así el aviso señala la línea que hay que corregir.
     from carga_masiva import error_de_fila, etiqueta_filas
 
-    importados, omitidos, fallidos = [], [], []
+    registros = _leer_registros()
+    codigos = {r.get("codigo_oficio", "").strip().casefold() for r in registros}
+
+    importados, fallidos = [], []
     ahora = datetime.now().isoformat(timespec="seconds")
     for fila in filas:
-        numero = etiqueta_filas(fila)
         try:
-            nuevo = _preparar_importado(fila, registros, referencias, codigos,
-                                        importado_por, ahora)
-        except _FilaRepetida as duplicada:
-            omitidos.append(error_de_fila(numero, fila.get("codigo_oficio"),
-                                          duplicada))
-            continue
+            nuevo = _preparar_importado(fila, registros, codigos,
+                                        importado_por, ahora, actor_rol)
         except ValueError as error:
-            fallidos.append(error_de_fila(numero, fila.get("codigo_oficio"),
-                                          error))
+            fallidos.append(error_de_fila(etiqueta_filas(fila),
+                                          fila.get("codigo_oficio"), error))
             continue
         registros.append(nuevo)
-        referencias.add(nuevo["referencia"].upper())
         codigos.add(nuevo["codigo_oficio"].casefold())
         importados.append(nuevo["referencia"])
 
-    if importados:
-        _guardar_registros(registros)
+    if fallidos:
+        # No se guarda NADA: el archivo se corrige y se vuelve a cargar entero.
+        registro_actividad.registrar(
+            "CARGA_MASIVA_RECHAZADA",
+            f"oficios={len(filas)}; con errores={len(fallidos)}", importado_por)
+        return {"importados": [], "fallidos": fallidos}
+
+    _guardar_registros(registros)
     registro_actividad.registrar(
-        "CARGA_MASIVA",
-        f"importados={len(importados)}; omitidos={len(omitidos)}; "
-        f"con errores={len(fallidos)}", importado_por)
-    return {"importados": importados, "omitidos": omitidos, "fallidos": fallidos}
+        "CARGA_MASIVA", f"importados={len(importados)}", importado_por)
+    return {"importados": importados, "fallidos": []}
 
 
-class _FilaRepetida(ValueError):
-    """La fila corresponde a un oficio que ya está registrado."""
+def _empleado_de(id_empleado: str) -> Dict:
+    """Cuenta del responsable indicado en el archivo.
+
+    El archivo nombra al responsable por su NOMBRE DE CUENTA (la columna
+    «Usuario responsable» de la exportación), que es lo único que identifica a
+    una persona sin ambigüedad. Si no existe, se dice para que se cree antes de
+    volver a cargar: la carga no inventa usuarios.
+    """
+    import autenticacion
+    objetivo = (id_empleado or "").strip().casefold()
+    for registro in autenticacion.listar_usuarios():
+        if registro["usuario"].strip().casefold() == objetivo:
+            return registro
+    raise ValueError(
+        f"el usuario «{id_empleado}» no existe en el sistema. Créelo primero "
+        f"en la pestaña Usuarios y vuelva a cargar el archivo."
+    )
 
 
-def _preparar_importado(fila: Dict, registros: List[Dict], referencias: set,
-                        codigos: set, importado_por: str, ahora: str) -> Dict:
-    """Valida una fila de la carga masiva y devuelve el registro a guardar."""
+def _validar_anulacion(anulado: str, motivo: str) -> Tuple[bool, str]:
+    """Columnas «Anulado» y «Motivo de anulación» del archivo."""
+    valor = " ".join(str(anulado or "").split()).casefold()
+    motivo = " ".join(str(motivo or "").split())
+    if valor in ("", "no", "false", "0"):
+        if motivo:
+            raise ValueError(
+                "hay un motivo de anulación pero el oficio no está marcado "
+                "como anulado.")
+        return False, ""
+    if valor not in ("si", "sí", "true", "1"):
+        raise ValueError(
+            f"«{anulado}» no es un valor de «Anulado» válido. Opciones: Sí o No.")
+    if len(motivo) < 5:
+        raise ValueError("indique el motivo de la anulación.")
+    return True, motivo
+
+
+def _preparar_importado(fila: Dict, registros: List[Dict], codigos: set,
+                        importado_por: str, ahora: str,
+                        actor_rol: str = None) -> Dict:
+    """Valida un oficio de la carga masiva y devuelve el registro a guardar.
+
+    Aplica las reglas del alta manual: lo que la aplicación no dejaría
+    registrar a mano tampoco entra por el archivo.
+    """
     codigo_oficio = (fila.get("codigo_oficio") or "").strip()
     if not codigo_oficio:
-        raise ValueError("falta la referencia del oficio.")
+        raise ValueError("falta la Referencia oficio.")
     if codigo_oficio.casefold() in codigos:
-        raise _FilaRepetida(
-            f"el oficio «{codigo_oficio}» ya está registrado.")
+        raise ValueError(
+            f"el oficio «{codigo_oficio}» ya está registrado. Quítelo del "
+            f"archivo: la carga da de alta oficios nuevos, no actualiza los "
+            f"existentes.")
 
-    # La Referencia UDC no viene en el archivo: la genera el sistema con la
+    # La Referencia UDC no se toma del archivo: la genera el sistema con la
     # nomenclatura de la institución que remite el oficio.
     institucion = parametros.validar_institucion(fila.get("institucion"))
     tipo_accion = _validar_tipo_accion(fila.get("tipo_accion"))
@@ -540,48 +605,83 @@ def _preparar_importado(fila: Dict, registros: List[Dict], referencias: set,
 
     fecha_recepcion = (fila.get("fecha_recepcion") or "").strip()
     if not fecha_recepcion:
-        # Sin fecha de emisión se usa la de asignación, que es cuando el oficio
-        # ya estaba con nosotros; y si tampoco la hay, la del propio oficio.
-        fecha_recepcion = ((fila.get("fecha_asignacion") or "").strip()
-                           or (fila.get("fecha_oficio") or "").strip())
-    if not fecha_recepcion:
-        raise ValueError("no tiene ninguna fecha de la que deducir la recepción.")
+        raise ValueError("falta la fecha de recepción.")
     _validar_fecha(fecha_recepcion, "Fecha de recepción")
 
-    fecha_oficio = (fila.get("fecha_oficio") or "").strip() or fecha_recepcion
+    fecha_oficio = (fila.get("fecha_oficio") or "").strip()
+    if not fecha_oficio:
+        raise ValueError("falta la fecha de oficio.")
     _validar_fecha(fecha_oficio, "Fecha de oficio")
     if datetime.strptime(fecha_oficio, "%Y-%m-%d") > datetime.strptime(fecha_recepcion, "%Y-%m-%d"):
         raise ValueError(
-            "la fecha del oficio es posterior a la de recepción.")
+            "la fecha de oficio no puede ser posterior a la de recepción.")
 
     fecha_respuesta = _validar_fecha_respuesta(
         fila.get("fecha_respuesta"), fecha_recepcion)
     fecha_asignacion = _validar_fecha_asignacion(
         fila.get("fecha_asignacion"), fecha_recepcion)
-    cantidad = _validar_cantidad_investigados(fila.get("cantidad_investigados"))
     prioridad = _validar_prioridad(fila.get("prioridad"))
+    anulado, motivo_anulacion = _validar_anulacion(
+        fila.get("anulado"), fila.get("motivo_anulacion"))
 
-    # La matriz trae una fila por investigado, así que la carga ya llega con el
-    # detalle de las personas. Si viene, es quien manda sobre la cantidad.
+    # Cada fila del archivo es una persona investigada, así que el detalle llega
+    # con el oficio y es quien manda sobre la cantidad.
     implicados = []
     for numero, datos in enumerate(fila.get("implicados") or [], start=1):
         implicado = validar_implicado(
             datos.get("nombre", ""), datos.get("tipo_identificacion", ""),
             datos.get("identificacion", ""), datos.get("tipo_implicado", ""),
-            datos.get("lci", "No"))
+            datos.get("lci", "No") or "No")
         implicado["id"] = numero
         implicados.append(implicado)
+    cantidad = _validar_cantidad_investigados(fila.get("cantidad_investigados"))
+    _exigir_cantidad_coherente({"implicados": implicados}, cantidad)
     if implicados:
         cantidad = str(len(implicados))
 
-    nombre_empleado = (fila.get("empleado") or "").strip()
+    # Responsable: se identifica por su nombre de cuenta y tiene que existir.
     id_empleado = (fila.get("id_empleado") or "").strip()
-    estado = fila.get("estado") or "Por asignar"
-    if estado not in ESTADOS:
-        raise ValueError(f"el estado «{estado}» no es válido.")
-    estado = _resolver_estado(nombre_empleado, estado, fecha_respuesta)
+    nombre_archivo = (fila.get("empleado") or "").strip()
+    nombre_empleado = ""
+    if id_empleado:
+        cuenta = _empleado_de(id_empleado)
+        id_empleado = cuenta["usuario"]
+        nombre_empleado = cuenta.get("nombre", "")
+        _validar_asignacion(id_empleado, actor_rol)
+    elif nombre_archivo:
+        raise ValueError(
+            f"el oficio indica «{nombre_archivo}» como responsable pero no dice "
+            f"su usuario. Complete la columna «Usuario responsable».")
 
-    return {
+    if fecha_asignacion and not id_empleado:
+        raise ValueError(
+            "tiene fecha de asignación pero no responsable: indique a quién se "
+            "le asignó o deje la fecha en blanco.")
+
+    estado = (fila.get("estado") or "").strip()
+    if estado not in ESTADOS:
+        raise ValueError(
+            f"el estado «{estado or '(vacío)'}» no es válido. "
+            f"Opciones: {', '.join(ESTADOS)}.")
+    # Las mismas reglas del alta manual entre responsable, respuesta y estado.
+    # Aquí no se corrige en silencio: si el archivo dice otra cosa, se avisa.
+    coherente = _resolver_estado(nombre_empleado, estado, fecha_respuesta)
+    if coherente != estado:
+        raise ValueError(
+            f"el estado «{estado}» no concuerda con el resto del oficio: "
+            f"corresponde «{coherente}».")
+    # Finalizar exige el expediente completo. La respuesta en PDF se adjunta
+    # después —un archivo no puede traerla—, pero sus fechas sí tienen que
+    # estar.
+    if estado == "Finalizado":
+        faltan = [etiqueta for etiqueta, valor in
+                  (("la fecha de asignación", fecha_asignacion),
+                   ("la fecha de respuesta", fecha_respuesta)) if not valor]
+        if faltan:
+            raise ValueError(
+                f"para estar «Finalizado» falta {' y '.join(faltan)}.")
+
+    nuevo = {
         "referencia": referencia,
         "institucion": institucion,
         "codigo_oficio": codigo_oficio,
@@ -604,8 +704,19 @@ def _preparar_importado(fila: Dict, registros: List[Dict], referencias: set,
         "fecha_registro": ahora,
         "origen": "carga masiva",
         "historial": [{"estado": estado, "por": importado_por, "cuando": ahora,
-                       "evento": "Importado desde la matriz"}],
+                       "evento": "Importado desde archivo"}],
     }
+    if anulado:
+        nuevo.update({
+            "anulado": True,
+            "motivo_anulacion": motivo_anulacion,
+            "anulado_por": importado_por,
+            "fecha_anulacion": ahora,
+        })
+        nuevo["historial"].append(
+            {"evento": f"Anulado: {motivo_anulacion}", "por": importado_por,
+             "cuando": ahora})
+    return nuevo
 
 
 def contar_por_tipo_accion(tipo: str) -> int:

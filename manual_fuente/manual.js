@@ -31,7 +31,7 @@ const LOGO_PROPORCION = 5.54;
 // Identificación del documento: la versión del manual y la de la aplicación
 // que documenta son independientes y se indican por separado.
 const VERSION_APLICACION = "1.0";
-const VERSION_DOCUMENTO = "2.4";
+const VERSION_DOCUMENTO = "3.0";
 const FECHA_ELABORACION = "1 de septiembre de 2026";
 
 // ---------- Ayudantes ----------
@@ -571,25 +571,28 @@ const contenido = [
   aviso("Reservado a gestores:", "el mantenimiento del catálogo corresponde a los administradores y al superusuario."),
 
   h2("4.7 Carga masiva de oficios"),
-  p("Permite dar de alta de una sola vez los oficios que se venían llevando en la matriz de Excel, sin necesidad de registrarlos uno por uno. Se encuentra en la pestaña Configuración."),
+  p("Permite dar de alta de una sola vez los oficios que se venían llevando fuera del sistema, sin necesidad de registrarlos uno por uno. Se encuentra en la pestaña Configuración."),
   ...pasos([
-    "Pulse Cargar archivo, en el apartado Carga masiva de oficios.",
-    "Seleccione la matriz (.xlsx) o un archivo CSV con la misma cabecera.",
-    "Revise el resumen que se presenta antes de guardar.",
-    "Pulse Importar para confirmar.",
+    "Exporte los oficios desde la pestaña Oficios para obtener la plantilla, o utilice el archivo de ejemplo.",
+    "Complete el archivo respetando sus columnas: una fila por cada persona investigada.",
+    "Pulse Cargar archivo, en el apartado Carga masiva de oficios, y seleccione el archivo (.xlsx o .csv).",
+    "Revise la vista previa. Si el archivo no presenta errores, pulse Importar para confirmar.",
   ]),
-  aviso("El archivo debe respetar el formato establecido:", "la cabecera en la fila 1, de la columna A a la Z, con todas sus columnas y en su orden, y los datos a partir de la fila 2. La primera celda del archivo (A1) corresponde a la Institución del Estado; no se admiten filas de rótulos por encima de la cabecera ni columnas en blanco por delante. Si el formato no coincide, la aplicación rechaza el archivo e indica qué columna no corresponde."),
-  aviso("La Institución del Estado se escribe con su sigla:", "la primera columna admite únicamente SB, para la Superintendencia de Bancos, y FGE, para la Fiscalía General del Estado. Es la sigla con la que se numera la Referencia UDC. Las filas que consignen cualquier otro valor —el nombre completo de la entidad incluido— no se incorporan y se relacionan en la pestaña Filas con error.", { tono: "aviso" }),
-  espacio(160),
-  p("Antes de guardar información alguna se presenta una vista previa con los oficios que se van a incorporar y los avisos pertinentes. Conviene tener en cuenta lo siguiente:"),
-  vinieta("La Referencia UDC no se toma del archivo: la asigna la aplicación según la institución de cada fila."),
-  vinieta("Las filas que comparten la misma Referencia oficio se agrupan en un solo oficio, y cada una de ellas aporta una persona investigada."),
-  vinieta("Los responsables de la matriz se identifican por su nombre. Si no se localiza la cuenta, o si el nombre corresponde a más de una, el oficio se incorpora sin responsable y en estado Por asignar."),
-  vinieta("Los oficios que se incorporan sin responsable pierden su fecha de respuesta, que deberá registrarse nuevamente al asignarlos."),
-  vinieta("Los oficios importados no llevan el documento del oficio ni la respuesta en PDF; pueden adjuntarse posteriormente desde la pestaña Oficios."),
-  vinieta("Los oficios ya registrados no se duplican: se omiten y se informa de ello."),
-  p("La vista previa se presenta en dos pestañas. La primera, Oficios a importar, contiene aquello que se va a incorporar; la segunda, Filas con error, relaciona una por una las filas que no pueden incorporarse, indicando la línea del archivo, la Referencia oficio y el motivo. Al concluir la importación se presenta el mismo detalle de cuanto quedó fuera, distinguiendo las filas con error de los oficios ya registrados."),
-  aviso("Para corregir la matriz:", "utilice la columna Línea del archivo, que señala el número de fila que debe revisarse. Cuando un oficio ocupa varias líneas se indican todas ellas. Corregidas las filas, puede volver a cargarse el archivo completo: los oficios ya incorporados se omiten por sí solos."),
+  aviso("El formato de la importación es el mismo de la exportación:", "las columnas que produce Exportar oficios, en su mismo orden, con la cabecera en la fila 1 —a partir de la celda A1— y los datos desde la fila 2. Las filas que comparten la misma Referencia oficio constituyen un solo oficio y cada una aporta una persona investigada; los datos del oficio se repiten en todas ellas y deben coincidir."),
+  espacio(120),
+  aviso("El archivo se incorpora completo o no se incorpora:", "antes de guardar información alguna se valida el archivo entero con las mismas reglas que exige el registro manual. Mientras subsista una sola fila con error, la aplicación no ofrece la importación y no se guarda nada. Corrija las filas señaladas y vuelva a cargar el archivo.", { tono: "aviso" }),
+  p("La vista previa se presenta en dos pestañas. La primera, Oficios del archivo, relaciona lo que contiene; la segunda, Filas con error, indica una por una las filas que no pueden incorporarse, con la línea del archivo, la Referencia oficio y el motivo. Cuando un oficio ocupa varias líneas se señalan todas ellas."),
+  h3("Qué se comprueba en cada oficio"),
+  vinieta("La Institución del Estado y el Tipo de acción deben corresponder a los del sistema; el tipo de acción, al catálogo vigente."),
+  vinieta("Las fechas de oficio y de recepción son obligatorias, no pueden ser posteriores al día en curso y la de oficio no puede ser posterior a la de recepción."),
+  vinieta("El estado debe concordar con el resto del oficio: sin responsable únicamente cabe Por asignar; con responsable, En proceso; y con fecha de respuesta, Finalizado. La aplicación no lo corrige en silencio: lo advierte."),
+  vinieta("Para que un oficio se incorpore como Finalizado deben constar su fecha de asignación y su fecha de respuesta."),
+  vinieta("La fecha de asignación exige responsable: no puede asignarse un oficio a nadie."),
+  vinieta("La cantidad de investigados debe coincidir con el número de personas relacionadas, cuando estas se detallan."),
+  vinieta("Cada persona investigada requiere nombre, tipo de implicado y una identificación bien formada: cédula de 10 dígitos, RUC de 13 y pasaporte alfanumérico."),
+  vinieta("La Referencia oficio es obligatoria y no puede repetirse, ni dentro del archivo ni respecto de los oficios ya registrados."),
+  aviso("El responsable se indica con su nombre de usuario:", "la columna Usuario responsable admite el nombre de cuenta —en minúsculas y sin espacios, como cmroman o jportero—, no el nombre de la persona. Si la cuenta no existe, la aplicación lo advierte y no incorpora nada: deberá crearla previamente en la pestaña Usuarios y volver a cargar el archivo.", { tono: "aviso" }),
+  p("La Referencia UDC no se toma del archivo: la asigna la aplicación según la institución de cada oficio. Tampoco se toman el documento del oficio, la respuesta en PDF, quién registra, la fecha de registro ni el origen. Los oficios importados no llevan el documento del oficio ni la respuesta en PDF; pueden adjuntarse posteriormente desde la pestaña Oficios."),
 
   saltoPagina(),
   h1("5. Rol Superusuario"),
@@ -709,7 +712,7 @@ const contenido = [
   p("Un administrador o el superusuario pueden anularlo desde Mantenimiento. El oficio se retira de la lista y de los indicadores, si bien se conserva; además, su Referencia oficio queda nuevamente disponible."),
 
   h3("La carga masiva rechaza mi archivo"),
-  p("El archivo debe respetar el formato establecido, con la cabecera en la primera fila, a partir de la celda A1, y todas sus columnas en su orden, siendo la primera la Institución del Estado, que se consigna con su sigla (SB o FGE). Los datos comienzan en la fila 2. El mensaje señala qué columna no corresponde."),
+  p("El archivo debe tener el mismo formato que produce Exportar oficios: sus columnas, en su orden, con la cabecera en la primera fila y los datos desde la segunda. Exporte los oficios para obtener la plantilla. Si el rechazo no es por el formato sino por el contenido, la pestaña Filas con error indica qué línea revisar y por qué; recuerde que el archivo se incorpora completo o no se incorpora."),
 
   h3("Aparece el mensaje «Otro usuario está guardando cambios en este momento»"),
   p("Dos personas han guardado de forma simultánea. Deberá esperarse unos segundos y repetir la operación; el mensaje evita que una modificación se sobreponga a la otra."),
