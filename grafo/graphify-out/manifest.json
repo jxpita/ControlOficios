@@ -1,14 +1,14 @@
 {
   "almacen_oficios.py": {
-    "mtime": 1788358461.2299435,
-    "seen": 1788359017.9689841,
-    "ast_hash": "79c9f45be4473927dcc398c44d8c5c8c",
+    "mtime": 1788535716.8707829,
+    "seen": 1788535877.5822759,
+    "ast_hash": "8fdc28b24e02787735559b3001b04efa",
     "semantic_hash": ""
   },
   "aplicacion.py": {
-    "mtime": 1788358798.8739357,
-    "seen": 1788359017.9689896,
-    "ast_hash": "0a28c8f1db940cb975e0580a79e2fb60",
+    "mtime": 1788535833.2188544,
+    "seen": 1788535877.582279,
+    "ast_hash": "f499c5289cc5ba6d28b676fb26e0156e",
     "semantic_hash": ""
   },
   "autenticacion.py": {
@@ -24,9 +24,9 @@
     "semantic_hash": "be68dfef4ef95ed0b58e941cd5c2fd61"
   },
   "carga_masiva.py": {
-    "mtime": 1788358379.5899453,
-    "seen": 1788359017.9689999,
-    "ast_hash": "3bc1a9d364fa5bea1ad637031bda048c",
+    "mtime": 1788535799.866788,
+    "seen": 1788535877.5822847,
+    "ast_hash": "45ff84732b6db3297d8475c64381395e",
     "semantic_hash": ""
   },
   "cifrado.py": {
@@ -42,9 +42,9 @@
     "semantic_hash": ""
   },
   "datos_de_prueba/generar_datos_prueba.py": {
-    "mtime": 1788358685.6179383,
-    "seen": 1788359017.9690068,
-    "ast_hash": "819fcb36adeec40c33d813852a66eef5",
+    "mtime": 1788535753.8105016,
+    "seen": 1788535877.582289,
+    "ast_hash": "8c20a5af9b40d925a49a421cf769f8fb",
     "semantic_hash": ""
   },
   "herramienta_admin.py": {
@@ -108,9 +108,9 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1788358914.0124311,
-    "seen": 1788359017.9690447,
-    "ast_hash": "f97d37d93400d7958cd2f2c4b3fe279d",
+    "mtime": 1788535815.2491987,
+    "seen": 1788535877.58231,
+    "ast_hash": "32bf1d0ab38826d186e071f1cdf2dad6",
     "semantic_hash": ""
   },
   "requirements.txt": {
@@ -138,9 +138,9 @@
     "semantic_hash": ""
   },
   "manual_fuente/manual.js": {
-    "mtime": 1788358950.5363417,
-    "seen": 1788359017.9690187,
-    "ast_hash": "e487493f878e9915fb3e5c02a7fb861a",
+    "mtime": 1788535833.2170973,
+    "seen": 1788535877.5822964,
+    "ast_hash": "d1b11fdf26efb819e57ac5017fe096e1",
     "semantic_hash": ""
   },
   "manual_fuente/package.json": {
@@ -168,9 +168,9 @@
     "semantic_hash": ""
   },
   "datos_de_prueba/generar_ejemplo_carga.py": {
-    "mtime": 1788358627.7579396,
-    "seen": 1788359017.9690094,
-    "ast_hash": "7f6e475694f52f777a698c1f64bfc230",
+    "mtime": 1788535753.8102996,
+    "seen": 1788535877.5822904,
+    "ast_hash": "b55bf018dcc30767af2ebf1b0bbaae6e",
     "semantic_hash": ""
   },
   "Manual Banco del Pac\u00edfico y PacifiCard.pdf": {

@@ -1,23 +1,28 @@
 """
 Carga masiva de oficios (importación) desde un archivo .xlsx o .csv.
 
-Formato establecido: EL MISMO DE LA EXPORTACIÓN
-------------------------------------------------
-El archivo que se importa tiene exactamente las columnas que produce
-*Exportar oficios*, en su mismo orden (ver `almacen_oficios.COLUMNAS_EXPORTACION`
-y `COLUMNAS_IMPLICADO`): la cabecera ocupa la fila 1, desde la celda A1, y los
-datos empiezan en la fila 2. Así lo que sale del sistema sirve de plantilla para
-lo que entra, y no hay dos formatos que mantener.
+Formato establecido: EL DE LA EXPORTACIÓN, SIN LA REFERENCIA UDC
+-----------------------------------------------------------------
+El archivo que se importa tiene las columnas que produce *Exportar oficios*, en
+su mismo orden (ver `almacen_oficios.COLUMNAS_EXPORTACION` y
+`COLUMNAS_IMPLICADO`), **menos la Referencia UDC**: la numera el sistema al
+importar, con la nomenclatura de la institución de cada oficio, así que pedirla
+solo daría pie a escribir una que no se va a usar. La cabecera ocupa la fila 1,
+desde la celda A1, y los datos empiezan en la fila 2. Así hay un solo formato
+que mantener y lo que sale del sistema se parece a lo que entra.
 
 Como en la exportación, **cada fila es una persona investigada**: las filas que
 comparten la misma *Referencia oficio* son el mismo oficio, y de ellas sale su
 detalle de implicados. Los datos del oficio se repiten en cada una de sus filas
 y tienen que coincidir; si no, se avisa.
 
-Columnas que **rellena el sistema** y cuyo contenido se ignora al importar
-(están en el archivo para que el formato sea el mismo): Referencia UDC —la
-numera el sistema con la nomenclatura de la institución—, Documento del oficio,
-Respuesta en PDF, Registrado por, Fecha de registro y Origen.
+Columnas que sí están en el archivo pero cuyo contenido **rellena el sistema**
+y se ignora al importar: Documento del oficio, Respuesta en PDF, Registrado por,
+Fecha de registro y Origen.
+
+`escribir_plantilla()` escribe un .xlsx con este mismo formato, y es lo que usan
+los archivos de ejemplo de `datos_de_prueba/`: el módulo que lee el formato es
+el que lo escribe.
 
 Todo o nada
 -----------
@@ -53,20 +58,25 @@ PRIMERA_FILA_DATOS = FILA_CABECERA + 1
 # oficio (por ejemplo "identificacion") al leer la fila.
 PREFIJO_IMPLICADO = "implicado_"
 
+# La Referencia UDC NO forma parte del archivo de carga: la numera el sistema al
+# importar, con la nomenclatura de la institución de cada oficio, así que pedirla
+# solo daría pie a escribir una que no se va a usar.
+CAMPO_EXCLUIDO = "referencia"
+
 # El formato se DERIVA de la exportación, no se copia: si allí se añade una
 # columna, aquí aparece sola y sigue habiendo un único formato.
 COLUMNAS = (
     [(clave, titulo, "oficio")
-     for clave, titulo in almacen_oficios.COLUMNAS_EXPORTACION.items()]
+     for clave, titulo in almacen_oficios.COLUMNAS_EXPORTACION.items()
+     if clave != CAMPO_EXCLUIDO]
     + [(PREFIJO_IMPLICADO + clave, titulo, "implicado")
        for clave, titulo in almacen_oficios.COLUMNAS_IMPLICADO.items()]
 )
 CABECERA = [titulo for _clave, titulo, _ambito in COLUMNAS]
+TITULO_EXCLUIDO = almacen_oficios.COLUMNAS_EXPORTACION[CAMPO_EXCLUIDO]
 
-# Columnas que el sistema rellena por su cuenta al importar. Se leen para que el
-# formato sea el mismo que el de la exportación, pero su contenido se ignora.
+# Columnas que sí están en el archivo pero cuyo contenido rellena el sistema.
 CAMPOS_ASIGNADOS = {
-    "referencia": "la numera el sistema",
     "archivo_oficio": "se adjunta después",
     "archivo_respuesta": "se adjunta después",
     "registrado_por": "es quien importa el archivo",
@@ -161,11 +171,12 @@ def _error_formato(detalle: str) -> ValueError:
     """Rechazo del archivo por no tener el formato establecido."""
     return ValueError(
         f"El archivo no tiene el formato establecido: {detalle}\n\n"
-        f"Debe ser el mismo archivo que produce «Exportar oficios»: la cabecera "
-        f"en la fila {FILA_CABECERA}, de la columna {PRIMERA_COLUMNA} a la "
-        f"{ULTIMA_COLUMNA}, con las {len(COLUMNAS)} columnas en su orden, y los "
-        f"datos a partir de la fila {PRIMERA_FILA_DATOS}.\n\n"
-        "Exporte los oficios para obtener la plantilla y vuelva a intentarlo."
+        f"Debe tener las mismas columnas que la exportación de oficios —salvo "
+        f"la «{TITULO_EXCLUIDO}», que no se toma del archivo— en su mismo "
+        f"orden: la cabecera en la fila {FILA_CABECERA}, de la columna "
+        f"{PRIMERA_COLUMNA} a la {ULTIMA_COLUMNA}, con las {len(COLUMNAS)} "
+        f"columnas, y los datos a partir de la fila {PRIMERA_FILA_DATOS}.\n\n"
+        "Use el archivo de ejemplo de la carga masiva como plantilla."
     )
 
 
@@ -187,6 +198,14 @@ def validar_cabecera(celdas: List) -> None:
         raise _error_formato(
             f"la cabecera no empieza en la columna {PRIMERA_COLUMNA} (hay "
             f"{vacias} columna(s) en blanco por delante).")
+    if titulos[0] == normalizar(TITULO_EXCLUIDO):
+        # Caso típico de quien parte de un archivo exportado: la exportación
+        # lleva la Referencia UDC delante y la carga no la usa.
+        raise _error_formato(
+            f"sobra la columna {PRIMERA_COLUMNA} «{TITULO_EXCLUIDO}». La "
+            f"numera el sistema al importar, con la nomenclatura de la "
+            f"institución de cada oficio, así que no se toma del archivo: "
+            f"elimine esa columna.")
 
     problemas = []
     for posicion, (_clave, titulo, _ambito) in enumerate(COLUMNAS):
@@ -321,6 +340,32 @@ def leer_archivo(ruta) -> Tuple[List[Dict], List[Dict]]:
             continue
         filas.append(datos)
     return filas, errores
+
+
+# --- Escritura: la plantilla de la carga -------------------------------------
+def filas_plantilla(oficios: List[Dict]) -> List[List[str]]:
+    """Las filas del archivo de carga para esos oficios: una por implicado.
+
+    Es la exportación sin la Referencia UDC. Sirve para escribir plantillas y
+    archivos de ejemplo con el formato exacto que la carga espera leer, sin que
+    nadie tenga que reproducirlo a mano.
+    """
+    filas = []
+    for oficio in oficios:
+        datos = [_a_texto(oficio.get(clave, "")) for clave, _t, ambito in COLUMNAS
+                 if ambito == "oficio"]
+        implicados = oficio.get("implicados") or [{}]
+        for implicado in implicados:
+            filas.append(datos + [
+                _a_texto(implicado.get(clave[len(PREFIJO_IMPLICADO):], ""))
+                for clave, _t, ambito in COLUMNAS if ambito == "implicado"])
+    return filas
+
+
+def escribir_plantilla(oficios: List[Dict], ruta_destino: str) -> None:
+    """Escribe un .xlsx con el formato de la carga masiva."""
+    almacen_oficios.escribir_xlsx(CABECERA, filas_plantilla(oficios),
+                                  ruta_destino, hoja_titulo="Oficios")
 
 
 # --- Agrupación: una fila por implicado --------------------------------------

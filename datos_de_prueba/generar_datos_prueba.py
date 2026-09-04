@@ -1,9 +1,9 @@
 """
 Genera el archivo de datos de prueba para la carga masiva.
 
-Crea `Matriz de prueba - 110 oficios.xlsx` con el MISMO formato que produce
-«Exportar oficios» —que es el que exige la importación— y 110 oficios
-repartidos entre las dos instituciones.
+Crea `Matriz de prueba - 110 oficios.xlsx` con el formato que exige la
+importación —el de la exportación, sin la columna Referencia UDC, que la numera
+el sistema— y 110 oficios repartidos entre las dos instituciones.
 
 Los datos se reparten a propósito para que el TABLERO se vea con contenido:
 
@@ -36,7 +36,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-import almacen_oficios                                    # noqa: E402
+import carga_masiva                                       # noqa: E402
 
 SALIDA = Path(__file__).resolve().parent / "Matriz de prueba - 110 oficios.xlsx"
 CANTIDAD_OFICIOS = 110
@@ -156,7 +156,8 @@ def _fechas_recepcion(cantidad, hoy):
 def generar_oficios():
     """Los oficios con la forma con la que los guarda el sistema.
 
-    De ahí los escribe la exportación, que es el formato que exige la carga.
+    De ahí los escribe `carga_masiva.escribir_plantilla` en el formato que esa
+    misma carga espera leer.
     """
     random.seed(2026)          # mismo archivo en cada ejecución
     hoy = date.today()
@@ -210,7 +211,6 @@ def generar_oficios():
             })
 
         oficios.append({
-            "referencia": "",              # la numera el sistema al importar
             "institucion": institucion,
             "codigo_oficio": f"{sigla}-{recepcion.year}-{numero:04d}-OF",
             "tipo_accion": TIPOS_ACCION[numero % len(TIPOS_ACCION)],
@@ -251,9 +251,9 @@ def _resumen(oficios):
 
 if __name__ == "__main__":
     oficios = generar_oficios()
-    # Lo escribe la exportación de la aplicación: los datos de prueba y el
+    # Lo escribe el propio módulo de la carga: los datos de prueba y el
     # formato real no pueden separarse.
-    almacen_oficios.exportar_xlsx(oficios, str(SALIDA))
+    carga_masiva.escribir_plantilla(oficios, str(SALIDA))
     estados, usuarios, entidades, reparto = _resumen(oficios)
     filas = sum(max(len(o["implicados"]), 1) for o in oficios)
     print(f"{SALIDA.name}: {len(oficios)} oficios en {filas} filas "

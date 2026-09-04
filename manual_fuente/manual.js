@@ -31,7 +31,7 @@ const LOGO_PROPORCION = 5.54;
 // Identificación del documento: la versión del manual y la de la aplicación
 // que documenta son independientes y se indican por separado.
 const VERSION_APLICACION = "1.0";
-const VERSION_DOCUMENTO = "3.0";
+const VERSION_DOCUMENTO = "3.1";
 const FECHA_ELABORACION = "1 de septiembre de 2026";
 
 // ---------- Ayudantes ----------
@@ -573,12 +573,12 @@ const contenido = [
   h2("4.7 Carga masiva de oficios"),
   p("Permite dar de alta de una sola vez los oficios que se venían llevando fuera del sistema, sin necesidad de registrarlos uno por uno. Se encuentra en la pestaña Configuración."),
   ...pasos([
-    "Exporte los oficios desde la pestaña Oficios para obtener la plantilla, o utilice el archivo de ejemplo.",
+    "Tome como plantilla el archivo de ejemplo de la carga masiva.",
     "Complete el archivo respetando sus columnas: una fila por cada persona investigada.",
     "Pulse Cargar archivo, en el apartado Carga masiva de oficios, y seleccione el archivo (.xlsx o .csv).",
     "Revise la vista previa. Si el archivo no presenta errores, pulse Importar para confirmar.",
   ]),
-  aviso("El formato de la importación es el mismo de la exportación:", "las columnas que produce Exportar oficios, en su mismo orden, con la cabecera en la fila 1 —a partir de la celda A1— y los datos desde la fila 2. Las filas que comparten la misma Referencia oficio constituyen un solo oficio y cada una aporta una persona investigada; los datos del oficio se repiten en todas ellas y deben coincidir."),
+  aviso("El formato de la importación es el de la exportación, sin la Referencia UDC:", "las columnas que produce Exportar oficios, en su mismo orden, salvo la Referencia UDC, que no se consigna porque la asigna el sistema al importar. La cabecera ocupa la fila 1 —a partir de la celda A1— y los datos comienzan en la fila 2. Las filas que comparten la misma Referencia oficio constituyen un solo oficio y cada una aporta una persona investigada; los datos del oficio se repiten en todas ellas y deben coincidir."),
   espacio(120),
   aviso("El archivo se incorpora completo o no se incorpora:", "antes de guardar información alguna se valida el archivo entero con las mismas reglas que exige el registro manual. Mientras subsista una sola fila con error, la aplicación no ofrece la importación y no se guarda nada. Corrija las filas señaladas y vuelva a cargar el archivo.", { tono: "aviso" }),
   p("La vista previa se presenta en dos pestañas. La primera, Oficios del archivo, relaciona lo que contiene; la segunda, Filas con error, indica una por una las filas que no pueden incorporarse, con la línea del archivo, la Referencia oficio y el motivo. Cuando un oficio ocupa varias líneas se señalan todas ellas."),
@@ -592,7 +592,7 @@ const contenido = [
   vinieta("Cada persona investigada requiere nombre, tipo de implicado y una identificación bien formada: cédula de 10 dígitos, RUC de 13 y pasaporte alfanumérico."),
   vinieta("La Referencia oficio es obligatoria y no puede repetirse, ni dentro del archivo ni respecto de los oficios ya registrados."),
   aviso("El responsable se indica con su nombre de usuario:", "la columna Usuario responsable admite el nombre de cuenta —en minúsculas y sin espacios, como cmroman o jportero—, no el nombre de la persona. Si la cuenta no existe, la aplicación lo advierte y no incorpora nada: deberá crearla previamente en la pestaña Usuarios y volver a cargar el archivo.", { tono: "aviso" }),
-  p("La Referencia UDC no se toma del archivo: la asigna la aplicación según la institución de cada oficio. Tampoco se toman el documento del oficio, la respuesta en PDF, quién registra, la fecha de registro ni el origen. Los oficios importados no llevan el documento del oficio ni la respuesta en PDF; pueden adjuntarse posteriormente desde la pestaña Oficios."),
+  p("La Referencia UDC no figura en el archivo: la asigna la aplicación según la institución de cada oficio. Tampoco se toman del archivo el documento del oficio, la respuesta en PDF, quién registra, la fecha de registro ni el origen, aunque sí figuren como columnas. Los oficios importados no llevan el documento del oficio ni la respuesta en PDF; pueden adjuntarse posteriormente desde la pestaña Oficios."),
 
   saltoPagina(),
   h1("5. Rol Superusuario"),
@@ -712,7 +712,7 @@ const contenido = [
   p("Un administrador o el superusuario pueden anularlo desde Mantenimiento. El oficio se retira de la lista y de los indicadores, si bien se conserva; además, su Referencia oficio queda nuevamente disponible."),
 
   h3("La carga masiva rechaza mi archivo"),
-  p("El archivo debe tener el mismo formato que produce Exportar oficios: sus columnas, en su orden, con la cabecera en la primera fila y los datos desde la segunda. Exporte los oficios para obtener la plantilla. Si el rechazo no es por el formato sino por el contenido, la pestaña Filas con error indica qué línea revisar y por qué; recuerde que el archivo se incorpora completo o no se incorpora."),
+  p("El archivo debe tener las mismas columnas que la exportación de oficios, en su orden y sin la Referencia UDC, con la cabecera en la primera fila y los datos desde la segunda. Tome como plantilla el archivo de ejemplo de la carga masiva. Si el rechazo no es por el formato sino por el contenido, la pestaña Filas con error indica qué línea revisar y por qué; recuerde que el archivo se incorpora completo o no se incorpora."),
 
   h3("Aparece el mensaje «Otro usuario está guardando cambios en este momento»"),
   p("Dos personas han guardado de forma simultánea. Deberá esperarse unos segundos y repetir la operación; el mensaje evita que una modificación se sobreponga a la otra."),

@@ -1,16 +1,16 @@
 """
 Genera el ARCHIVO DE EJEMPLO de la carga masiva.
 
-Crea `Ejemplo de carga masiva.xlsx`: seis oficios con los casos habituales,
-escrito con el MISMO formato que produce «Exportar oficios», que es el que
-exige la importación. Sirve como plantilla: se borra el contenido de ejemplo y
-se escriben los oficios reales debajo de la cabecera.
+Crea `Ejemplo de carga masiva.xlsx`: seis oficios con los casos habituales, en
+el formato que exige la importación —el de la exportación, sin la columna
+Referencia UDC, que la numera el sistema—. Sirve como plantilla: se borra el
+contenido de ejemplo y se escriben los oficios reales debajo de la cabecera.
 
     python datos_de_prueba/generar_ejemplo_carga.py
 
-El archivo lo escribe la propia exportación de la aplicación
-(`almacen_oficios.exportar_xlsx`), de modo que el ejemplo no puede desviarse
-del formato: si se añade una columna a la exportación, aparece aquí sola.
+El archivo lo escribe `carga_masiva.escribir_plantilla`, es decir, el propio
+módulo que después lo lee, de modo que el ejemplo no puede desviarse del
+formato: si se añade una columna, aparece aquí sola.
 
 Los responsables se indican con su NOMBRE DE CUENTA, en minúsculas y sin
 espacios (cmroman, jportero…). Esas cuentas tienen que existir en el sistema
@@ -25,7 +25,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-import almacen_oficios                                    # noqa: E402
+import carga_masiva                                       # noqa: E402
 
 SALIDA = Path(__file__).resolve().parent / "Ejemplo de carga masiva.xlsx"
 
@@ -61,13 +61,12 @@ def _oficio(institucion, codigo, accion, causal, oficio, recepcion,
             cantidad_investigados=""):
     """Un oficio con la forma con la que lo guarda el sistema.
 
-    La Referencia UDC, el documento del oficio, quién lo registró y cuándo son
-    columnas que rellena el sistema al importar: aquí van vacías a propósito,
-    para que se vea que su contenido no se toma del archivo.
+    La Referencia UDC no es ni una columna del archivo: la numera el sistema al
+    importar. El documento del oficio, quién lo registró y cuándo sí son
+    columnas, pero las rellena el sistema: aquí van vacías a propósito.
     """
     implicados = list(implicados)
     return {
-        "referencia": "",
         "institucion": institucion,
         "codigo_oficio": codigo,
         "tipo_accion": accion,
@@ -149,13 +148,13 @@ OFICIOS = [
 
 
 if __name__ == "__main__":
-    # Lo escribe la exportación de la aplicación: el ejemplo y el formato real
-    # no pueden separarse.
-    almacen_oficios.exportar_xlsx(OFICIOS, str(SALIDA))
+    # Lo escribe el propio módulo de la carga: el ejemplo y el formato real no
+    # pueden separarse.
+    carga_masiva.escribir_plantilla(OFICIOS, str(SALIDA))
     filas = sum(max(len(o["implicados"]), 1) for o in OFICIOS)
     print(f"{SALIDA.name}: {len(OFICIOS)} oficios en {filas} filas.")
-    print("  Mismo formato que «Exportar oficios»: cabecera en la fila 1 y "
-          "una fila por persona investigada.")
+    print("  Formato de la carga: cabecera en la fila 1, una fila por persona\n"
+          "  investigada y sin la columna Referencia UDC.")
     print("  Responsables por nombre de cuenta: "
           + ", ".join(sorted(RESPONSABLES)) + ".")
     print("  Esas cuentas deben existir en el sistema antes de cargar.")

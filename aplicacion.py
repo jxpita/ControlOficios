@@ -2361,10 +2361,11 @@ class AplicacionPrincipal(ttk.Frame):
         self._etiqueta_ajustable(
             panel,
             "Permite dar de alta de una sola vez los oficios que se venían "
-            "llevando fuera del sistema. El archivo (.xlsx o .csv) debe tener "
-            "el mismo formato que produce «Exportar oficios», con la cabecera "
-            "en la primera fila y una fila por persona investigada. El "
-            "responsable se indica con su nombre de usuario."
+            "llevando fuera del sistema. El archivo (.xlsx o .csv) lleva las "
+            "mismas columnas que la exportación de oficios —sin la Referencia "
+            "UDC, que la asigna el sistema—, con la cabecera en la primera "
+            "fila y una fila por persona investigada. El responsable se indica "
+            "con su nombre de usuario."
         ).pack(anchor="w", pady=(0, 8))
 
         btn = ttk.Button(panel, text="Cargar archivo",

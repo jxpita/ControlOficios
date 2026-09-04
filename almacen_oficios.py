@@ -1395,7 +1395,17 @@ def hay_soporte_xlsx() -> bool:
 
 
 def exportar_xlsx(registros: List[Dict], ruta_destino: str) -> None:
-    """Escribe los oficios en un libro de Excel (.xlsx).
+    """Escribe los oficios en un libro de Excel (.xlsx)."""
+    escribir_xlsx(_encabezados_exportacion(), filas_exportacion(registros),
+                  ruta_destino)
+
+
+def escribir_xlsx(encabezados: List[str], filas: List[List[str]],
+                  ruta_destino: str, hoja_titulo: str = "Oficios") -> None:
+    """Escribe una hoja de cálculo con la cabecera destacada y anchos al dato.
+
+    Lo usan tanto la exportación como el archivo de ejemplo de la carga, para
+    que los dos se vean igual y ninguno tenga su propia idea del formato.
 
     Requiere openpyxl, que es opcional: si falta, se avisa para que se use el
     CSV, que no necesita ninguna librería externa.
@@ -1413,10 +1423,9 @@ def exportar_xlsx(registros: List[Dict], ruta_destino: str) -> None:
 
     libro = Workbook()
     hoja = libro.active
-    hoja.title = "Oficios"
+    hoja.title = hoja_titulo
 
-    encabezados = _encabezados_exportacion()
-    hoja.append(encabezados)
+    hoja.append(list(encabezados))
     # Cabecera con los colores corporativos, para que se distinga de los datos.
     relleno = PatternFill("solid", fgColor="152342")
     for columna in range(1, len(encabezados) + 1):
@@ -1425,7 +1434,6 @@ def exportar_xlsx(registros: List[Dict], ruta_destino: str) -> None:
         celda.fill = relleno
         celda.alignment = Alignment(vertical="center")
 
-    filas = filas_exportacion(registros)
     for fila in filas:
         hoja.append(fila)
 

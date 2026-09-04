@@ -401,8 +401,8 @@ los de la persona a la derecha (`filas_exportacion`). Es la misma forma que
 tiene la matriz de la unidad, así que un oficio con cuatro investigados ocupa
 cuatro filas. Los oficios sin implicados anotados ocupan una sola fila, con esas
 últimas columnas vacías: no se pierden del reporte. **Es también el formato que
-admite la carga masiva**, así que un archivo exportado sirve de plantilla para
-importar. Lo que se cuenta y se
+admite la carga masiva**, salvo por la *Referencia UDC*, que allí no se pide
+porque la genera el sistema. Lo que se cuenta y se
 informa al terminar son los **oficios**, que es lo que se pidió exportar.
 
 | Formato | Librería | Notas |
@@ -428,13 +428,21 @@ fuera del sistema. Está en la pestaña *Configuración*, así que solo la usan
 administradores y el superusuario; la restricción se valida también en el
 almacenamiento (`almacen_oficios.importar_oficios`).
 
-**El formato de importación es el mismo de la exportación.** No hay dos
-formatos que mantener: lo que sale de *Exportar oficios* sirve de plantilla
-para lo que entra. Las columnas se **derivan** de
+**El formato de importación es el de la exportación, sin la Referencia UDC.**
+No hay dos formatos que mantener: las columnas se **derivan** de
 `almacen_oficios.COLUMNAS_EXPORTACION` y `COLUMNAS_IMPLICADO`, de modo que
-añadir una columna a la exportación la añade a la carga sola. La cabecera
-ocupa la **fila 1** desde la celda **A1**, los datos empiezan en la **fila 2**
-y se admiten `.xlsx` y `.csv`.
+añadir una columna a la exportación la añade a la carga sola. La única que se
+excluye es la **Referencia UDC**: la numera el sistema al importar, con la
+nomenclatura de la institución de cada oficio, así que pedirla solo daría pie a
+escribir una que no se va a usar. Quedan **26 columnas**, de la **A** a la
+**Z**, con la cabecera en la **fila 1** desde **A1**, los datos desde la **fila
+2**, y se admiten `.xlsx` y `.csv`.
+
+Quien parta de un archivo exportado se encuentra esa columna de más, así que el
+rechazo lo dice con todas las letras: «sobra la columna A «Referencia UDC». La
+numera el sistema al importar […]: elimine esa columna». La plantilla a mano es
+el archivo de ejemplo (ver 3.5), que escribe el propio módulo de la carga
+(`carga_masiva.escribir_plantilla`).
 
 Como en la exportación, **cada fila es una persona investigada**: las filas que
 comparten *Referencia oficio* son el mismo oficio y de ellas sale su detalle de
@@ -442,10 +450,9 @@ implicados. Los datos del oficio se repiten en todas sus filas y **tienen que
 coincidir**; si una línea contradice a la primera del oficio, se dice en qué
 columna.
 
-Seis columnas están en el archivo para que el formato sea el mismo, pero su
-contenido **se ignora** porque lo pone el sistema: *Referencia UDC* (la numera
-el sistema con la nomenclatura de la institución), *Documento del oficio*,
-*Respuesta en PDF*, *Registrado por*, *Fecha de registro* y *Origen*.
+Cinco columnas sí están en el archivo, pero su contenido **se ignora** porque lo
+pone el sistema: *Documento del oficio*, *Respuesta en PDF*, *Registrado por*,
+*Fecha de registro* y *Origen*.
 
 #### Todo o nada
 
@@ -816,8 +823,8 @@ tocar información real:
   datos_de_prueba/generar_datos_prueba.py`). Usa una semilla fija, así que
   produce siempre el mismo archivo.
 
-Los dos los escribe la propia exportación de la aplicación
-(`almacen_oficios.exportar_xlsx`), de modo que no pueden desviarse del formato.
+Los dos los escribe `carga_masiva.escribir_plantilla`, es decir, el propio
+módulo que después los lee, de modo que no pueden desviarse del formato.
 Se cargan desde **Configuración → Carga masiva de oficios → Cargar archivo**. El archivo puede estar en cualquier carpeta a la que se llegue
 desde el explorador; la aplicación no lo lee de una ruta fija.
 
