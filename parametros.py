@@ -27,7 +27,8 @@ from typing import Dict, Optional
 from cryptography.fernet import InvalidToken
 
 from configuracion import (
-    ARCHIVO_PARAMETROS, PREFIJO_REFERENCIA, INSTITUCIONES, ROLES_GESTORES
+    ARCHIVO_PARAMETROS, PREFIJO_REFERENCIA, INSTITUCIONES, ROLES_GESTORES,
+    normalizar_texto,
 )
 from cifrado import cifrar, descifrar
 import registro_actividad
@@ -72,10 +73,15 @@ def _guardar(datos: Dict) -> None:
 
 # --- Instituciones y siglas ---------------------------------------------------
 def sigla_de(institucion: str) -> str:
-    """Sigla de la referencia para esa institución (por ejemplo 'SB')."""
+    """Sigla de la referencia para esa institución (por ejemplo 'SB').
+
+    Se admite el nombre completo o la sigla, escritos como sea: la carga masiva
+    los teclea en una hoja de cálculo, donde nadie respeta mayúsculas ni tildes.
+    """
     institucion = " ".join(str(institucion or "").split())
+    clave = normalizar_texto(institucion)
     for nombre, sigla in INSTITUCIONES.items():
-        if nombre.casefold() == institucion.casefold() or sigla.casefold() == institucion.casefold():
+        if clave in (normalizar_texto(nombre), normalizar_texto(sigla)):
             return sigla
     raise ValueError(
         f"«{institucion}» no es una institución válida. "
@@ -86,7 +92,7 @@ def sigla_de(institucion: str) -> str:
 def institucion_de(sigla: str) -> str:
     """Nombre de la institución a partir de su sigla."""
     for nombre, propia in INSTITUCIONES.items():
-        if propia.casefold() == str(sigla or "").casefold():
+        if normalizar_texto(propia) == normalizar_texto(sigla):
             return nombre
     return ""
 

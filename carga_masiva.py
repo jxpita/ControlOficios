@@ -47,6 +47,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import almacen_oficios
+import configuracion
 
 # --- Formato del archivo -----------------------------------------------------
 # La cabecera es la primera fila y los datos empiezan en la segunda, igual que
@@ -88,15 +89,9 @@ CAMPOS_ASIGNADOS = {
 CAMPOS_FECHA = {"fecha_oficio", "fecha_recepcion",
                 "fecha_asignacion", "fecha_respuesta"}
 
-_ACENTOS = str.maketrans("áéíóúàèìòùäëïöüâêîôûÁÉÍÓÚÄËÏÖÜÂÊÎÔÛ",
-                         "aeiouaeiouaeiouaeiouAEIOUAEIOUAEIOU")
-
-
-def normalizar(texto) -> str:
-    """Texto en minúsculas, sin tildes y con los espacios colapsados."""
-    if texto is None:
-        return ""
-    return " ".join(str(texto).translate(_ACENTOS).lower().split())
+# Comparar sin distinguir mayúsculas, tildes ni espacios de más: la misma regla
+# con la que el sistema reconoce los valores de sus catálogos.
+normalizar = configuracion.normalizar_texto
 
 
 def _a_fecha(valor) -> str:

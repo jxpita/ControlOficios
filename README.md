@@ -454,6 +454,16 @@ Cinco columnas sí están en el archivo, pero su contenido **se ignora** porque 
 pone el sistema: *Documento del oficio*, *Respuesta en PDF*, *Registrado por*,
 *Fecha de registro* y *Origen*.
 
+**Rígido en la estructura, tolerante en el contenido.** Las columnas y su orden
+no se negocian, pero lo que se escribe dentro no distingue **mayúsculas,
+minúsculas ni tildes** en ningún campo: `FINALIZADO`, `finalizado` y
+`Finalizado` son el mismo estado, `CEDULA` es `Cédula`, `fiscalia general del
+estado` es la Fiscalía y `CMROMAN` es la cuenta `cmroman`. Lo que se guarda es
+siempre el valor del catálogo, para que en los datos no acaben conviviendo tres
+formas de escribir lo mismo. La regla vive en `configuracion.opcion_de()` y la
+usan por igual el archivo y el formulario. También la cabecera se compara así,
+de modo que un archivo con los títulos en mayúsculas se admite.
+
 #### Todo o nada
 
 Antes de guardar nada se valida el archivo **entero**, con las mismas reglas
@@ -479,7 +489,8 @@ Lo que se valida en cada oficio:
 | Finalizado | exige fecha de asignación y de respuesta |
 | Prioridad | Baja, Media o Alta |
 | Cantidad de investigados | entero no negativo; con detalle de personas debe coincidir con el número de filas |
-| Implicados | `validar_implicado`: nombre, tipo de implicado del catálogo, LCI Sí/No e identificación bien formada (cédula 10 dígitos, RUC 13, pasaporte alfanumérico) |
+| Implicados | `validar_implicado`: nombre, tipo de implicado del catálogo, LCI Sí/No (también valen `S` o `X`) e identificación bien formada |
+| Identificación | **cédula: 10 dígitos exactos**, **RUC: 13**, pasaporte alfanumérico. Se admiten puntos, guiones y espacios, que se retiran antes de contar. Si faltan dígitos, el aviso recuerda que Excel se come el cero de la izquierda si la celda no es de tipo texto |
 | Anulado / Motivo de anulación | *Sí* exige motivo; un motivo sin *Sí* es un error. Un oficio anulado entra ya anulado |
 
 Lo único que no se exige, porque un archivo no puede aportarlo, es el

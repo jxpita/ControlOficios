@@ -18,7 +18,8 @@ from typing import Dict, List
 from cryptography.fernet import InvalidToken
 
 from configuracion import (
-    ARCHIVO_TIPOS_ACCION, TIPOS_ACCION_INICIALES, ROLES_GESTORES
+    ARCHIVO_TIPOS_ACCION, TIPOS_ACCION_INICIALES, ROLES_GESTORES,
+    normalizar_texto,
 )
 from cifrado import cifrar, descifrar
 import registro_actividad
@@ -46,17 +47,14 @@ def _guardar(tipos: List[str]) -> None:
     )
 
 
-_ACENTOS = str.maketrans("áéíóúàèìòùäëïöüâêîôûÁÉÍÓÚÄËÏÖÜÂÊÎÔÛ",
-                         "aeiouaeiouaeiouaeiouAEIOUAEIOUAEIOU")
-
-
 def _normalizar(texto) -> str:
     """Para comparar sin distinguir mayúsculas, tildes ni espacios sobrantes.
 
-    Las tildes se ignoran a propósito: la matriz escribe «RETENCIÓN» y quien
-    teclea a mano suele omitirlas, y son el mismo tipo de acción.
+    Las tildes se ignoran a propósito: un archivo escribe «RETENCIÓN» y quien
+    teclea a mano suele omitirlas, y son el mismo tipo de acción. Es la misma
+    regla que usan los demás catálogos (`configuracion.normalizar_texto`).
     """
-    return " ".join(str(texto or "").translate(_ACENTOS).split()).casefold()
+    return normalizar_texto(texto)
 
 
 def listar() -> List[str]:

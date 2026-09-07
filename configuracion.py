@@ -178,6 +178,41 @@ TIPOS_IMPLICADO = ["Cliente", "No cliente", "Ex cliente", "Sin identificación"]
 # LCI = Lista de Control Interno.
 VALORES_LCI = ["Sí", "No"]
 
+# --- Cómo se escriben los valores de los catálogos ---------------------------
+# Los catálogos de arriba (estados, prioridades, tipos de identificación, de
+# implicado, LCI, instituciones) fijan QUÉ valores son válidos, no CÓMO hay que
+# escribirlos. En la aplicación se eligen en un desplegable, pero en la carga
+# masiva se teclean en una hoja de cálculo, donde nadie escribe igual:
+# «FINALIZADO», «Finalizado» y «finalizado» son el mismo estado, y «CEDULA» es
+# «Cédula». Se comparan sin distinguir mayúsculas, tildes ni espacios de más, y
+# lo que se guarda es siempre el valor del catálogo.
+_ACENTOS = str.maketrans("áéíóúàèìòùäëïöüâêîôûñÁÉÍÓÚÀÈÌÒÙÄËÏÖÜÂÊÎÔÛÑ",
+                         "aeiouaeiouaeiouaeiounAEIOUAEIOUAEIOUAEIOUN")
+
+
+def normalizar_texto(texto) -> str:
+    """Texto en minúsculas, sin tildes y con los espacios colapsados."""
+    if texto is None:
+        return ""
+    return " ".join(str(texto).translate(_ACENTOS).split()).casefold()
+
+
+def opcion_de(valor, opciones):
+    """La opción del catálogo que corresponde a lo escrito, o '' si ninguna.
+
+    Devuelve SIEMPRE el valor tal como está en el catálogo, de modo que en los
+    datos no acaben conviviendo «Sí», «SI» y «si» como si fueran cosas
+    distintas.
+    """
+    clave = normalizar_texto(valor)
+    if not clave:
+        return ""
+    for opcion in opciones:
+        if normalizar_texto(opcion) == clave:
+            return opcion
+    return ""
+
+
 # --- Roles de usuario --------------------------------------------------------
 # El superusuario es el primer usuario que se crea y NO puede eliminarse.
 ROL_SUPERUSUARIO = "superusuario"

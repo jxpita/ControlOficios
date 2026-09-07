@@ -25,6 +25,7 @@ from configuracion import (
     ARCHIVO_OFICIOS, PREFIJO_REFERENCIA, ESTADOS, ROLES_GESTORES, DIR_RESPUESTAS,
     DIR_DOCUMENTOS, EXTENSIONES_DOCUMENTO, ROL_ADMINISTRADOR, ROL_SUPERUSUARIO,
     TIPOS_IDENTIFICACION, TIPOS_IMPLICADO, VALORES_LCI, PRIORIDADES,
+    opcion_de,
 )
 from cifrado import cifrar, descifrar
 import registro_actividad
@@ -171,14 +172,36 @@ def _validar_tipo_accion(tipo: str) -> str:
 
 def _validar_prioridad(prioridad: str) -> str:
     """Prioridad de atención del oficio. Es opcional: el histórico que se carga
-    desde la matriz puede no traerla."""
-    prioridad = " ".join(str(prioridad or "").split()).capitalize()
-    if prioridad and prioridad not in PRIORIDADES:
+    desde un archivo puede no traerla.
+
+    Se admite escrita como sea («ALTA», «alta»); se guarda la del catálogo.
+    """
+    escrita = " ".join(str(prioridad or "").split())
+    if not escrita:
+        return ""
+    del_catalogo = opcion_de(escrita, PRIORIDADES)
+    if not del_catalogo:
         raise ValueError(
-            f"La prioridad «{prioridad}» no es válida. "
+            f"La prioridad «{escrita}» no es válida. "
             f"Opciones: {', '.join(PRIORIDADES)}."
         )
-    return prioridad
+    return del_catalogo
+
+
+def validar_estado(estado: str) -> str:
+    """Estado del oficio tal como está en el catálogo.
+
+    Da igual cómo se escriba —«FINALIZADO», «finalizado»—: lo que importa es
+    que sea uno de los estados del sistema.
+    """
+    escrito = " ".join(str(estado or "").split())
+    del_catalogo = opcion_de(escrito, ESTADOS)
+    if not del_catalogo:
+        raise ValueError(
+            f"El estado «{escrito or '(vacío)'}» no es válido. "
+            f"Opciones: {', '.join(ESTADOS)}."
+        )
+    return del_catalogo
 
 
 def _validar_cantidad_investigados(valor) -> str:
@@ -384,8 +407,7 @@ def registrar_oficio(codigo_oficio: str, fecha_recepcion: str, fecha_oficio: str
     if detalle:
         cantidad_investigados = str(len(detalle))
     observacion = (observacion or "").strip()
-    if estado not in ESTADOS:
-        raise ValueError("Estado no válido.")
+    estado = validar_estado(estado)
 
     # El responsable es opcional. Las reglas ajustan el estado en consecuencia
     # (incluida la fecha de respuesta, que implica "Finalizado").
@@ -563,18 +585,23 @@ def _empleado_de(id_empleado: str) -> Dict:
 
 
 def _validar_anulacion(anulado: str, motivo: str) -> Tuple[bool, str]:
-    """Columnas «Anulado» y «Motivo de anulación» del archivo."""
-    valor = " ".join(str(anulado or "").split()).casefold()
+    """Columnas «Anulado» y «Motivo de anulación» del archivo.
+
+    Se escriba como se escriba: «Sí», «SI», «X»…
+    """
+    escrito = " ".join(str(anulado or "").split())
     motivo = " ".join(str(motivo or "").split())
-    if valor in ("", "no", "false", "0"):
+    valor = opcion_de(escrito, VALORES_LCI) or _LCI_ABREVIADO.get(
+        escrito.casefold(), "")
+    if not escrito or valor == "No":
         if motivo:
             raise ValueError(
                 "hay un motivo de anulación pero el oficio no está marcado "
                 "como anulado.")
         return False, ""
-    if valor not in ("si", "sí", "true", "1"):
+    if valor != "Sí":
         raise ValueError(
-            f"«{anulado}» no es un valor de «Anulado» válido. Opciones: Sí o No.")
+            f"«{escrito}» no es un valor de «Anulado» válido. Opciones: Sí o No.")
     if len(motivo) < 5:
         raise ValueError("indique el motivo de la anulación.")
     return True, motivo
@@ -658,11 +685,7 @@ def _preparar_importado(fila: Dict, registros: List[Dict], codigos: set,
             "tiene fecha de asignación pero no responsable: indique a quién se "
             "le asignó o deje la fecha en blanco.")
 
-    estado = (fila.get("estado") or "").strip()
-    if estado not in ESTADOS:
-        raise ValueError(
-            f"el estado «{estado or '(vacío)'}» no es válido. "
-            f"Opciones: {', '.join(ESTADOS)}.")
+    estado = validar_estado(fila.get("estado"))
     # Las mismas reglas del alta manual entre responsable, respuesta y estado.
     # Aquí no se corrige en silencio: si el archivo dice otra cosa, se avisa.
     coherente = _resolver_estado(nombre_empleado, estado, fecha_respuesta)
@@ -807,8 +830,7 @@ def actualizar_oficio(referencia: str, nuevo_estado: str, id_empleado: str,
             "No tiene permisos para reasignar el responsable ni cambiar "
             "libremente el estado del oficio."
         )
-    if nuevo_estado not in ESTADOS:
-        raise ValueError("Estado no válido.")
+    nuevo_estado = validar_estado(nuevo_estado)
     nombre_empleado = (nombre_empleado or "").strip()
     id_empleado = (id_empleado or "").strip()
     registros = _leer_registros()
@@ -1567,8 +1589,7 @@ def filtrar_oficios(registros: List[Dict], campo_texto: str = "", texto: str = "
 
     estado = (estado or "").strip()
     if estado:
-        if estado not in ESTADOS:
-            raise ValueError(f"El estado «{estado}» no es válido.")
+        estado = validar_estado(estado)
         resultado = [r for r in resultado if r.get("estado", "") == estado]
 
     prioridad = (prioridad or "").strip()
@@ -1609,6 +1630,11 @@ def causales_registradas(registros: List[Dict]) -> List[str]:
 # persona edita, no se modifica al que no era.
 # Separadores que se admiten al teclear una identificación y que no forman
 # parte de ella: "1400.349.096" y "1400349096" son el mismo documento.
+# Marcas habituales de un "sí" o un "no" en una hoja de cálculo, además de los
+# valores del catálogo.
+_LCI_ABREVIADO = {"s": "Sí", "x": "Sí", "true": "Sí", "1": "Sí",
+                  "n": "No", "false": "No", "0": "No"}
+
 _SEPARADORES_IDENTIFICACION = str.maketrans("", "", " .-/")
 
 # Cuántos dígitos tiene cada documento numérico.
@@ -1639,9 +1665,15 @@ def validar_identificacion(tipo_identificacion: str, identificacion: str) -> str
                 f"números."
             )
         if len(limpia) != digitos:
+            aviso = ""
+            if len(limpia) < digitos:
+                # Causa habitual al cargar desde Excel: la celda se tomó como
+                # número y el documento perdió sus ceros de la izquierda.
+                aviso = (" Si empieza por cero, escríbala con la celda en "
+                         "formato de texto para que no lo pierda.")
             raise ValueError(
                 f"{tipo_identificacion}: debe tener {digitos} dígitos "
-                f"(se ingresaron {len(limpia)})."
+                f"(se ingresaron {len(limpia)}).{aviso}"
             )
     elif tipo_identificacion == "Pasaporte":
         if not limpia.isalnum():
@@ -1659,10 +1691,13 @@ def validar_implicado(nombre: str, tipo_identificacion: str = "",
     if len(nombre) < 3:
         raise ValueError("Debe ingresar el nombre o razón social del implicado.")
 
-    tipo_identificacion = " ".join(str(tipo_identificacion or "").split())
-    if tipo_identificacion and tipo_identificacion not in TIPOS_IDENTIFICACION:
+    # Los catálogos admiten cualquier forma de escribirlos («CEDULA», «cédula»)
+    # y se guarda siempre el valor del catálogo.
+    escrito = " ".join(str(tipo_identificacion or "").split())
+    tipo_identificacion = opcion_de(escrito, TIPOS_IDENTIFICACION)
+    if escrito and not tipo_identificacion:
         raise ValueError(
-            f"El tipo de identificación «{tipo_identificacion}» no es válido. "
+            f"El tipo de identificación «{escrito}» no es válido. "
             f"Opciones: {', '.join(TIPOS_IDENTIFICACION)}."
         )
     identificacion = " ".join(str(identificacion or "").split())
@@ -1674,15 +1709,21 @@ def validar_implicado(nombre: str, tipo_identificacion: str = "",
         )
     identificacion = validar_identificacion(tipo_identificacion, identificacion)
 
-    tipo_implicado = " ".join(str(tipo_implicado or "").split())
-    if tipo_implicado not in TIPOS_IMPLICADO:
+    escrito = " ".join(str(tipo_implicado or "").split())
+    tipo_implicado = opcion_de(escrito, TIPOS_IMPLICADO)
+    if not tipo_implicado:
         raise ValueError(
-            f"Debe indicar el tipo de implicado. "
+            f"El tipo de implicado «{escrito or '(vacío)'}» no es válido. "
             f"Opciones: {', '.join(TIPOS_IMPLICADO)}."
         )
-    lci = " ".join(str(lci or "").split()) or "No"
-    if lci not in VALORES_LCI:
-        raise ValueError("El campo LCI solo admite «Sí» o «No».")
+    escrito = " ".join(str(lci or "").split()) or "No"
+    # «SI», «Si» y «sí» son lo mismo; también se admite la S o la X con las que
+    # se suele marcar una casilla.
+    lci = opcion_de(escrito, VALORES_LCI) or _LCI_ABREVIADO.get(
+        " ".join(str(escrito).split()).casefold(), "")
+    if not lci:
+        raise ValueError(
+            f"El campo LCI solo admite «Sí» o «No» (se indicó «{escrito}»).")
 
     return {
         "nombre": nombre,

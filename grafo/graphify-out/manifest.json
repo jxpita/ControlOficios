@@ -1,8 +1,8 @@
 {
   "almacen_oficios.py": {
-    "mtime": 1788535716.8707829,
-    "seen": 1788535877.5822759,
-    "ast_hash": "8fdc28b24e02787735559b3001b04efa",
+    "mtime": 1788814828.63458,
+    "seen": 1788814971.1377063,
+    "ast_hash": "b665c55fdbf8315cd00b7aee8f739999",
     "semantic_hash": ""
   },
   "aplicacion.py": {
@@ -24,9 +24,9 @@
     "semantic_hash": "be68dfef4ef95ed0b58e941cd5c2fd61"
   },
   "carga_masiva.py": {
-    "mtime": 1788535799.866788,
-    "seen": 1788535877.5822847,
-    "ast_hash": "45ff84732b6db3297d8475c64381395e",
+    "mtime": 1788814815.7011309,
+    "seen": 1788814971.1377168,
+    "ast_hash": "b5fa3ccca079bb94bef3ba4a59dd5d59",
     "semantic_hash": ""
   },
   "cifrado.py": {
@@ -36,9 +36,9 @@
     "semantic_hash": "7103051022eb6bb5483a4986a15ffba8"
   },
   "configuracion.py": {
-    "mtime": 1787774636.7514882,
-    "seen": 1787774900.3042684,
-    "ast_hash": "9b7fbdccf1963d168b8049a737e61a2b",
+    "mtime": 1788814726.2589943,
+    "seen": 1788814971.1377196,
+    "ast_hash": "d2f7ca53ddb51646a86b48006e11b38a",
     "semantic_hash": ""
   },
   "datos_de_prueba/generar_datos_prueba.py": {
@@ -60,9 +60,9 @@
     "semantic_hash": ""
   },
   "parametros.py": {
-    "mtime": 1787774636.964489,
-    "seen": 1787774900.3042896,
-    "ast_hash": "b42420c83dc20794fa3e3c1eff9d015b",
+    "mtime": 1788814815.700459,
+    "seen": 1788814971.1377356,
+    "ast_hash": "e6e54c8ecaa56a14c3354a86880d3036",
     "semantic_hash": ""
   },
   "permisos.py": {
@@ -90,10 +90,10 @@
     "semantic_hash": "76ce06ddec5dcae388cffc70339d1f14"
   },
   "tipos_accion.py": {
-    "mtime": 1787774636.9674883,
-    "seen": 1787774900.3042986,
-    "ast_hash": "3e747bc95d59d153cbd203f35b83e4f4",
-    "semantic_hash": "3e747bc95d59d153cbd203f35b83e4f4"
+    "mtime": 1788814815.7006876,
+    "seen": 1788814971.1377413,
+    "ast_hash": "33e11e04b6a4dd4341972c3fe1871830",
+    "semantic_hash": ""
   },
   "visor_pdf.py": {
     "mtime": 1787774636.9674883,
@@ -108,9 +108,9 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1788535815.2491987,
-    "seen": 1788535877.58231,
-    "ast_hash": "32bf1d0ab38826d186e071f1cdf2dad6",
+    "mtime": 1788814924.3432322,
+    "seen": 1788814971.1377444,
+    "ast_hash": "42f1622790225f5deccd62edbe1336cb",
     "semantic_hash": ""
   },
   "requirements.txt": {
@@ -138,9 +138,9 @@
     "semantic_hash": ""
   },
   "manual_fuente/manual.js": {
-    "mtime": 1788535833.2170973,
-    "seen": 1788535877.5822964,
-    "ast_hash": "d1b11fdf26efb819e57ac5017fe096e1",
+    "mtime": 1788814924.3439035,
+    "seen": 1788814971.1377304,
+    "ast_hash": "9f559f8922d9606e20a5600e97033558",
     "semantic_hash": ""
   },
   "manual_fuente/package.json": {
