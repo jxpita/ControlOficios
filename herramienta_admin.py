@@ -15,13 +15,20 @@ Uso:
     python herramienta_admin.py oficios --csv reporte.csv
         -> exporta los oficios a un CSV que abre directo en Excel
 
+    python herramienta_admin.py oficios --estandarizar
+        -> pasa a MAYÚSCULAS el texto libre (Referencia oficio, Causal,
+           Observación, motivo de anulación y los datos de los implicados) de
+           los oficios YA registrados. Los nuevos se guardan así solos; esto
+           es para poner al día lo anterior. Pide confirmación.
+
     python herramienta_admin.py oficios --purgar-formato-anterior
         -> ELIMINA los oficios que aún usan la referencia antigua
            (cualquiera que no empiece por REQ-UDC-), previa confirmación. Útil
            para descartar registros de prueba anteriores al formato vigente
            REQ-UDC-<SIGLA>-NNNN.
 
-Salvo '--purgar-formato-anterior', la herramienta es de solo lectura.
+Salvo '--purgar-formato-anterior' y '--estandarizar', la herramienta es de solo
+lectura.
 """
 import sys
 import json
@@ -67,6 +74,20 @@ def exportar_csv_oficios(registros, ruta_csv):
         for registro in registros:
             escritor.writerow(registro)
     print(f"Exportado a '{ruta_csv}' ({len(registros)} registros).")
+
+
+def estandarizar(registros):
+    """Pasa a mayúsculas el texto libre de los oficios ya guardados."""
+    print(f"Se revisarán {len(registros)} oficio(s): Referencia oficio, Causal, "
+          "Observación,\nmotivo de anulación y los datos de cada implicado "
+          "pasan a MAYÚSCULAS.")
+    respuesta = input("Escriba 'SI' para continuar: ").strip().upper()
+    if respuesta not in ("SI", "SÍ"):
+        print("Cancelado. No se modificó ningún registro.")
+        return
+    cambiados = almacen_oficios.estandarizar_registros("herramienta_admin")
+    print(f"Oficios actualizados: {cambiados}. "
+          f"Sin cambios: {len(registros) - cambiados}.")
 
 
 def _es_formato_actual(referencia):
@@ -119,7 +140,12 @@ def main():
     ruta = ARCHIVO_OFICIOS if objetivo == "oficios" else ARCHIVO_CREDENCIALES
     registros = _cargar(ruta)
 
-    if "--purgar-formato-anterior" in argumentos:
+    if "--estandarizar" in argumentos:
+        if objetivo != "oficios":
+            print("La estandarización solo aplica a 'oficios'.")
+            return
+        estandarizar(registros)
+    elif "--purgar-formato-anterior" in argumentos:
         if objetivo != "oficios":
             print("La purga solo aplica a 'oficios'.")
             return

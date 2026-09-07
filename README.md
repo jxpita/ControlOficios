@@ -253,6 +253,17 @@ La **Referencia UDC** no se ingresa: la genera el sistema a partir de la
 institución elegida (ver 3.2). El formulario muestra cuál será la próxima en
 cuanto se selecciona la institución.
 
+**El texto libre se guarda en MAYÚSCULAS**, se teclee como se teclee: la
+Referencia oficio, la Causal, la Observación, el motivo de una anulación y el
+nombre e identificación de cada persona investigada
+(`configuracion.estandarizar_texto`, con los espacios de sobra colapsados y las
+tildes conservadas). Así el mismo dato no aparece de tres formas distintas en
+la tabla, el tablero y los reportes. No se aplica a los **valores de catálogo**
+—que ya tienen una única forma correcta, la suya: *Finalizado*, *Cédula*,
+*Media*— ni al **nombre de cuenta** del responsable, que va en minúsculas. Los
+oficios registrados antes de esta regla se ponen al día con
+`herramienta_admin.py oficios --estandarizar` (ver 3.1).
+
 **Ninguna fecha puede ser posterior a hoy** (no se registra lo que aún no ha
 ocurrido): el calendario muestra los días futuros deshabilitados y el
 almacenamiento rechaza una fecha futura escrita a mano.
@@ -454,15 +465,16 @@ Cinco columnas sí están en el archivo, pero su contenido **se ignora** porque 
 pone el sistema: *Documento del oficio*, *Respuesta en PDF*, *Registrado por*,
 *Fecha de registro* y *Origen*.
 
-**Rígido en la estructura, tolerante en el contenido.** Las columnas y su orden
-no se negocian, pero lo que se escribe dentro no distingue **mayúsculas,
-minúsculas ni tildes** en ningún campo: `FINALIZADO`, `finalizado` y
+**Rígido en la estructura, tolerante al escribir, estandarizado al guardar.**
+Las columnas y su orden no se negocian, pero lo que se escribe dentro no
+distingue **mayúsculas, minúsculas ni tildes** en ningún campo: `FINALIZADO`, `finalizado` y
 `Finalizado` son el mismo estado, `CEDULA` es `Cédula`, `fiscalia general del
 estado` es la Fiscalía y `CMROMAN` es la cuenta `cmroman`. Lo que se guarda es
-siempre el valor del catálogo, para que en los datos no acaben conviviendo tres
-formas de escribir lo mismo. La regla vive en `configuracion.opcion_de()` y la
-usan por igual el archivo y el formulario. También la cabecera se compara así,
-de modo que un archivo con los títulos en mayúsculas se admite.
+siempre el valor del catálogo (`configuracion.opcion_de()`) y el texto libre
+sube a **mayúsculas** (`estandarizar_texto()`), para que en los datos no acaben
+conviviendo tres formas de escribir lo mismo. Las dos reglas las usan por igual
+el archivo y el formulario. También la cabecera se compara así, de modo que un
+archivo con los títulos en mayúsculas se admite.
 
 #### Todo o nada
 
@@ -669,14 +681,20 @@ python herramienta_admin.py credenciales
 # Exportar los oficios a un CSV que abre directo en Excel (con tildes)
 python herramienta_admin.py oficios --csv reporte.csv
 
+# Pasar a MAYÚSCULAS el texto libre de los oficios YA registrados
+# (los nuevos se guardan así solos), previa confirmación
+python herramienta_admin.py oficios --estandarizar
+
 # Eliminar los oficios que aún usan la referencia ANTIGUA
 # (UDC-OFICIO-AAAAMMDD-NNNN), previa confirmación
 python herramienta_admin.py oficios --purgar-formato-anterior
 ```
 
-Salvo `--purgar-formato-anterior`, es de **solo lectura y exportación**. Esa
-purga lista primero los registros afectados, exige escribir `PURGAR` para
-confirmar y deja constancia en la bitácora. Si la ejecutas sin argumentos, la
+Salvo `--estandarizar` y `--purgar-formato-anterior`, es de **solo lectura y
+exportación**. La purga lista primero los registros afectados, exige escribir
+`PURGAR` para confirmar y deja constancia en la bitácora; la estandarización
+también pide confirmación y anota cuántos oficios cambió
+(`ESTANDARIZAR_TEXTO`). Si la ejecutas sin argumentos, la
 herramienta imprime su propia ayuda.
 
 ## 3.2 Referencia UDC y secuencial inicial

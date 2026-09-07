@@ -25,7 +25,7 @@ from configuracion import (
     ARCHIVO_OFICIOS, PREFIJO_REFERENCIA, ESTADOS, ROLES_GESTORES, DIR_RESPUESTAS,
     DIR_DOCUMENTOS, EXTENSIONES_DOCUMENTO, ROL_ADMINISTRADOR, ROL_SUPERUSUARIO,
     TIPOS_IDENTIFICACION, TIPOS_IMPLICADO, VALORES_LCI, PRIORIDADES,
-    opcion_de,
+    opcion_de, estandarizar_texto,
 )
 from cifrado import cifrar, descifrar
 import registro_actividad
@@ -359,10 +359,11 @@ def registrar_oficio(codigo_oficio: str, fecha_recepcion: str, fecha_oficio: str
     superusuario y administradores, y un administrador no puede asignárselos a
     un superusuario.
     """
-    codigo_oficio = codigo_oficio.strip()
+    # El texto libre se guarda estandarizado: siempre en mayúsculas.
+    codigo_oficio = estandarizar_texto(codigo_oficio)
     if not codigo_oficio:
         raise ValueError("Debe ingresar la referencia del oficio o circular.")
-    causal_oficio = (causal_oficio or "").strip()
+    causal_oficio = estandarizar_texto(causal_oficio)
     if not (ruta_documento or "").strip():
         raise ValueError(
             "Debe adjuntar el documento del oficio en formato PDF o Word (.docx)."
@@ -406,7 +407,7 @@ def registrar_oficio(codigo_oficio: str, fecha_recepcion: str, fecha_oficio: str
         detalle.append(persona)
     if detalle:
         cantidad_investigados = str(len(detalle))
-    observacion = (observacion or "").strip()
+    observacion = estandarizar_texto(observacion)
     estado = validar_estado(estado)
 
     # El responsable es opcional. Las reglas ajustan el estado en consecuencia
@@ -590,7 +591,7 @@ def _validar_anulacion(anulado: str, motivo: str) -> Tuple[bool, str]:
     Se escriba como se escriba: «Sí», «SI», «X»…
     """
     escrito = " ".join(str(anulado or "").split())
-    motivo = " ".join(str(motivo or "").split())
+    motivo = estandarizar_texto(motivo)
     valor = opcion_de(escrito, VALORES_LCI) or _LCI_ABREVIADO.get(
         escrito.casefold(), "")
     if not escrito or valor == "No":
@@ -615,7 +616,7 @@ def _preparar_importado(fila: Dict, registros: List[Dict], codigos: set,
     Aplica las reglas del alta manual: lo que la aplicación no dejaría
     registrar a mano tampoco entra por el archivo.
     """
-    codigo_oficio = (fila.get("codigo_oficio") or "").strip()
+    codigo_oficio = estandarizar_texto(fila.get("codigo_oficio"))
     if not codigo_oficio:
         raise ValueError("falta la Referencia oficio.")
     if codigo_oficio.casefold() in codigos:
@@ -709,7 +710,7 @@ def _preparar_importado(fila: Dict, registros: List[Dict], codigos: set,
         "institucion": institucion,
         "codigo_oficio": codigo_oficio,
         "tipo_accion": tipo_accion,
-        "causal_oficio": (fila.get("causal_oficio") or "").strip(),
+        "causal_oficio": estandarizar_texto(fila.get("causal_oficio")),
         "fecha_recepcion": fecha_recepcion,
         "fecha_oficio": fecha_oficio,
         "fecha_asignacion": fecha_asignacion,
@@ -720,7 +721,7 @@ def _preparar_importado(fila: Dict, registros: List[Dict], codigos: set,
         "id_empleado": id_empleado,
         "empleado": nombre_empleado,
         "estado": estado,
-        "observacion": (fila.get("observacion") or "").strip(),
+        "observacion": estandarizar_texto(fila.get("observacion")),
         "archivo_oficio": "",
         "archivo_respuesta": "",
         "registrado_por": importado_por,
@@ -889,7 +890,7 @@ def actualizar_oficio(referencia: str, nuevo_estado: str, id_empleado: str,
                     registro["fecha_respuesta"] = nueva_fecha
                     cambios.append(f"Fecha de respuesta: {nueva_fecha or '(sin fecha)'}")
             if observacion is not None:
-                nueva_obs = observacion.strip()
+                nueva_obs = estandarizar_texto(observacion)
                 if nueva_obs != registro.get("observacion", ""):
                     registro["observacion"] = nueva_obs
                     cambios.append("Observación actualizada")
@@ -984,7 +985,7 @@ def actualizar_estado_asignado(referencia: str, actor: str, nuevo_estado: str,
                     registro["fecha_respuesta"] = nueva_fecha
                     cambios.append(f"Fecha de respuesta: {nueva_fecha or '(sin fecha)'}")
             if observacion is not None:
-                nueva_obs = observacion.strip()
+                nueva_obs = estandarizar_texto(observacion)
                 if nueva_obs != registro.get("observacion", ""):
                     registro["observacion"] = nueva_obs
                     cambios.append("Observación actualizada")
@@ -1046,7 +1047,7 @@ def corregir_oficio(referencia: str, actor: str, actor_rol: str,
                          else registro.get(campo, ""))
                  for campo in CAMPOS_MANTENIMIENTO}
 
-        codigo = (nuevo["codigo_oficio"] or "").strip()
+        codigo = estandarizar_texto(nuevo["codigo_oficio"])
         if not codigo:
             raise ValueError("Debe indicar la referencia del oficio.")
         for otro in registros:
@@ -1073,7 +1074,9 @@ def corregir_oficio(referencia: str, actor: str, actor_rol: str,
                      "fecha_recepcion": "Fecha de recepción"}
         cambios = []
         for campo in CAMPOS_MANTENIMIENTO:
-            valor = (nuevo[campo] or "").strip()
+            # Las fechas ya vienen normalizadas; el texto libre, en mayúsculas.
+            valor = ((nuevo[campo] or "").strip() if campo.startswith("fecha_")
+                     else estandarizar_texto(nuevo[campo]))
             if valor != (registro.get(campo, "") or ""):
                 cambios.append(f"{etiquetas[campo]}: "
                                f"«{registro.get(campo, '') or '(vacío)'}» → «{valor}»")
@@ -1106,7 +1109,7 @@ def anular_oficio(referencia: str, motivo: str, actor: str,
     if actor_rol not in ROLES_GESTORES:
         raise ValueError(
             "Anular oficios está reservado a administradores y al superusuario.")
-    motivo = " ".join((motivo or "").split())
+    motivo = estandarizar_texto(motivo)
     if len(motivo) < 5:
         raise ValueError("Indique el motivo de la anulación.")
 
@@ -1608,6 +1611,47 @@ def filtrar_oficios(registros: List[Dict], campo_texto: str = "", texto: str = "
     return resultado
 
 
+# Campos de texto libre que se guardan estandarizados (en MAYÚSCULAS). El resto
+# o son fechas, o valores de catálogo —que ya tienen una forma única—, o el
+# nombre de cuenta del responsable, que va en minúsculas.
+CAMPOS_TEXTO_LIBRE = ("codigo_oficio", "causal_oficio", "observacion",
+                      "motivo_anulacion")
+CAMPOS_TEXTO_IMPLICADO = ("nombre", "identificacion")
+
+
+@bloqueo.con_bloqueo("oficios")
+def estandarizar_registros(actor: str = "") -> int:
+    """Pasa a MAYÚSCULAS el texto libre de los oficios ya registrados.
+
+    Los oficios que se registran o se cargan quedan estandarizados solos; esto
+    es para los que se guardaron antes de que esa regla existiera, de modo que
+    no convivan «Lavado de activos» y «LAVADO DE ACTIVOS» en la misma tabla.
+    Devuelve cuántos oficios cambiaron.
+    """
+    registros = _leer_registros()
+    cambiados = 0
+    for registro in registros:
+        toco = False
+        for campo in CAMPOS_TEXTO_LIBRE:
+            valor = estandarizar_texto(registro.get(campo, ""))
+            if valor != (registro.get(campo, "") or ""):
+                registro[campo] = valor
+                toco = True
+        for implicado in registro.get("implicados") or []:
+            for campo in CAMPOS_TEXTO_IMPLICADO:
+                valor = estandarizar_texto(implicado.get(campo, ""))
+                if valor != (implicado.get(campo, "") or ""):
+                    implicado[campo] = valor
+                    toco = True
+        cambiados += 1 if toco else 0
+    if cambiados:
+        _guardar_registros(registros)
+        registro_actividad.registrar(
+            "ESTANDARIZAR_TEXTO", f"oficios actualizados={cambiados}",
+            actor or "herramienta_admin")
+    return cambiados
+
+
 def causales_registradas(registros: List[Dict]) -> List[str]:
     """Causales distintas presentes en esos oficios, en orden alfabético.
 
@@ -1650,9 +1694,10 @@ def validar_identificacion(tipo_identificacion: str, identificacion: str) -> str
       propio formato).
 
     Los puntos, guiones y espacios se retiran antes de comprobar: son formas de
-    escribir el mismo documento. Lo que se guarda es el valor ya limpio.
+    escribir el mismo documento. Lo que se guarda es el valor ya limpio y, en
+    el pasaporte, en mayúsculas: «ab123456» y «AB123456» son el mismo documento.
     """
-    identificacion = "".join(str(identificacion or "").split())
+    identificacion = "".join(str(identificacion or "").split()).upper()
     if not identificacion:
         return ""
     limpia = identificacion.translate(_SEPARADORES_IDENTIFICACION)
@@ -1687,7 +1732,7 @@ def validar_implicado(nombre: str, tipo_identificacion: str = "",
                       identificacion: str = "", tipo_implicado: str = "",
                       lci: str = "No") -> Dict:
     """Comprueba y normaliza los datos de un implicado."""
-    nombre = " ".join(str(nombre or "").split())
+    nombre = estandarizar_texto(nombre)
     if len(nombre) < 3:
         raise ValueError("Debe ingresar el nombre o razón social del implicado.")
 

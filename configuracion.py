@@ -197,6 +197,24 @@ def normalizar_texto(texto) -> str:
     return " ".join(str(texto).translate(_ACENTOS).split()).casefold()
 
 
+def estandarizar_texto(texto) -> str:
+    """Texto libre tal como se guarda: EN MAYÚSCULAS y sin espacios de sobra.
+
+    Los nombres, referencias, causales y observaciones los teclea cada persona
+    a su manera («Lavado de activos», «LAVADO DE ACTIVOS», «lavado de
+    activos»). Guardarlos en una sola forma evita que el mismo dato se vea de
+    tres maneras en la tabla, en el tablero y en los reportes. Se conservan las
+    tildes, que en mayúsculas también se escriben.
+
+    No se aplica a los valores de los catálogos —esos ya tienen una única forma
+    correcta, la del catálogo— ni al nombre de cuenta del usuario, que va en
+    minúsculas.
+    """
+    if texto is None:
+        return ""
+    return " ".join(str(texto).split()).upper()
+
+
 def opcion_de(valor, opciones):
     """La opción del catálogo que corresponde a lo escrito, o '' si ninguna.
 

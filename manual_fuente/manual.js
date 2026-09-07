@@ -31,7 +31,7 @@ const LOGO_PROPORCION = 5.54;
 // Identificación del documento: la versión del manual y la de la aplicación
 // que documenta son independientes y se indican por separado.
 const VERSION_APLICACION = "1.0";
-const VERSION_DOCUMENTO = "3.2";
+const VERSION_DOCUMENTO = "3.3";
 const FECHA_ELABORACION = "1 de septiembre de 2026";
 
 // ---------- Ayudantes ----------
@@ -398,6 +398,8 @@ const contenido = [
   ),
   espacio(200),
   p("Al guardar, la aplicación asigna automáticamente la Referencia UDC. Dicha referencia no se digita, no se repite y su nomenclatura depende de la institución seleccionada (apartado 6.4)."),
+  aviso("El texto se guarda en mayúsculas:", "la Referencia oficio, la Causal, la Observación y los datos de las personas investigadas se registran en MAYÚSCULAS, con independencia de cómo se escriban, de modo que un mismo dato no figure de varias formas en las consultas y los reportes."),
+  espacio(160),
   aviso("El documento es obligatorio:", "no se registra un oficio sin su soporte. Se admite PDF o Word (.docx)."),
   espacio(160),
   aviso("Asignación automática:", "los oficios registrados por un usuario quedan a su cargo. Su asignación a otra persona corresponde a un administrador."),
@@ -591,7 +593,7 @@ const contenido = [
   vinieta("La cantidad de investigados debe coincidir con el número de personas relacionadas, cuando estas se detallan."),
   vinieta("Cada persona investigada requiere nombre, tipo de implicado y una identificación bien formada: la cédula debe tener 10 dígitos exactos, el RUC 13 y el pasaporte, letras y números. Se admiten puntos, guiones y espacios, que se descartan antes de comprobarla."),
   vinieta("La Referencia oficio es obligatoria y no puede repetirse, ni dentro del archivo ni respecto de los oficios ya registrados."),
-  aviso("Al escribir el archivo no importan las mayúsculas ni las tildes:", "en ningún campo. FINALIZADO, Finalizado y finalizado son el mismo estado; CEDULA es Cédula; y fiscalia general del estado, la Fiscalía General del Estado. La aplicación guarda siempre la forma correcta. Lo que sí es estricto es la estructura: las columnas y su orden."),
+  aviso("Al escribir el archivo no importan las mayúsculas ni las tildes:", "en ningún campo. FINALIZADO, Finalizado y finalizado son el mismo estado; CEDULA es Cédula; y fiscalia general del estado, la Fiscalía General del Estado. La aplicación guarda siempre la forma correcta, y el texto libre —Referencia oficio, Causal, Observación y los datos de las personas investigadas— queda en MAYÚSCULAS. Lo que sí es estricto es la estructura: las columnas y su orden."),
   aviso("El responsable se indica con su nombre de usuario:", "la columna Usuario responsable admite el nombre de cuenta —en minúsculas y sin espacios, como cmroman o jportero—, no el nombre de la persona. Si la cuenta no existe, la aplicación lo advierte y no incorpora nada: deberá crearla previamente en la pestaña Usuarios y volver a cargar el archivo.", { tono: "aviso" }),
   p("La Referencia UDC no figura en el archivo: la asigna la aplicación según la institución de cada oficio. Tampoco se toman del archivo el documento del oficio, la respuesta en PDF, quién registra, la fecha de registro ni el origen, aunque sí figuren como columnas. Los oficios importados no llevan el documento del oficio ni la respuesta en PDF; pueden adjuntarse posteriormente desde la pestaña Oficios."),
 

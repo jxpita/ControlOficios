@@ -1,8 +1,8 @@
 {
   "almacen_oficios.py": {
-    "mtime": 1788814828.63458,
-    "seen": 1788814971.1377063,
-    "ast_hash": "b665c55fdbf8315cd00b7aee8f739999",
+    "mtime": 1788817338.691133,
+    "seen": 1788817490.975248,
+    "ast_hash": "2972fefc23a2b0af417484b9e5325b79",
     "semantic_hash": ""
   },
   "aplicacion.py": {
@@ -36,9 +36,9 @@
     "semantic_hash": "7103051022eb6bb5483a4986a15ffba8"
   },
   "configuracion.py": {
-    "mtime": 1788814726.2589943,
-    "seen": 1788814971.1377196,
-    "ast_hash": "d2f7ca53ddb51646a86b48006e11b38a",
+    "mtime": 1788817297.1191306,
+    "seen": 1788817490.975267,
+    "ast_hash": "333320281774894c2569f92efdf83e9c",
     "semantic_hash": ""
   },
   "datos_de_prueba/generar_datos_prueba.py": {
@@ -48,10 +48,10 @@
     "semantic_hash": ""
   },
   "herramienta_admin.py": {
-    "mtime": 1787774636.9594882,
-    "seen": 1787774900.3042762,
-    "ast_hash": "3a8615a50cde7472a623905e215ba56a",
-    "semantic_hash": "3a8615a50cde7472a623905e215ba56a"
+    "mtime": 1788817352.6739855,
+    "seen": 1788817490.9752736,
+    "ast_hash": "16e9eada29e675f60dd6c3a15e5fd483",
+    "semantic_hash": ""
   },
   "metricas.py": {
     "mtime": 1787774636.964489,
@@ -108,9 +108,9 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1788814924.3432322,
-    "seen": 1788814971.1377444,
-    "ast_hash": "42f1622790225f5deccd62edbe1336cb",
+    "mtime": 1788817442.3838868,
+    "seen": 1788817490.9753041,
+    "ast_hash": "a3bab5afba07c9612b5704b6dae7012e",
     "semantic_hash": ""
   },
   "requirements.txt": {
@@ -138,9 +138,9 @@
     "semantic_hash": ""
   },
   "manual_fuente/manual.js": {
-    "mtime": 1788814924.3439035,
-    "seen": 1788814971.1377304,
-    "ast_hash": "9f559f8922d9606e20a5600e97033558",
+    "mtime": 1788817456.3763306,
+    "seen": 1788817490.975282,
+    "ast_hash": "bf8b7a6b37334450a1ec97fb244dc963",
     "semantic_hash": ""
   },
   "manual_fuente/package.json": {
