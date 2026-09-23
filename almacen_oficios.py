@@ -585,29 +585,6 @@ def _empleado_de(id_empleado: str) -> Dict:
     )
 
 
-def _validar_anulacion(anulado: str, motivo: str) -> Tuple[bool, str]:
-    """Columnas «Anulado» y «Motivo de anulación» del archivo.
-
-    Se escriba como se escriba: «Sí», «SI», «X»…
-    """
-    escrito = " ".join(str(anulado or "").split())
-    motivo = estandarizar_texto(motivo)
-    valor = opcion_de(escrito, VALORES_LCI) or _LCI_ABREVIADO.get(
-        escrito.casefold(), "")
-    if not escrito or valor == "No":
-        if motivo:
-            raise ValueError(
-                "hay un motivo de anulación pero el oficio no está marcado "
-                "como anulado.")
-        return False, ""
-    if valor != "Sí":
-        raise ValueError(
-            f"«{escrito}» no es un valor de «Anulado» válido. Opciones: Sí o No.")
-    if len(motivo) < 5:
-        raise ValueError("indique el motivo de la anulación.")
-    return True, motivo
-
-
 def _preparar_importado(fila: Dict, registros: List[Dict], codigos: set,
                         importado_por: str, ahora: str,
                         actor_rol: str = None) -> Dict:
@@ -649,8 +626,6 @@ def _preparar_importado(fila: Dict, registros: List[Dict], codigos: set,
     fecha_asignacion = _validar_fecha_asignacion(
         fila.get("fecha_asignacion"), fecha_recepcion)
     prioridad = _validar_prioridad(fila.get("prioridad"))
-    anulado, motivo_anulacion = _validar_anulacion(
-        fila.get("anulado"), fila.get("motivo_anulacion"))
 
     # Cada fila del archivo es una persona investigada, así que el detalle llega
     # con el oficio y es quien manda sobre la cantidad.
@@ -705,7 +680,7 @@ def _preparar_importado(fila: Dict, registros: List[Dict], codigos: set,
             raise ValueError(
                 f"para estar «Finalizado» falta {' y '.join(faltan)}.")
 
-    nuevo = {
+    return {
         "referencia": referencia,
         "institucion": institucion,
         "codigo_oficio": codigo_oficio,
@@ -730,17 +705,6 @@ def _preparar_importado(fila: Dict, registros: List[Dict], codigos: set,
         "historial": [{"estado": estado, "por": importado_por, "cuando": ahora,
                        "evento": "Importado desde archivo"}],
     }
-    if anulado:
-        nuevo.update({
-            "anulado": True,
-            "motivo_anulacion": motivo_anulacion,
-            "anulado_por": importado_por,
-            "fecha_anulacion": ahora,
-        })
-        nuevo["historial"].append(
-            {"evento": f"Anulado: {motivo_anulacion}", "por": importado_por,
-             "cuando": ahora})
-    return nuevo
 
 
 def contar_por_tipo_accion(tipo: str) -> int:
@@ -784,7 +748,7 @@ def esta_anulado(registro: Dict) -> bool:
 
 def listar_oficios_visibles(actor: str, actor_rol: str,
                             incluir_anulados: bool = False) -> List[Dict]:
-    """Oficios que puede VER el usuario en sesión.
+    """Oficios que puede VER el usuario en sesión, **del último al primero**.
 
     - Superusuario y administrador: todos.
     - Usuario regular: solo los que él registró o los que tiene asignados.
@@ -792,8 +756,15 @@ def listar_oficios_visibles(actor: str, actor_rol: str,
     Los oficios ANULADOS quedan fuera salvo que se pidan expresamente, y solo
     los ve un gestor: son registros retirados de la operación diaria que se
     conservan por trazabilidad.
+
+    El orden es el de ingreso invertido: lo último que entró encabeza la lista,
+    que es lo que se está tramitando, y lo antiguo queda al final. Se invierte
+    el orden de almacenamiento —los registros se anexan según se dan de alta,
+    también en la carga masiva— en vez de ordenar por una fecha: la fecha de
+    registro no distingue entre los oficios de una misma carga y la de
+    recepción es el dato del oficio, no el momento en que se capturó.
     """
-    registros = _leer_registros()
+    registros = list(reversed(_leer_registros()))
     if actor_rol in ROLES_GESTORES:
         visibles = registros
     else:

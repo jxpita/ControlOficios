@@ -1328,8 +1328,8 @@ class AplicacionPrincipal(ttk.Frame):
         # --- 2) Tabla de oficios (orden: oficio -> recepción -> respuesta) --
         columnas = ("referencia", "institucion", "codigo", "accion", "causal",
                     "oficio", "recepcion", "asignacion", "respuesta",
-                    "investigados", "empleado", "estado", "prioridad", "pdf",
-                    "observacion")
+                    "investigados", "empleado", "estado", "prioridad",
+                    "documento", "pdf", "observacion")
         # Encabezados con el nombre completo del campo, sin abreviar y en una
         # sola línea (ver `_ancho_columna`): la tabla queda más ancha, pero se
         # lee sin ambigüedad. Para el ancho está la barra horizontal.
@@ -1338,11 +1338,12 @@ class AplicacionPrincipal(ttk.Frame):
                    "Causal oficio", "Fecha de oficio", "Fecha de recepción",
                    "Fecha de asignación", "Fecha de respuesta",
                    "Cantidad de investigados",
-                   "Responsable", "Estado", "Prioridad", "PDF", "Observación")
+                   "Responsable", "Estado", "Prioridad", "Documento",
+                   "Respuesta PDF", "Observación")
         # Ancho que pide el DATO (p. ej. "REQ-UDC-FGE-2026-0001" o
         # "Superintendencia de Bancos"); si el título es más largo, manda él.
         anchos = (190, 215, 150, 120, 150, 90, 95, 90, 90, 60, 110, 90, 60, 40,
-                  200)
+                  40, 200)
         contenedor = ttk.Frame(marco)
         # Altura fija (no expand): dentro de un área desplazable la tabla debe
         # tener alto propio para que el panel inferior siga siendo alcanzable.
@@ -1444,8 +1445,13 @@ class AplicacionPrincipal(ttk.Frame):
         btn_guardar.config(style="Accent.TButton")
         ttk.Button(barra, text="Ver oficio",
                    command=self._ver_documento).pack(side="left", padx=6)
-        ttk.Button(barra, text="Cambiar oficio",
-                   command=self._cambiar_documento).pack(side="left")
+        # El mismo botón sirve para poner el documento que falta y para
+        # sustituir el que está: el texto dice cuál de las dos cosas hace con
+        # el oficio seleccionado. Los oficios de una carga masiva llegan sin
+        # documento, así que ahí se lee "Adjuntar oficio".
+        self.btn_documento = ttk.Button(barra, text="Adjuntar oficio",
+                                        command=self._cambiar_documento)
+        self.btn_documento.pack(side="left")
         ttk.Button(barra, text="Adjuntar respuesta (PDF)",
                    command=self._adjuntar_respuesta).pack(side="left", padx=6)
         ttk.Button(barra, text="Ver respuesta (PDF)",
@@ -1550,7 +1556,11 @@ class AplicacionPrincipal(ttk.Frame):
                     registro.get("id_empleado", ""),
                     "ANULADO" if anulado else registro["estado"],
                     registro.get("prioridad", ""),
-                    "Sí" if registro.get("archivo_respuesta") else "",
+                    # Qué adjuntos tiene: el guion salta a la vista y es lo que
+                    # distingue a los oficios que entraron por carga masiva,
+                    # que llegan sin documento.
+                    "Sí" if registro.get("archivo_oficio") else "—",
+                    "Sí" if registro.get("archivo_respuesta") else "—",
                     observacion))
         except ValueError as error:
             messagebox.showerror("Filtro no válido", str(error))
@@ -1570,6 +1580,7 @@ class AplicacionPrincipal(ttk.Frame):
         # teclea nadie —la cuentan los implicados—, así que actualizarla no
         # puede pisar una edición a medias, y si acaban de añadir o quitar a
         # una persona tiene que verse al momento.
+        self._actualizar_boton_documento()
         if hasattr(self, "edicion_cantidad") and seleccion_previa:
             registro = self._oficio_por_referencia(seleccion_previa[0])
             if registro is not None:
@@ -1589,6 +1600,7 @@ class AplicacionPrincipal(ttk.Frame):
         seleccion = self.tabla.selection()
         if not seleccion:
             return
+        self._actualizar_boton_documento()
         if seleccion[0] == getattr(self, "_referencia_en_edicion", None):
             return          # mismo oficio: no pisar lo que se esté editando
         registro = self._oficio_por_referencia(seleccion[0])
@@ -1661,6 +1673,17 @@ class AplicacionPrincipal(ttk.Frame):
         self._refrescar_listado()
 
     # ---- Documento del oficio ------------------------------------------------
+    def _actualizar_boton_documento(self):
+        """El botón dice lo que hará: adjuntar el que falta o cambiar el que hay."""
+        if not hasattr(self, "btn_documento"):
+            return
+        seleccion = self.tabla.selection()
+        registro = (self._oficio_por_referencia(seleccion[0]) if seleccion
+                    else None)
+        tiene = bool(registro and registro.get("archivo_oficio"))
+        self.btn_documento.config(
+            text="Cambiar oficio" if tiene else "Adjuntar oficio")
+
     def _ver_documento(self):
         """Abre el documento del oficio (PDF dentro de la aplicación; el Word,
         con el programa del sistema)."""
@@ -1673,8 +1696,9 @@ class AplicacionPrincipal(ttk.Frame):
             messagebox.showinfo(
                 "Sin documento",
                 "Este oficio no tiene el documento adjunto.\n\n"
-                "Los oficios registrados antes de esta versión pueden no "
-                "tenerlo: use \"Cambiar oficio\" para adjuntarlo.")
+                "Los oficios que entraron por carga masiva —y los registrados "
+                "antes de que el documento fuera obligatorio— llegan sin él: "
+                "use \"Adjuntar oficio\" para ponerlo.")
             return
         if ruta.suffix.lower() != ".pdf":
             # Word: no hay visor integrado, lo abre el programa asociado.
@@ -1684,7 +1708,12 @@ class AplicacionPrincipal(ttk.Frame):
         self._mostrar_pdf(ruta, f"Oficio {seleccion[0]}")
 
     def _cambiar_documento(self):
-        """Sustituye el documento del oficio por si se cargó el equivocado."""
+        """Pone el documento del oficio: el que falta o uno que sustituya al que
+        hay, si se cargó el equivocado.
+
+        Los oficios de una carga masiva entran sin documento —un archivo de
+        Excel no puede traerlo—, así que este es el camino para completarlos.
+        """
         seleccion = self.tabla.selection()
         if not seleccion:
             messagebox.showwarning("Sin selección", "Seleccione un oficio en la lista.")
@@ -1702,7 +1731,7 @@ class AplicacionPrincipal(ttk.Frame):
         except ValueError as error:
             messagebox.showerror("Error", str(error))
             return
-        messagebox.showinfo("Listo", "Documento del oficio actualizado.")
+        messagebox.showinfo("Listo", "Documento del oficio guardado.")
         self._refrescar_listado()
 
     # ---- Respuesta en PDF ---------------------------------------------------
@@ -2691,8 +2720,11 @@ class AplicacionPrincipal(ttk.Frame):
                 text=f"{len(registros)} de {total} oficios"
                 if len(registros) != total else "")
 
-        # Fila 1: volumen y estados.
+        # Fila 1: volumen y estados. Las dos primeras tarjetas son las dos
+        # medidas del volumen: cuántos oficios y a cuánta gente investigan.
         self._tarjeta(self.marco_tarjetas, "Total", datos["total"], COLOR_AZUL)
+        self._tarjeta(self.marco_tarjetas, "Personas investigadas",
+                      datos["personas_investigadas"], "#4338ca")
         self._tarjeta(self.marco_tarjetas, "Por asignar",
                       datos["por_estado"]["Por asignar"], self.COLOR_POR_ASIGNAR)
         self._tarjeta(self.marco_tarjetas, "En proceso",
@@ -3532,11 +3564,9 @@ class DialogoCargaMasiva(tk.Toplevel):
                 "El archivo no tiene errores: cada oficio cumple las mismas "
                 "reglas que exige el registro manual.")
         lineas.append(
-            "Los datos que pone el sistema y no se toman del archivo: "
-            + ", ".join(resumen.get("campos_asignados") or []) + ".")
-        lineas.append(
             "Los oficios importados no llevan el documento del oficio ni la "
-            "respuesta en PDF; se adjuntan después desde la pestaña Oficios.")
+            "respuesta en PDF: se adjuntan después con «Adjuntar oficio» y "
+            "«Adjuntar respuesta (PDF)», en la pestaña Oficios.")
         return "\n".join(lineas)
 
     def _importar(self):

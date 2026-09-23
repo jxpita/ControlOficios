@@ -31,8 +31,8 @@ const LOGO_PROPORCION = 5.54;
 // Identificación del documento: la versión del manual y la de la aplicación
 // que documenta son independientes y se indican por separado.
 const VERSION_APLICACION = "1.0";
-const VERSION_DOCUMENTO = "3.3";
-const FECHA_ELABORACION = "1 de septiembre de 2026";
+const VERSION_DOCUMENTO = "3.4";
+const FECHA_ELABORACION = "23 de septiembre de 2026";
 
 // ---------- Ayudantes ----------
 const TEXTO_CUERPO = "232B3D";   // gris azulado, más cálido que el negro puro
@@ -438,6 +438,7 @@ const contenido = [
   p("Si el documento no corresponde al tipo indicado, la aplicación lo señala al añadir a la persona."),
 
   h2("3.3 Buscar oficios"),
+  p("Los oficios se presentan del más reciente al más antiguo: el último incorporado encabeza la lista. La exportación conserva ese mismo orden."),
   p("En la pestaña Oficios, el panel Buscar oficios ofrece tres bloques de filtros, que pueden combinarse entre sí."),
   h3("Por texto"),
   p("Seleccione el campo (Referencia UDC, Institución del Estado, Referencia oficio, Tipo de acción o Causal oficio), indique el texto y pulse Buscar. No es necesario escribir el valor completo ni respetar las mayúsculas."),
@@ -460,11 +461,12 @@ const contenido = [
   h2("3.5 Documentos del oficio"),
   p("Cada oficio conserva dos documentos: el propio oficio, que se adjunta al registrarlo, y la respuesta en PDF, que se incorpora al atenderlo."),
   vinieta("Ver oficio: muestra el documento del oficio. Los archivos PDF se abren dentro de la aplicación; los de Word, con el programa del equipo."),
-  vinieta("Cambiar oficio: sustituye el documento, en caso de haberse adjuntado el archivo equivocado."),
+  vinieta("Adjuntar oficio: incorpora el documento a un oficio que no lo tiene. Cuando el oficio ya cuenta con él, este mismo botón se denomina Cambiar oficio y lo sustituye, en caso de haberse adjuntado el archivo equivocado."),
   vinieta("Adjuntar respuesta (PDF): incorpora el documento de respuesta."),
   vinieta("Ver respuesta (PDF): permite consultarlo desde la propia aplicación."),
   vinieta("Eliminar PDF: retira la respuesta adjunta."),
-  p("La columna PDF de la lista señala con «Sí» los oficios que ya cuentan con su respuesta adjunta."),
+  p("Las columnas Documento y Respuesta PDF de la lista señalan con «Sí» los oficios que ya cuentan con cada archivo, y con un guion los que no."),
+  aviso("Los oficios incorporados por carga masiva llegan sin documento:", "un archivo de Excel no puede contenerlo. Localícelos por la columna Documento y utilice Adjuntar oficio para completarlos.", { tono: "aviso" }),
   aviso("Para finalizar un oficio:", "constituye requisito que cuente con fecha de asignación, fecha de respuesta y la respuesta en PDF adjunta. Si faltara alguno, la aplicación indica cuál."),
 
   h2("3.6 Exportar oficios"),
@@ -478,7 +480,8 @@ const contenido = [
   p("Si no se indica ninguna fecha, se exporta la totalidad de los oficios que la persona puede consultar. El archivo contiene todos los datos del oficio y dedica una fila a cada persona investigada, con los datos del oficio repetidos, de forma análoga a la matriz del área."),
 
   h2("3.7 Tablero"),
-  p("Presenta los indicadores de gestión del área. Las tarjetas superiores resumen el volumen y la situación de los oficios: total, distribución por estado, porcentaje de finalizados, días promedio de respuesta, recepciones del día, de la semana y del mes, y seguimiento de las respuestas. A continuación se presentan cinco gráficos:"),
+  p("Presenta los indicadores de gestión del área. Las tarjetas superiores resumen el volumen y la situación de los oficios: total de oficios, total de personas investigadas, distribución por estado, porcentaje de finalizados, días promedio de respuesta, recepciones del día, de la semana y del mes, y seguimiento de las respuestas. A continuación se presentan cinco gráficos:"),
+  aviso("Total de personas investigadas:", "acompaña al total de oficios porque un mismo oficio puede investigar a varias personas. Se obtiene del detalle de personas de cada oficio y, cuando no lo tiene, de su cantidad de investigados. Al aplicar los filtros del tablero, la tarjeta suma únicamente los oficios que queden seleccionados."),
   tabla(
     ["Gráfico", "Qué presenta"],
     [
@@ -595,7 +598,13 @@ const contenido = [
   vinieta("La Referencia oficio es obligatoria y no puede repetirse, ni dentro del archivo ni respecto de los oficios ya registrados."),
   aviso("Al escribir el archivo no importan las mayúsculas ni las tildes:", "en ningún campo. FINALIZADO, Finalizado y finalizado son el mismo estado; CEDULA es Cédula; y fiscalia general del estado, la Fiscalía General del Estado. La aplicación guarda siempre la forma correcta, y el texto libre —Referencia oficio, Causal, Observación y los datos de las personas investigadas— queda en MAYÚSCULAS. Lo que sí es estricto es la estructura: las columnas y su orden."),
   aviso("El responsable se indica con su nombre de usuario:", "la columna Usuario responsable admite el nombre de cuenta —en minúsculas y sin espacios, como cmroman o jportero—, no el nombre de la persona. Si la cuenta no existe, la aplicación lo advierte y no incorpora nada: deberá crearla previamente en la pestaña Usuarios y volver a cargar el archivo.", { tono: "aviso" }),
-  p("La Referencia UDC no figura en el archivo: la asigna la aplicación según la institución de cada oficio. Tampoco se toman del archivo el documento del oficio, la respuesta en PDF, quién registra, la fecha de registro ni el origen, aunque sí figuren como columnas. Los oficios importados no llevan el documento del oficio ni la respuesta en PDF; pueden adjuntarse posteriormente desde la pestaña Oficios."),
+  h3("Qué no figura en el archivo"),
+  p("El archivo solo contiene aquello que debe aportarse. No figuran, y por tanto no se consignan:"),
+  vinieta("La Referencia UDC: la asigna la aplicación según la institución de cada oficio."),
+  vinieta("El documento del oficio y la respuesta en PDF: son archivos y se adjuntan posteriormente desde la pestaña Oficios, mediante Adjuntar oficio y Adjuntar respuesta (PDF)."),
+  vinieta("Registrado por, Fecha de registro y Origen: los consigna la propia importación."),
+  vinieta("Anulado y Motivo de anulación: la anulación de un oficio se efectúa desde Mantenimiento, una vez registrado."),
+  p("Si el archivo incluyera alguna de estas columnas —por haberse partido de una exportación—, la aplicación las enumera con su motivo y solicita eliminarlas."),
 
   saltoPagina(),
   h1("5. Rol Superusuario"),

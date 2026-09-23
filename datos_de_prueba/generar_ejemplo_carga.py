@@ -2,9 +2,9 @@
 Genera el ARCHIVO DE EJEMPLO de la carga masiva.
 
 Crea `Ejemplo de carga masiva.xlsx`: seis oficios con los casos habituales, en
-el formato que exige la importación —el de la exportación, sin la columna
-Referencia UDC, que la numera el sistema—. Sirve como plantilla: se borra el
-contenido de ejemplo y se escriben los oficios reales debajo de la cabecera.
+el formato que exige la importación —el de la exportación, sin las columnas que
+no se toman del archivo—. Sirve como plantilla: se borra el contenido de
+ejemplo y se escriben los oficios reales debajo de la cabecera.
 
     python datos_de_prueba/generar_ejemplo_carga.py
 
@@ -61,9 +61,8 @@ def _oficio(institucion, codigo, accion, causal, oficio, recepcion,
             cantidad_investigados=""):
     """Un oficio con la forma con la que lo guarda el sistema.
 
-    La Referencia UDC no es ni una columna del archivo: la numera el sistema al
-    importar. El documento del oficio, quién lo registró y cuándo sí son
-    columnas, pero las rellena el sistema: aquí van vacías a propósito.
+    Solo lleva lo que el formato de la carga pide: ni Referencia UDC, ni
+    documentos, ni datos de registro o anulación, que no se toman del archivo.
     """
     implicados = list(implicados)
     return {
@@ -81,14 +80,7 @@ def _oficio(institucion, codigo, accion, causal, oficio, recepcion,
         "id_empleado": usuario,
         "empleado": RESPONSABLES.get(usuario, ""),
         "estado": estado,
-        "archivo_oficio": "",
-        "archivo_respuesta": "",
         "observacion": observacion,
-        "registrado_por": "",
-        "fecha_registro": "",
-        "origen": "",
-        "anulado": "",
-        "motivo_anulacion": "",
         "implicados": implicados,
     }
 
@@ -153,8 +145,8 @@ if __name__ == "__main__":
     carga_masiva.escribir_plantilla(OFICIOS, str(SALIDA))
     filas = sum(max(len(o["implicados"]), 1) for o in OFICIOS)
     print(f"{SALIDA.name}: {len(OFICIOS)} oficios en {filas} filas.")
-    print("  Formato de la carga: cabecera en la fila 1, una fila por persona\n"
-          "  investigada y sin la columna Referencia UDC.")
+    print(f"  Formato de la carga: {len(carga_masiva.COLUMNAS)} columnas, "
+          "cabecera en la fila 1 y una fila por persona investigada.")
     print("  Responsables por nombre de cuenta: "
           + ", ".join(sorted(RESPONSABLES)) + ".")
     print("  Esas cuentas deben existir en el sistema antes de cargar.")

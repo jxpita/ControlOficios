@@ -1,24 +1,25 @@
 """
 Carga masiva de oficios (importación) desde un archivo .xlsx o .csv.
 
-Formato establecido: EL DE LA EXPORTACIÓN, SIN LA REFERENCIA UDC
------------------------------------------------------------------
+Formato establecido: LO QUE SE CAPTURA DE UN OFICIO, NADA MÁS
+--------------------------------------------------------------
 El archivo que se importa tiene las columnas que produce *Exportar oficios*, en
 su mismo orden (ver `almacen_oficios.COLUMNAS_EXPORTACION` y
-`COLUMNAS_IMPLICADO`), **menos la Referencia UDC**: la numera el sistema al
-importar, con la nomenclatura de la institución de cada oficio, así que pedirla
-solo daría pie a escribir una que no se va a usar. La cabecera ocupa la fila 1,
-desde la celda A1, y los datos empiezan en la fila 2. Así hay un solo formato
-que mantener y lo que sale del sistema se parece a lo que entra.
+`COLUMNAS_IMPLICADO`), **menos las que no se toman de él** (ver
+`CAMPOS_EXCLUIDOS`): la Referencia UDC, que la numera el sistema; el documento
+del oficio y la respuesta en PDF, que se adjuntan después desde la aplicación;
+quién registra, cuándo y el origen, que los pone la propia importación; y la
+anulación con su motivo, que se hace desde Mantenimiento cuando corresponde.
+Quedan solo los datos que alguien tiene que aportar.
+
+La cabecera ocupa la fila 1, desde la celda A1, y los datos empiezan en la fila
+2. Así hay un solo formato que mantener y lo que sale del sistema se parece a lo
+que entra.
 
 Como en la exportación, **cada fila es una persona investigada**: las filas que
 comparten la misma *Referencia oficio* son el mismo oficio, y de ellas sale su
 detalle de implicados. Los datos del oficio se repiten en cada una de sus filas
 y tienen que coincidir; si no, se avisa.
-
-Columnas que sí están en el archivo pero cuyo contenido **rellena el sistema**
-y se ignora al importar: Documento del oficio, Respuesta en PDF, Registrado por,
-Fecha de registro y Origen.
 
 `escribir_plantilla()` escribe un .xlsx con este mismo formato, y es lo que usan
 los archivos de ejemplo de `datos_de_prueba/`: el módulo que lee el formato es
@@ -59,31 +60,38 @@ PRIMERA_FILA_DATOS = FILA_CABECERA + 1
 # oficio (por ejemplo "identificacion") al leer la fila.
 PREFIJO_IMPLICADO = "implicado_"
 
-# La Referencia UDC NO forma parte del archivo de carga: la numera el sistema al
-# importar, con la nomenclatura de la institución de cada oficio, así que pedirla
-# solo daría pie a escribir una que no se va a usar.
-CAMPO_EXCLUIDO = "referencia"
+# Columnas de la exportación que NO forman parte del archivo de carga, porque
+# no se toman de él: pedirlas solo daría pie a escribir algo que se va a
+# ignorar. Cada una con el motivo, que es lo que se dice si el archivo las trae.
+CAMPOS_EXCLUIDOS = {
+    "referencia": "la numera el sistema al importar, con la nomenclatura de la "
+                  "institución de cada oficio",
+    "archivo_oficio": "el documento del oficio se adjunta después, desde la "
+                      "pestaña Oficios",
+    "archivo_respuesta": "la respuesta en PDF se adjunta después, desde la "
+                         "pestaña Oficios",
+    "registrado_por": "es quien importa el archivo",
+    "fecha_registro": "es la fecha de la importación",
+    "origen": "queda como «carga masiva»",
+    "anulado": "un oficio se anula desde Mantenimiento, después de registrarlo",
+    "motivo_anulacion": "acompaña a la anulación, que se hace desde "
+                        "Mantenimiento",
+}
 
 # El formato se DERIVA de la exportación, no se copia: si allí se añade una
 # columna, aquí aparece sola y sigue habiendo un único formato.
 COLUMNAS = (
     [(clave, titulo, "oficio")
      for clave, titulo in almacen_oficios.COLUMNAS_EXPORTACION.items()
-     if clave != CAMPO_EXCLUIDO]
+     if clave not in CAMPOS_EXCLUIDOS]
     + [(PREFIJO_IMPLICADO + clave, titulo, "implicado")
        for clave, titulo in almacen_oficios.COLUMNAS_IMPLICADO.items()]
 )
 CABECERA = [titulo for _clave, titulo, _ambito in COLUMNAS]
-TITULO_EXCLUIDO = almacen_oficios.COLUMNAS_EXPORTACION[CAMPO_EXCLUIDO]
 
-# Columnas que sí están en el archivo pero cuyo contenido rellena el sistema.
-CAMPOS_ASIGNADOS = {
-    "archivo_oficio": "se adjunta después",
-    "archivo_respuesta": "se adjunta después",
-    "registrado_por": "es quien importa el archivo",
-    "fecha_registro": "es la de la importación",
-    "origen": "queda como «carga masiva»",
-}
+# Título -> motivo, para reconocer una columna sobrante por su encabezado.
+TITULOS_EXCLUIDOS = {almacen_oficios.COLUMNAS_EXPORTACION[clave]: motivo
+                     for clave, motivo in CAMPOS_EXCLUIDOS.items()}
 
 # Columnas cuyo valor es una fecha (AAAA-MM-DD en la exportación).
 CAMPOS_FECHA = {"fecha_oficio", "fecha_recepcion",
@@ -166,11 +174,10 @@ def _error_formato(detalle: str) -> ValueError:
     """Rechazo del archivo por no tener el formato establecido."""
     return ValueError(
         f"El archivo no tiene el formato establecido: {detalle}\n\n"
-        f"Debe tener las mismas columnas que la exportación de oficios —salvo "
-        f"la «{TITULO_EXCLUIDO}», que no se toma del archivo— en su mismo "
-        f"orden: la cabecera en la fila {FILA_CABECERA}, de la columna "
-        f"{PRIMERA_COLUMNA} a la {ULTIMA_COLUMNA}, con las {len(COLUMNAS)} "
-        f"columnas, y los datos a partir de la fila {PRIMERA_FILA_DATOS}.\n\n"
+        f"La cabecera va en la fila {FILA_CABECERA}, de la columna "
+        f"{PRIMERA_COLUMNA} a la {ULTIMA_COLUMNA}, con estas "
+        f"{len(COLUMNAS)} columnas en su orden, y los datos a partir de la "
+        f"fila {PRIMERA_FILA_DATOS}.\n\n"
         "Use el archivo de ejemplo de la carga masiva como plantilla."
     )
 
@@ -193,14 +200,20 @@ def validar_cabecera(celdas: List) -> None:
         raise _error_formato(
             f"la cabecera no empieza en la columna {PRIMERA_COLUMNA} (hay "
             f"{vacias} columna(s) en blanco por delante).")
-    if titulos[0] == normalizar(TITULO_EXCLUIDO):
-        # Caso típico de quien parte de un archivo exportado: la exportación
-        # lleva la Referencia UDC delante y la carga no la usa.
+    # Caso típico de quien parte de un archivo exportado: trae columnas que la
+    # carga no usa. Se dicen todas juntas, con su motivo, en vez de encadenar
+    # una diferencia por cada columna desplazada.
+    sobrantes = []
+    for posicion, titulo in enumerate(titulos):
+        for excluido, motivo in TITULOS_EXCLUIDOS.items():
+            if titulo == normalizar(excluido):
+                sobrantes.append(
+                    f"  · la columna {_letra_columna(posicion)} «{excluido}»: "
+                    f"{motivo}")
+    if sobrantes:
         raise _error_formato(
-            f"sobra la columna {PRIMERA_COLUMNA} «{TITULO_EXCLUIDO}». La "
-            f"numera el sistema al importar, con la nomenclatura de la "
-            f"institución de cada oficio, así que no se toma del archivo: "
-            f"elimine esa columna.")
+            "sobran columnas que no se toman del archivo. Elimínelas:\n\n"
+            + "\n".join(sobrantes))
 
     problemas = []
     for posicion, (_clave, titulo, _ambito) in enumerate(COLUMNAS):
@@ -376,12 +389,11 @@ def _implicado_de(fila: Dict) -> Optional[Dict]:
 
 
 # Columnas del oficio que se repiten en cada una de sus filas y tienen que
-# decir lo mismo. Se excluyen las que rellena el sistema (su contenido se
-# ignora) y la cantidad de investigados, que la cuenta el propio detalle.
+# decir lo mismo. Se excluye la cantidad de investigados, que la cuenta el
+# propio detalle.
 def _campos_comparables() -> List[Tuple[str, str]]:
     return [(clave, titulo) for clave, titulo, ambito in COLUMNAS
-            if ambito == "oficio" and clave not in CAMPOS_ASIGNADOS
-            and clave != "cantidad_investigados"]
+            if ambito == "oficio" and clave != "cantidad_investigados"]
 
 
 def agrupar_por_referencia(filas: List[Dict]) -> Tuple[List[Dict], List[Dict]]:
@@ -446,9 +458,4 @@ def preparar(ruta, actor: str = "", actor_rol: str = "") -> Dict:
                   if not contradictorios & {str(n) for n in o["_filas"]}]
     errores += almacen_oficios.validar_importacion(revisables, actor, actor_rol)
 
-    return {
-        "filas": oficios,
-        "errores": ordenar_errores(errores),
-        "campos_asignados": [almacen_oficios.COLUMNAS_EXPORTACION[clave]
-                             for clave in CAMPOS_ASIGNADOS],
-    }
+    return {"filas": oficios, "errores": ordenar_errores(errores)}

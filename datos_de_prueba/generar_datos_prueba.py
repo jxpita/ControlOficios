@@ -2,8 +2,8 @@
 Genera el archivo de datos de prueba para la carga masiva.
 
 Crea `Matriz de prueba - 110 oficios.xlsx` con el formato que exige la
-importación —el de la exportación, sin la columna Referencia UDC, que la numera
-el sistema— y 110 oficios repartidos entre las dos instituciones.
+importación —el de la exportación, sin las columnas que no se toman del
+archivo— y 110 oficios repartidos entre las dos instituciones.
 
 Los datos se reparten a propósito para que el TABLERO se vea con contenido:
 
@@ -224,16 +224,9 @@ def generar_oficios():
             "id_empleado": usuario,
             "empleado": NOMBRES.get(usuario, ""),
             "estado": estado,
-            "archivo_oficio": "",
-            "archivo_respuesta": "",
             "observacion": random.choice(
                 ["", "", "Atendido dentro del plazo", "Requiere seguimiento",
                  "Se remitió por correo"]),
-            "registrado_por": "",
-            "fecha_registro": "",
-            "origen": "",
-            "anulado": "",
-            "motivo_anulacion": "",
             "implicados": implicados,
         })
     return oficios

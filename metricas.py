@@ -53,6 +53,11 @@ def resumen(registros: Optional[List[Dict]] = None) -> Dict:
     finalizados = por_estado.get("Finalizado", 0)
     return {
         "total": total,
+        # Cuánta gente hay detrás de esos oficios: un mismo oficio puede
+        # investigar a ocho personas, así que el volumen de trabajo real no se
+        # ve solo contando oficios.
+        "personas_investigadas": sum(personas_investigadas(reg)
+                                     for reg in registros),
         "por_estado": {estado: por_estado.get(estado, 0) for estado in ESTADOS},
         "recibidos_hoy": conteo_hoy,
         "recibidos_semana": conteo_semana,

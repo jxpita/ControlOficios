@@ -439,20 +439,27 @@ fuera del sistema. Está en la pestaña *Configuración*, así que solo la usan
 administradores y el superusuario; la restricción se valida también en el
 almacenamiento (`almacen_oficios.importar_oficios`).
 
-**El formato de importación es el de la exportación, sin la Referencia UDC.**
-No hay dos formatos que mantener: las columnas se **derivan** de
-`almacen_oficios.COLUMNAS_EXPORTACION` y `COLUMNAS_IMPLICADO`, de modo que
-añadir una columna a la exportación la añade a la carga sola. La única que se
-excluye es la **Referencia UDC**: la numera el sistema al importar, con la
-nomenclatura de la institución de cada oficio, así que pedirla solo daría pie a
-escribir una que no se va a usar. Quedan **26 columnas**, de la **A** a la
-**Z**, con la cabecera en la **fila 1** desde **A1**, los datos desde la **fila
-2**, y se admiten `.xlsx` y `.csv`.
+**El formato de importación es el de la exportación, sin lo que no se toma del
+archivo.** No hay dos formatos que mantener: las columnas se **derivan** de
+`almacen_oficios.COLUMNAS_EXPORTACION` y `COLUMNAS_IMPLICADO` quitando las de
+`CAMPOS_EXCLUIDOS`, de modo que añadir una columna a la exportación la añade a
+la carga sola. Quedan **19 columnas**, de la **A** a la **S**, con la cabecera
+en la **fila 1** desde **A1**, los datos desde la **fila 2**, y se admiten
+`.xlsx` y `.csv`.
 
-Quien parta de un archivo exportado se encuentra esa columna de más, así que el
-rechazo lo dice con todas las letras: «sobra la columna A «Referencia UDC». La
-numera el sistema al importar […]: elimine esa columna». La plantilla a mano es
-el archivo de ejemplo (ver 3.5), que escribe el propio módulo de la carga
+Lo que se excluye, y por qué:
+
+| Columna | Por qué no está |
+|---|---|
+| Referencia UDC | La numera el sistema al importar, con la nomenclatura de la institución de cada oficio |
+| Documento del oficio · Respuesta en PDF | Son archivos: se adjuntan después desde la pestaña *Oficios* («Adjuntar oficio», «Adjuntar respuesta (PDF)») |
+| Registrado por · Fecha de registro · Origen | Los pone la propia importación: quien carga, cuándo, y `carga masiva` |
+| Anulado · Motivo de anulación | Un oficio se **anula desde Mantenimiento** una vez registrado; no se carga anulado de entrada |
+
+Así el archivo solo pide lo que alguien tiene que aportar. Quien parta de un
+archivo exportado se encuentra esas columnas de más, así que el rechazo las
+enumera con su motivo y pide eliminarlas. La plantilla a mano es el archivo de
+ejemplo (ver 3.5), que escribe el propio módulo de la carga
 (`carga_masiva.escribir_plantilla`).
 
 Como en la exportación, **cada fila es una persona investigada**: las filas que
@@ -460,10 +467,6 @@ comparten *Referencia oficio* son el mismo oficio y de ellas sale su detalle de
 implicados. Los datos del oficio se repiten en todas sus filas y **tienen que
 coincidir**; si una línea contradice a la primera del oficio, se dice en qué
 columna.
-
-Cinco columnas sí están en el archivo, pero su contenido **se ignora** porque lo
-pone el sistema: *Documento del oficio*, *Respuesta en PDF*, *Registrado por*,
-*Fecha de registro* y *Origen*.
 
 **Rígido en la estructura, tolerante al escribir, estandarizado al guardar.**
 Las columnas y su orden no se negocian, pero lo que se escribe dentro no
@@ -503,7 +506,6 @@ Lo que se valida en cada oficio:
 | Cantidad de investigados | entero no negativo; con detalle de personas debe coincidir con el número de filas |
 | Implicados | `validar_implicado`: nombre, tipo de implicado del catálogo, LCI Sí/No (también valen `S` o `X`) e identificación bien formada |
 | Identificación | **cédula: 10 dígitos exactos**, **RUC: 13**, pasaporte alfanumérico. Se admiten puntos, guiones y espacios, que se retiran antes de contar. Si faltan dígitos, el aviso recuerda que Excel se come el cero de la izquierda si la celda no es de tipo texto |
-| Anulado / Motivo de anulación | *Sí* exige motivo; un motivo sin *Sí* es un error. Un oficio anulado entra ya anulado |
 
 Lo único que no se exige, porque un archivo no puede aportarlo, es el
 **documento del oficio** y la **respuesta en PDF**: se adjuntan después desde la
@@ -542,9 +544,25 @@ solo lectura, como el resto de los datos.
 
 - **"Ver oficio"** abre el documento: los PDF en el visor integrado y los Word
   con el programa asociado del sistema.
-- **"Cambiar oficio"** lo sustituye, por si se cargó el archivo equivocado.
-- Los oficios registrados con versiones anteriores no tienen documento; al
-  intentar verlo, la aplicación lo indica y sugiere adjuntarlo.
+- El **botón de al lado dice lo que hará** con el oficio seleccionado:
+  **"Adjuntar oficio"** cuando no tiene documento y **"Cambiar oficio"** cuando
+  ya lo tiene (por si se cargó el archivo equivocado). Es el mismo botón:
+  `reemplazar_documento` sirve para las dos cosas.
+- Los oficios que entran por **carga masiva** llegan sin documento —un archivo
+  de Excel no puede traerlo—, igual que los registrados con versiones
+  anteriores a esta exigencia. La columna **Documento** de la tabla (`Sí` / `—`)
+  los deja a la vista para completarlos, y al intentar verlos la aplicación lo
+  indica.
+
+### Orden del listado
+
+Los oficios se listan **del último al primero**: lo que acaba de entrar
+encabeza la tabla y lo antiguo queda al final, que es como se trabaja. Se
+invierte el orden de almacenamiento —los registros se anexan según se dan de
+alta, también en la carga masiva— en vez de ordenar por una fecha: la de
+registro no distingue entre los oficios de una misma carga y la de recepción es
+un dato del oficio, no el momento en que se capturó. La exportación sale en ese
+mismo orden, así que el archivo coincide con lo que se ve.
 
 ### Respuesta en PDF
 
@@ -557,7 +575,8 @@ Cada oficio puede llevar adjunta **la respuesta en PDF**:
   no, ofrece abrirlo con el lector del sistema.
 - **"Eliminar PDF"** borra el archivo adjunto (por si se cargó el equivocado) y
   permite volver a adjuntar el correcto.
-- La columna **PDF** de la tabla indica con "Sí" qué oficios ya tienen respuesta.
+- La columna **Respuesta PDF** de la tabla indica con "Sí" qué oficios ya tienen
+  respuesta adjunta, junto a la columna **Documento**.
 - Un usuario regular solo puede adjuntar o eliminar respuestas en **sus**
   oficios; los gestores, en cualquiera.
 
@@ -567,9 +586,18 @@ Cada oficio puede llevar adjunta **la respuesta en PDF**:
 El tablero tiene **desplazamiento vertical** y muestra únicamente los oficios
 que el usuario puede ver (ver *Visibilidad de los oficios*).
 
-**Indicadores:** total, por estado (por asignar / en proceso / finalizados),
-% finalizados, días promedio de respuesta, recibidos hoy / semana / mes,
-con y sin respuesta, con PDF adjunto y sin responsable.
+**Indicadores:** total de oficios, **total de personas investigadas**, por
+estado (por asignar / en proceso / finalizados), % finalizados, días promedio de
+respuesta, recibidos hoy / semana / mes, con y sin respuesta, con PDF adjunto y
+sin responsable.
+
+Las dos primeras tarjetas son las dos medidas del volumen y conviene mirarlas
+juntas: un oficio puede investigar a ocho personas, así que contar oficios no
+dice cuánto trabajo hay. El total de personas sale del **detalle de implicados**
+de cada oficio y, cuando no lo tiene, de su *Cantidad de investigados*
+(`metricas.personas_investigadas`). Como el resto de indicadores, **responde a
+los filtros del tablero**: al acotar por institución, responsable o fechas, la
+tarjeta suma solo los oficios que quedan.
 
 **Gráficos:**
 
