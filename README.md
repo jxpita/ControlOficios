@@ -550,9 +550,8 @@ solo lectura, como el resto de los datos.
   `reemplazar_documento` sirve para las dos cosas.
 - Los oficios que entran por **carga masiva** llegan sin documento —un archivo
   de Excel no puede traerlo—, igual que los registrados con versiones
-  anteriores a esta exigencia. La columna **Documento** de la tabla (`Sí` / `—`)
-  los deja a la vista para completarlos, y al intentar verlos la aplicación lo
-  indica.
+  anteriores a esta exigencia. La columna **Documento** de la tabla los deja a
+  la vista para completarlos, y al intentar verlos la aplicación lo indica.
 
 ### Orden del listado
 
@@ -575,8 +574,13 @@ Cada oficio puede llevar adjunta **la respuesta en PDF**:
   no, ofrece abrirlo con el lector del sistema.
 - **"Eliminar PDF"** borra el archivo adjunto (por si se cargó el equivocado) y
   permite volver a adjuntar el correcto.
-- La columna **Respuesta PDF** de la tabla indica con "Sí" qué oficios ya tienen
-  respuesta adjunta, junto a la columna **Documento**.
+- Las columnas **Documento** y **Respuesta PDF** de la tabla marcan con **✓** el
+  archivo que está y con **✗** el que falta, centradas para poder recorrerlas
+  de un vistazo. Los símbolos se eligen **midiendo la fuente** de la tabla
+  (`marcas_adjunto`): si no dibujara ✓ o ✗ se verían rectángulos vacíos, así
+  que en ese caso se recurre a «Sí» y «No». En Windows no suele hacer falta
+  —Tk sustituye la fuente por otra que sí los tenga—, pero la comprobación
+  evita una tabla llena de cuadros allí donde no.
 - Un usuario regular solo puede adjuntar o eliminar respuestas en **sus**
   oficios; los gestores, en cualquiera.
 

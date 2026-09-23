@@ -796,6 +796,15 @@ class AplicacionPrincipal(ttk.Frame):
         except ValueError:
             self.lbl_proxima_referencia.config(text="")
 
+    def _marcas_adjunto(self):
+        """Las marcas de las columnas de adjuntos, medidas con la fuente real."""
+        try:
+            fuente = tkfont.Font(
+                font=ttk.Style().lookup("Treeview", "font") or "TkDefaultFont")
+            return marcas_adjunto(fuente.measure)
+        except tk.TclError:
+            return MARCA_SI_TEXTO, MARCA_NO_TEXTO
+
     @classmethod
     def _ancho_columna(cls, titulo, ancho_dato):
         """Ancho de una columna de tabla: el mayor entre lo que pide el dato y
@@ -1355,6 +1364,11 @@ class AplicacionPrincipal(ttk.Frame):
             self.tabla.column(columna, width=ancho, minwidth=ancho, anchor="w",
                               stretch=False)
         self.tabla.column("observacion", stretch=True)
+        # Las dos columnas de adjuntos llevan una marca, no un texto: centrada
+        # se lee de un vistazo cuáles faltan al recorrer la lista.
+        for columna in ("documento", "pdf"):
+            self.tabla.column(columna, anchor="center")
+        self.marca_si, self.marca_no = self._marcas_adjunto()
         barra_v = ttk.Scrollbar(contenedor, orient="vertical", command=self.tabla.yview)
         barra_h = ttk.Scrollbar(contenedor, orient="horizontal", command=self.tabla.xview)
         self.tabla.configure(yscrollcommand=barra_v.set, xscrollcommand=barra_h.set)
@@ -1556,11 +1570,13 @@ class AplicacionPrincipal(ttk.Frame):
                     registro.get("id_empleado", ""),
                     "ANULADO" if anulado else registro["estado"],
                     registro.get("prioridad", ""),
-                    # Qué adjuntos tiene: el guion salta a la vista y es lo que
+                    # Qué adjuntos tiene: la marca salta a la vista y es lo que
                     # distingue a los oficios que entraron por carga masiva,
                     # que llegan sin documento.
-                    "Sí" if registro.get("archivo_oficio") else "—",
-                    "Sí" if registro.get("archivo_respuesta") else "—",
+                    self.marca_si if registro.get("archivo_oficio")
+                    else self.marca_no,
+                    self.marca_si if registro.get("archivo_respuesta")
+                    else self.marca_no,
                     observacion))
         except ValueError as error:
             messagebox.showerror("Filtro no válido", str(error))
@@ -3398,6 +3414,30 @@ class DialogoImplicados(tk.Toplevel):
 # ============================================================================
 #  CARGA MASIVA DE OFICIOS
 # ============================================================================
+# Marcas de las columnas de adjuntos: si el archivo está o no está.
+MARCA_SI, MARCA_NO = "✓", "✗"
+# Texto al que se recurre si la fuente no dibujara los símbolos.
+MARCA_SI_TEXTO, MARCA_NO_TEXTO = "Sí", "No"
+
+
+def marcas_adjunto(medir):
+    """Devuelve (marca_sí, marca_no) según la fuente dibuje los símbolos.
+
+    `medir` es la función que da el ancho de un texto en la fuente de la tabla
+    (`tkfont.Font.measure`). Una fuente sin el glifo pedido dibuja el carácter
+    «no definido» —un rectángulo vacío—, que ocupa siempre lo mismo; se compara
+    contra un carácter del área de uso privado, que ninguna fuente define, y si
+    coinciden se usa texto en vez de arriesgar una tabla llena de cuadros.
+
+    En Windows no suele hacer falta: Tk sustituye la fuente por otra que sí
+    tenga el símbolo. La comprobación está por las instalaciones donde no.
+    """
+    sin_glifo = medir("")
+    if medir(MARCA_SI) == sin_glifo or medir(MARCA_NO) == sin_glifo:
+        return MARCA_SI_TEXTO, MARCA_NO_TEXTO
+    return MARCA_SI, MARCA_NO
+
+
 def anchos_de_columna(titulos, anchos):
     """Ensancha lo justo para que ningún encabezado salga cortado.
 

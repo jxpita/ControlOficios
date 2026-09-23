@@ -6,9 +6,9 @@
     "semantic_hash": ""
   },
   "aplicacion.py": {
-    "mtime": 1790180892.7266731,
-    "seen": 1790181197.054762,
-    "ast_hash": "a9a5854925dd66ba34c470d19ba90309",
+    "mtime": 1790192803.8657858,
+    "seen": 1790192909.0061977,
+    "ast_hash": "0c0aa41c28b5835903c9eb1309cd123a",
     "semantic_hash": ""
   },
   "autenticacion.py": {
@@ -108,9 +108,9 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1790181118.2573118,
-    "seen": 1790181197.054805,
-    "ast_hash": "540dba7ad69136f3c85541f91ef3c255",
+    "mtime": 1790192873.4131193,
+    "seen": 1790192909.006226,
+    "ast_hash": "146f2d1319449c1b1593a238608c05de",
     "semantic_hash": ""
   },
   "requirements.txt": {
@@ -138,9 +138,9 @@
     "semantic_hash": ""
   },
   "manual_fuente/manual.js": {
-    "mtime": 1790181176.7422388,
-    "seen": 1790181197.0547857,
-    "ast_hash": "4a606d23a39d0c6e84fb1d33db88ab75",
+    "mtime": 1790192873.4134834,
+    "seen": 1790192909.0062113,
+    "ast_hash": "fbbd016ed45ed3f478c3dfc49695a586",
     "semantic_hash": ""
   },
   "manual_fuente/package.json": {

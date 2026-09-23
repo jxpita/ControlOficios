@@ -31,7 +31,7 @@ const LOGO_PROPORCION = 5.54;
 // Identificación del documento: la versión del manual y la de la aplicación
 // que documenta son independientes y se indican por separado.
 const VERSION_APLICACION = "1.0";
-const VERSION_DOCUMENTO = "3.4";
+const VERSION_DOCUMENTO = "3.5";
 const FECHA_ELABORACION = "23 de septiembre de 2026";
 
 // ---------- Ayudantes ----------
@@ -465,8 +465,8 @@ const contenido = [
   vinieta("Adjuntar respuesta (PDF): incorpora el documento de respuesta."),
   vinieta("Ver respuesta (PDF): permite consultarlo desde la propia aplicación."),
   vinieta("Eliminar PDF: retira la respuesta adjunta."),
-  p("Las columnas Documento y Respuesta PDF de la lista señalan con «Sí» los oficios que ya cuentan con cada archivo, y con un guion los que no."),
-  aviso("Los oficios incorporados por carga masiva llegan sin documento:", "un archivo de Excel no puede contenerlo. Localícelos por la columna Documento y utilice Adjuntar oficio para completarlos.", { tono: "aviso" }),
+  p("Las columnas Documento y Respuesta PDF de la lista indican con un visto (✓) el archivo que consta y con un aspa (✗) el que falta, de modo que se advierte de un vistazo qué oficios están incompletos."),
+  aviso("Los oficios incorporados por carga masiva llegan sin documento:", "un archivo de Excel no puede contenerlo. Localícelos por el aspa (✗) de la columna Documento y utilice Adjuntar oficio para completarlos.", { tono: "aviso" }),
   aviso("Para finalizar un oficio:", "constituye requisito que cuente con fecha de asignación, fecha de respuesta y la respuesta en PDF adjunta. Si faltara alguno, la aplicación indica cuál."),
 
   h2("3.6 Exportar oficios"),
